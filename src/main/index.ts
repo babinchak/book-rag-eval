@@ -2,6 +2,8 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
+import { pickAndLoadEpub } from './epub'
+import type { LoadEpubResult } from '../preload/types'
 
 function createWindow(): void {
   // Create the browser window.
@@ -49,8 +51,13 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  // IPC test
-  ipcMain.on('ping', () => console.log('pong'))
+  ipcMain.handle('epub:load', async (): Promise<LoadEpubResult> => {
+    try {
+      return { ok: true, data: await pickAndLoadEpub() }
+    } catch (err) {
+      return { ok: false, error: (err as Error).message }
+    }
+  })
 
   createWindow()
 

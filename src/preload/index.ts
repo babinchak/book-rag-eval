@@ -1,12 +1,11 @@
-import { contextBridge } from 'electron'
+import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
+import type { LoadEpubResult } from './types'
 
-// Custom APIs for renderer
-const api = {}
+const api = {
+  loadEpub: (): Promise<LoadEpubResult> => ipcRenderer.invoke('epub:load')
+}
 
-// Use `contextBridge` APIs to expose Electron APIs to
-// renderer only if context isolation is enabled, otherwise
-// just add to the DOM global.
 if (process.contextIsolated) {
   try {
     contextBridge.exposeInMainWorld('electron', electronAPI)
@@ -20,3 +19,5 @@ if (process.contextIsolated) {
   // @ts-ignore (define in dts)
   window.api = api
 }
+
+export type Api = typeof api
