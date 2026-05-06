@@ -1,18 +1,19 @@
 import { memo, useEffect, useRef, useState } from 'react'
 import type {
   BookSummary,
+  ChunkParams,
   ChunkSetSummary,
   LoadedEpub,
   SpineItem
 } from '../../../preload/types'
 import { applyChunkOverlay, clearChunkOverlay } from '../lib/overlay'
+import { DEFAULT_STRATEGIES, strategyIdOf, strategyLabel } from '../../../shared/strategy'
 
 interface ReaderProps {
   book: BookSummary
   onBack: () => void
 }
 
-const DEFAULT_CHUNK_PARAMS = { size: 1200, overlap: 200 }
 const RAIL_EXPANDED_WIDTH = 280
 const RAIL_COLLAPSED_WIDTH = 40
 
@@ -20,7 +21,7 @@ function Reader({ book, onBack }: ReaderProps): React.JSX.Element {
   const [loaded, setLoaded] = useState<LoadedEpub | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [chunkSets, setChunkSets] = useState<ChunkSetSummary[]>([])
-  const [running, setRunning] = useState(false)
+  const [runningStrategyId, setRunningStrategyId] = useState<string | null>(null)
   const [railOpen, setRailOpen] = useState(true)
   const [overlayStrategyId, setOverlayStrategyId] = useState<string | null>(null)
   const [overlayApplied, setOverlayApplied] = useState<number | null>(null)
@@ -82,18 +83,19 @@ function Reader({ book, onBack }: ReaderProps): React.JSX.Element {
     else setError(result.error)
   }
 
-  async function handleRunFixed(): Promise<void> {
-    setRunning(true)
+  async function handleRun(params: ChunkParams): Promise<void> {
+    const sid = strategyIdOf(params)
+    setRunningStrategyId(sid)
     setError(null)
     try {
-      const result = await window.api.chunks.run(book.id, DEFAULT_CHUNK_PARAMS)
+      const result = await window.api.chunks.run(book.id, params)
       if (!result.ok) {
         setError(result.error)
         return
       }
       await refreshChunkSets()
     } finally {
-      setRunning(false)
+      setRunningStrategyId(null)
     }
   }
 
@@ -102,11 +104,7 @@ function Reader({ book, onBack }: ReaderProps): React.JSX.Element {
   }
 
   const spineCount = loaded?.manifest.readingOrder?.length ?? 0
-  const hasFixedDefault = chunkSets.some(
-    (s) =>
-      s.params.size === DEFAULT_CHUNK_PARAMS.size &&
-      s.params.overlap === DEFAULT_CHUNK_PARAMS.overlap
-  )
+  const existingStrategyIds = new Set(chunkSets.map((s) => s.strategyId))
 
   return (
     <div style={{ display: 'flex', height: '100vh', color: '#222' }}>
@@ -159,9 +157,9 @@ function Reader({ book, onBack }: ReaderProps): React.JSX.Element {
           <div style={{ overflowY: 'auto', padding: 12 }}>
             <ChunkingSection
               chunkSets={chunkSets}
-              running={running}
-              hasFixedDefault={hasFixedDefault}
-              onRun={handleRunFixed}
+              runningStrategyId={runningStrategyId}
+              existingStrategyIds={existingStrategyIds}
+              onRun={handleRun}
               overlayStrategyId={overlayStrategyId}
               overlayApplied={overlayApplied}
               onToggleOverlay={toggleOverlay}
@@ -274,9 +272,9 @@ const SpineRenderer = memo(function SpineRenderer({
 
 interface ChunkingSectionProps {
   chunkSets: ChunkSetSummary[]
-  running: boolean
-  hasFixedDefault: boolean
-  onRun: () => void
+  runningStrategyId: string | null
+  existingStrategyIds: Set<string>
+  onRun: (params: ChunkParams) => void
   overlayStrategyId: string | null
   overlayApplied: number | null
   onToggleOverlay: (strategyId: string) => void
@@ -284,13 +282,14 @@ interface ChunkingSectionProps {
 
 function ChunkingSection({
   chunkSets,
-  running,
-  hasFixedDefault,
+  runningStrategyId,
+  existingStrategyIds,
   onRun,
   overlayStrategyId,
   overlayApplied,
   onToggleOverlay
 }: ChunkingSectionProps): React.JSX.Element {
+  const anyRunning = runningStrategyId !== null
   return (
     <section>
       <h3
@@ -303,34 +302,60 @@ function ChunkingSection({
           letterSpacing: 0.5
         }}
       >
-        Chunking
+        Strategies
       </h3>
-      <button
-        onClick={onRun}
-        disabled={running}
-        style={{
-          width: '100%',
-          padding: '8px 10px',
-          fontSize: 13,
-          textAlign: 'left',
-          cursor: running ? 'wait' : 'pointer',
-          background: '#fff',
-          border: '1px solid #d4d4d4',
-          borderRadius: 4
-        }}
-      >
-        {running
-          ? 'Running…'
-          : hasFixedDefault
-            ? 'Re-run fixed-1200-200'
-            : 'Run fixed-1200-200'}
-      </button>
+      <div style={{ display: 'grid', gap: 6 }}>
+        {DEFAULT_STRATEGIES.map((params) => {
+          const sid = strategyIdOf(params)
+          const isRunning = runningStrategyId === sid
+          const exists = existingStrategyIds.has(sid)
+          return (
+            <button
+              key={sid}
+              onClick={() => onRun(params)}
+              disabled={anyRunning}
+              style={{
+                width: '100%',
+                padding: '7px 10px',
+                fontSize: 12,
+                textAlign: 'left',
+                cursor: anyRunning ? 'wait' : 'pointer',
+                background: '#fff',
+                border: '1px solid #d4d4d4',
+                borderRadius: 4,
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                gap: 6
+              }}
+            >
+              <span>
+                {isRunning ? 'Running…' : exists ? 'Re-run ' : 'Run '}
+                {strategyLabel(params)}
+              </span>
+              {exists && !isRunning && <span style={{ color: '#10b981', fontSize: 11 }}>✓</span>}
+            </button>
+          )
+        })}
+      </div>
 
       <div style={{ marginTop: 16 }}>
+        <div
+          style={{
+            fontSize: 11,
+            fontWeight: 600,
+            color: '#444',
+            textTransform: 'uppercase',
+            letterSpacing: 0.5,
+            marginBottom: 6
+          }}
+        >
+          Chunk sets
+        </div>
         <div style={{ fontSize: 11, color: '#888', marginBottom: 6 }}>
           {chunkSets.length === 0
-            ? 'No chunk sets yet'
-            : `${chunkSets.length} chunk set${chunkSets.length === 1 ? '' : 's'}`}
+            ? 'None generated yet'
+            : `${chunkSets.length} generated`}
         </div>
         <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'grid', gap: 6 }}>
           {chunkSets.map((s) => {

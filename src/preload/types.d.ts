@@ -55,10 +55,11 @@ export type LibraryOpenResult = { ok: true; data: LoadedEpub } | { ok: false; er
 
 export type LibraryRemoveResult = { ok: true } | { ok: false; error: string }
 
-export interface ChunkParams {
-  size: number
-  overlap: number
-}
+export type ChunkParams =
+  | { kind: 'fixed'; size: number; overlap: number }
+  | { kind: 'paragraph'; targetSize: number }
+  | { kind: 'sentence'; targetSize: number }
+  | { kind: 'structural'; maxSize: number }
 
 export interface Chunk {
   id: string
