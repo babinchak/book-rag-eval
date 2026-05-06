@@ -2,6 +2,24 @@ import { spawn } from 'node:child_process'
 import AdmZip from 'adm-zip'
 import type { ReadiumManifest, SpineItem } from '../preload/types'
 
+export interface RawSpineItem {
+  href: string
+  rawHtml: string
+}
+
+export function readSpineRaw(epubPath: string, manifest: ReadiumManifest): RawSpineItem[] {
+  const readingOrder = manifest.readingOrder ?? []
+  if (readingOrder.length === 0) return []
+  const zip = new AdmZip(epubPath)
+  const byPath = new Map(zip.getEntries().map((e) => [e.entryName, e]))
+  return readingOrder.map((link) => {
+    const href = link.href
+    const candidate = href.startsWith('/') ? href.slice(1) : href
+    const entry = byPath.get(candidate) ?? byPath.get(decodeURIComponent(candidate))
+    return { href, rawHtml: entry ? entry.getData().toString('utf8') : '' }
+  })
+}
+
 const READIUM_BIN = process.env.READIUM_BIN || 'readium'
 
 export function runReadiumManifest(epubPath: string): Promise<ReadiumManifest> {

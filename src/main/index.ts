@@ -3,7 +3,12 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { importEpubFromDialog, listLibrary, openBook, removeBook } from './library'
+import { getChunkSet, listChunkSets, runChunking } from './chunking'
 import type {
+  ChunkParams,
+  ChunksGetResult,
+  ChunksListResult,
+  ChunksRunResult,
   LibraryImportResult,
   LibraryListResult,
   LibraryOpenResult,
@@ -78,6 +83,36 @@ app.whenReady().then(() => {
       return { ok: false, error: (err as Error).message }
     }
   })
+
+  ipcMain.handle(
+    'chunks:run',
+    async (_, bookId: string, params: ChunkParams): Promise<ChunksRunResult> => {
+      try {
+        return { ok: true, data: await runChunking(bookId, params) }
+      } catch (err) {
+        return { ok: false, error: (err as Error).message }
+      }
+    }
+  )
+
+  ipcMain.handle('chunks:list', async (_, bookId: string): Promise<ChunksListResult> => {
+    try {
+      return { ok: true, sets: await listChunkSets(bookId) }
+    } catch (err) {
+      return { ok: false, error: (err as Error).message }
+    }
+  })
+
+  ipcMain.handle(
+    'chunks:get',
+    async (_, bookId: string, strategyId: string): Promise<ChunksGetResult> => {
+      try {
+        return { ok: true, data: await getChunkSet(bookId, strategyId) }
+      } catch (err) {
+        return { ok: false, error: (err as Error).message }
+      }
+    }
+  )
 
   createWindow()
 

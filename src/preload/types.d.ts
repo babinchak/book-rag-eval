@@ -54,3 +54,39 @@ export type LibraryImportResult =
 export type LibraryOpenResult = { ok: true; data: LoadedEpub } | { ok: false; error: string }
 
 export type LibraryRemoveResult = { ok: true } | { ok: false; error: string }
+
+export interface ChunkParams {
+  size: number
+  overlap: number
+}
+
+export interface Chunk {
+  id: string
+  strategyId: string
+  spineHref: string
+  textStart: number
+  textEnd: number
+  text: string
+}
+
+export interface ChunkSetSummary {
+  strategyId: string
+  params: ChunkParams
+  count: number
+  generatedAt: number
+}
+
+export interface ChunkSet extends ChunkSetSummary {
+  bookId: string
+  chunks: Chunk[]
+}
+
+export type ChunksRunResult =
+  | { ok: true; data: ChunkSetSummary }
+  | { ok: false; error: string }
+
+export type ChunksListResult =
+  | { ok: true; sets: ChunkSetSummary[] }
+  | { ok: false; error: string }
+
+export type ChunksGetResult = { ok: true; data: ChunkSet } | { ok: false; error: string }

@@ -50,7 +50,7 @@ function indexPath(): string {
   return join(libraryDir(), 'index.json')
 }
 
-function bookDir(id: string): string {
+export function bookDir(id: string): string {
   return join(libraryDir(), id)
 }
 

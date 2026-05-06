@@ -1,6 +1,10 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 import type {
+  ChunkParams,
+  ChunksGetResult,
+  ChunksListResult,
+  ChunksRunResult,
   LibraryImportResult,
   LibraryListResult,
   LibraryOpenResult,
@@ -13,6 +17,13 @@ const api = {
     import: (): Promise<LibraryImportResult> => ipcRenderer.invoke('library:import'),
     open: (id: string): Promise<LibraryOpenResult> => ipcRenderer.invoke('library:open', id),
     remove: (id: string): Promise<LibraryRemoveResult> => ipcRenderer.invoke('library:remove', id)
+  },
+  chunks: {
+    run: (bookId: string, params: ChunkParams): Promise<ChunksRunResult> =>
+      ipcRenderer.invoke('chunks:run', bookId, params),
+    list: (bookId: string): Promise<ChunksListResult> => ipcRenderer.invoke('chunks:list', bookId),
+    get: (bookId: string, strategyId: string): Promise<ChunksGetResult> =>
+      ipcRenderer.invoke('chunks:get', bookId, strategyId)
   }
 }
 
