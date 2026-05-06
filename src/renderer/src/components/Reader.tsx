@@ -11,6 +11,7 @@ import type {
 import { applyChunkOverlay, buildRangeForChunk, clearChunkOverlay } from '../lib/overlay'
 import { DEFAULT_STRATEGIES, strategyIdOf, strategyLabel } from '../../../shared/strategy'
 import AssistantPane from './AssistantPane'
+import EvaluationSection from './EvaluationSection'
 
 interface ChunkSetOverlayState {
   strategyId: string
@@ -273,6 +274,11 @@ function Reader({ book, onBack }: ReaderProps): React.JSX.Element {
               overlayStrategyId={overlayStrategyId}
               overlayApplied={overlayApplied}
               onToggleOverlay={toggleOverlay}
+            />
+            <EvaluationSection
+              bookId={book.id}
+              chunkSets={chunkSets}
+              embeddingSets={embeddingSets}
             />
           </div>
         )}

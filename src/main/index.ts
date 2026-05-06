@@ -7,6 +7,17 @@ import { getChunkSet, listChunkSets, runChunking } from './chunking'
 import { listEmbeddingSets, removeEmbeddings, runEmbedding } from './embeddings'
 import { ask } from './retrieval'
 import { clearOpenaiKey, hasOpenaiKey, setOpenaiKey } from './settings'
+import {
+  addCase,
+  createEvalSet,
+  deleteEvalSet,
+  getEvalSet,
+  listEvalRuns,
+  listEvalSets,
+  locateQuote,
+  removeCase,
+  runEval
+} from './evals'
 import type {
   AskIpcResult,
   ChunkParams,
@@ -16,6 +27,16 @@ import type {
   EmbedRunIpcResult,
   EmbeddingsListIpcResult,
   EmbeddingsRemoveIpcResult,
+  EvalCaseAddIpcResult,
+  EvalCaseRemoveIpcResult,
+  EvalLocateIpcResult,
+  EvalRunIpcResult,
+  EvalRunsListIpcResult,
+  EvalSetCreateIpcResult,
+  EvalSetDeleteIpcResult,
+  EvalSetGetIpcResult,
+  EvalSetsListIpcResult,
+  GoldSpan,
   LibraryImportResult,
   LibraryListResult,
   LibraryOpenResult,
@@ -198,6 +219,126 @@ app.whenReady().then(() => {
     ): Promise<AskIpcResult> => {
       try {
         return { ok: true, data: await ask(bookId, strategyId, query, k) }
+      } catch (err) {
+        return { ok: false, error: (err as Error).message }
+      }
+    }
+  )
+
+  ipcMain.handle('evals:list', async (_, bookId: string): Promise<EvalSetsListIpcResult> => {
+    try {
+      return { ok: true, sets: await listEvalSets(bookId) }
+    } catch (err) {
+      return { ok: false, error: (err as Error).message }
+    }
+  })
+
+  ipcMain.handle(
+    'evals:get',
+    async (_, bookId: string, setId: string): Promise<EvalSetGetIpcResult> => {
+      try {
+        return { ok: true, data: await getEvalSet(bookId, setId) }
+      } catch (err) {
+        return { ok: false, error: (err as Error).message }
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'evals:create',
+    async (_, bookId: string, setId: string): Promise<EvalSetCreateIpcResult> => {
+      try {
+        return { ok: true, data: await createEvalSet(bookId, setId) }
+      } catch (err) {
+        return { ok: false, error: (err as Error).message }
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'evals:delete',
+    async (_, bookId: string, setId: string): Promise<EvalSetDeleteIpcResult> => {
+      try {
+        await deleteEvalSet(bookId, setId)
+        return { ok: true }
+      } catch (err) {
+        return { ok: false, error: (err as Error).message }
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'evals:addCase',
+    async (
+      _,
+      bookId: string,
+      setId: string,
+      question: string,
+      goldSpans: GoldSpan[],
+      notes?: string
+    ): Promise<EvalCaseAddIpcResult> => {
+      try {
+        return { ok: true, data: await addCase(bookId, setId, question, goldSpans, notes) }
+      } catch (err) {
+        return { ok: false, error: (err as Error).message }
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'evals:removeCase',
+    async (
+      _,
+      bookId: string,
+      setId: string,
+      caseId: string
+    ): Promise<EvalCaseRemoveIpcResult> => {
+      try {
+        await removeCase(bookId, setId, caseId)
+        return { ok: true }
+      } catch (err) {
+        return { ok: false, error: (err as Error).message }
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'evals:locate',
+    async (_, bookId: string, quote: string): Promise<EvalLocateIpcResult> => {
+      try {
+        const result = await locateQuote(bookId, quote)
+        if (!result) {
+          return { ok: false, error: 'Quote not found in any spine item' }
+        }
+        return { ok: true, data: result }
+      } catch (err) {
+        return { ok: false, error: (err as Error).message }
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'evals:run',
+    async (
+      _,
+      bookId: string,
+      setId: string,
+      strategyId: string,
+      k: number
+    ): Promise<EvalRunIpcResult> => {
+      try {
+        return { ok: true, data: await runEval(bookId, setId, strategyId, k) }
+      } catch (err) {
+        return { ok: false, error: (err as Error).message }
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'evals:listRuns',
+    async (_, bookId: string): Promise<EvalRunsListIpcResult> => {
+      try {
+        return { ok: true, runs: await listEvalRuns(bookId) }
       } catch (err) {
         return { ok: false, error: (err as Error).message }
       }

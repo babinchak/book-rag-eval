@@ -136,3 +136,91 @@ export interface AskResultPayload {
 }
 
 export type AskIpcResult = { ok: true; data: AskResultPayload } | { ok: false; error: string }
+
+export interface GoldSpan {
+  spineHref: string
+  textStart: number
+  textEnd: number
+}
+
+export interface EvalCase {
+  id: string
+  question: string
+  goldSpans: GoldSpan[]
+  notes?: string
+}
+
+export interface EvalSet {
+  id: string
+  bookId: string
+  cases: EvalCase[]
+  createdAt: number
+  updatedAt: number
+}
+
+export interface EvalSetSummary {
+  id: string
+  caseCount: number
+  updatedAt: number
+}
+
+export interface RetrievedDetail {
+  chunkId: string
+  distance: number
+  hit: boolean
+  overlap: number
+  rank: number
+}
+
+export interface EvalCaseResult {
+  caseId: string
+  question: string
+  retrieved: RetrievedDetail[]
+  recallAtK: number
+  mrr: number
+  hitRank: number | null
+}
+
+export interface EvalRunResult {
+  id: string
+  bookId: string
+  evalSetId: string
+  strategyId: string
+  k: number
+  ranAt: number
+  meanRecallAtK: number
+  meanMRR: number
+  cases: EvalCaseResult[]
+}
+
+export interface EvalRunSummary {
+  id: string
+  evalSetId: string
+  strategyId: string
+  k: number
+  ranAt: number
+  meanRecallAtK: number
+  meanMRR: number
+  caseCount: number
+}
+
+export interface LocateQuoteHit {
+  goldSpan: GoldSpan
+  preview: string
+}
+
+export type EvalSetsListIpcResult =
+  | { ok: true; sets: EvalSetSummary[] }
+  | { ok: false; error: string }
+export type EvalSetGetIpcResult = { ok: true; data: EvalSet } | { ok: false; error: string }
+export type EvalSetCreateIpcResult = { ok: true; data: EvalSet } | { ok: false; error: string }
+export type EvalSetDeleteIpcResult = { ok: true } | { ok: false; error: string }
+export type EvalCaseAddIpcResult = { ok: true; data: EvalCase } | { ok: false; error: string }
+export type EvalCaseRemoveIpcResult = { ok: true } | { ok: false; error: string }
+export type EvalLocateIpcResult =
+  | { ok: true; data: LocateQuoteHit }
+  | { ok: false; error: string }
+export type EvalRunIpcResult = { ok: true; data: EvalRunResult } | { ok: false; error: string }
+export type EvalRunsListIpcResult =
+  | { ok: true; runs: EvalRunSummary[] }
+  | { ok: false; error: string }

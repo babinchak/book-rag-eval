@@ -9,6 +9,16 @@ import type {
   EmbedRunIpcResult,
   EmbeddingsListIpcResult,
   EmbeddingsRemoveIpcResult,
+  EvalCaseAddIpcResult,
+  EvalCaseRemoveIpcResult,
+  EvalLocateIpcResult,
+  EvalRunIpcResult,
+  EvalRunsListIpcResult,
+  EvalSetCreateIpcResult,
+  EvalSetDeleteIpcResult,
+  EvalSetGetIpcResult,
+  EvalSetsListIpcResult,
+  GoldSpan,
   LibraryImportResult,
   LibraryListResult,
   LibraryOpenResult,
@@ -50,6 +60,40 @@ const api = {
   ask: {
     run: (bookId: string, strategyId: string, query: string, k: number): Promise<AskIpcResult> =>
       ipcRenderer.invoke('ask:run', bookId, strategyId, query, k)
+  },
+  evals: {
+    list: (bookId: string): Promise<EvalSetsListIpcResult> =>
+      ipcRenderer.invoke('evals:list', bookId),
+    get: (bookId: string, setId: string): Promise<EvalSetGetIpcResult> =>
+      ipcRenderer.invoke('evals:get', bookId, setId),
+    create: (bookId: string, setId: string): Promise<EvalSetCreateIpcResult> =>
+      ipcRenderer.invoke('evals:create', bookId, setId),
+    delete: (bookId: string, setId: string): Promise<EvalSetDeleteIpcResult> =>
+      ipcRenderer.invoke('evals:delete', bookId, setId),
+    addCase: (
+      bookId: string,
+      setId: string,
+      question: string,
+      goldSpans: GoldSpan[],
+      notes?: string
+    ): Promise<EvalCaseAddIpcResult> =>
+      ipcRenderer.invoke('evals:addCase', bookId, setId, question, goldSpans, notes),
+    removeCase: (
+      bookId: string,
+      setId: string,
+      caseId: string
+    ): Promise<EvalCaseRemoveIpcResult> =>
+      ipcRenderer.invoke('evals:removeCase', bookId, setId, caseId),
+    locate: (bookId: string, quote: string): Promise<EvalLocateIpcResult> =>
+      ipcRenderer.invoke('evals:locate', bookId, quote),
+    run: (
+      bookId: string,
+      setId: string,
+      strategyId: string,
+      k: number
+    ): Promise<EvalRunIpcResult> => ipcRenderer.invoke('evals:run', bookId, setId, strategyId, k),
+    listRuns: (bookId: string): Promise<EvalRunsListIpcResult> =>
+      ipcRenderer.invoke('evals:listRuns', bookId)
   }
 }
 
