@@ -6,7 +6,16 @@ import { importEpubFromDialog, listLibrary, openBook, removeBook } from './libra
 import { getChunkSet, listChunkSets, runChunking } from './chunking'
 import { listEmbeddingSets, removeEmbeddings, runEmbedding } from './embeddings'
 import { ask } from './retrieval'
-import { clearOpenaiKey, hasOpenaiKey, setOpenaiKey } from './settings'
+import {
+  clearLangsmithKey,
+  clearOpenaiKey,
+  getLangsmithProject,
+  hasLangsmithKey,
+  hasOpenaiKey,
+  setLangsmithKey,
+  setLangsmithProject,
+  setOpenaiKey
+} from './settings'
 import {
   addCase,
   createEvalSet,
@@ -42,8 +51,10 @@ import type {
   LibraryOpenResult,
   LibraryRemoveResult,
   SettingsClearKeyResult,
+  SettingsGetStringResult,
   SettingsHasKeyResult,
-  SettingsSetKeyResult
+  SettingsSetKeyResult,
+  SettingsSetStringResult
 } from '../preload/types'
 
 function createWindow(): void {
@@ -207,6 +218,58 @@ app.whenReady().then(() => {
       return { ok: false, error: (err as Error).message }
     }
   })
+
+  ipcMain.handle('settings:hasLangsmithKey', async (): Promise<SettingsHasKeyResult> => {
+    try {
+      return { ok: true, hasKey: await hasLangsmithKey() }
+    } catch (err) {
+      return { ok: false, error: (err as Error).message }
+    }
+  })
+
+  ipcMain.handle(
+    'settings:setLangsmithKey',
+    async (_, key: string): Promise<SettingsSetKeyResult> => {
+      try {
+        await setLangsmithKey(key)
+        return { ok: true }
+      } catch (err) {
+        return { ok: false, error: (err as Error).message }
+      }
+    }
+  )
+
+  ipcMain.handle('settings:clearLangsmithKey', async (): Promise<SettingsClearKeyResult> => {
+    try {
+      await clearLangsmithKey()
+      return { ok: true }
+    } catch (err) {
+      return { ok: false, error: (err as Error).message }
+    }
+  })
+
+  ipcMain.handle(
+    'settings:getLangsmithProject',
+    async (): Promise<SettingsGetStringResult> => {
+      try {
+        return { ok: true, value: await getLangsmithProject() }
+      } catch (err) {
+        return { ok: false, error: (err as Error).message }
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'settings:setLangsmithProject',
+    async (_, name: string): Promise<SettingsSetStringResult> => {
+      try {
+        await setLangsmithProject(name)
+        return { ok: true }
+      } catch (err) {
+        return { ok: false, error: (err as Error).message }
+      }
+    }
+  )
 
   ipcMain.handle(
     'ask:run',

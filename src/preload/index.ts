@@ -24,8 +24,10 @@ import type {
   LibraryOpenResult,
   LibraryRemoveResult,
   SettingsClearKeyResult,
+  SettingsGetStringResult,
   SettingsHasKeyResult,
-  SettingsSetKeyResult
+  SettingsSetKeyResult,
+  SettingsSetStringResult
 } from './types'
 
 const api = {
@@ -55,7 +57,17 @@ const api = {
     setOpenaiKey: (key: string): Promise<SettingsSetKeyResult> =>
       ipcRenderer.invoke('settings:setOpenaiKey', key),
     clearOpenaiKey: (): Promise<SettingsClearKeyResult> =>
-      ipcRenderer.invoke('settings:clearOpenaiKey')
+      ipcRenderer.invoke('settings:clearOpenaiKey'),
+    hasLangsmithKey: (): Promise<SettingsHasKeyResult> =>
+      ipcRenderer.invoke('settings:hasLangsmithKey'),
+    setLangsmithKey: (key: string): Promise<SettingsSetKeyResult> =>
+      ipcRenderer.invoke('settings:setLangsmithKey', key),
+    clearLangsmithKey: (): Promise<SettingsClearKeyResult> =>
+      ipcRenderer.invoke('settings:clearLangsmithKey'),
+    getLangsmithProject: (): Promise<SettingsGetStringResult> =>
+      ipcRenderer.invoke('settings:getLangsmithProject'),
+    setLangsmithProject: (name: string): Promise<SettingsSetStringResult> =>
+      ipcRenderer.invoke('settings:setLangsmithProject', name)
   },
   ask: {
     run: (bookId: string, strategyId: string, query: string, k: number): Promise<AskIpcResult> =>

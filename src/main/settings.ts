@@ -4,6 +4,8 @@ import { join } from 'node:path'
 
 interface SettingsBlob {
   openaiKeyEncrypted?: string
+  langsmithKeyEncrypted?: string
+  langsmithProject?: string
 }
 
 function settingsPath(): string {
@@ -61,4 +63,53 @@ export async function clearOpenaiKey(): Promise<void> {
 export async function hasOpenaiKey(): Promise<boolean> {
   const blob = await read()
   return Boolean(blob.openaiKeyEncrypted)
+}
+
+export async function setLangsmithKey(key: string): Promise<void> {
+  if (!safeStorage.isEncryptionAvailable()) {
+    throw new Error(
+      'OS-level encrypted storage is not available; refusing to persist key in plaintext'
+    )
+  }
+  const trimmed = key.trim()
+  if (!trimmed) throw new Error('LangSmith API key is empty')
+  const encrypted = safeStorage.encryptString(trimmed)
+  const blob = await read()
+  blob.langsmithKeyEncrypted = encrypted.toString('base64')
+  await write(blob)
+}
+
+export async function getLangsmithKey(): Promise<string | null> {
+  const blob = await read()
+  if (!blob.langsmithKeyEncrypted) return null
+  if (!safeStorage.isEncryptionAvailable()) return null
+  try {
+    return safeStorage.decryptString(Buffer.from(blob.langsmithKeyEncrypted, 'base64'))
+  } catch {
+    return null
+  }
+}
+
+export async function clearLangsmithKey(): Promise<void> {
+  const blob = await read()
+  delete blob.langsmithKeyEncrypted
+  await write(blob)
+}
+
+export async function hasLangsmithKey(): Promise<boolean> {
+  const blob = await read()
+  return Boolean(blob.langsmithKeyEncrypted)
+}
+
+export async function setLangsmithProject(name: string): Promise<void> {
+  const blob = await read()
+  const trimmed = name.trim()
+  if (trimmed) blob.langsmithProject = trimmed
+  else delete blob.langsmithProject
+  await write(blob)
+}
+
+export async function getLangsmithProject(): Promise<string | null> {
+  const blob = await read()
+  return blob.langsmithProject ?? null
 }
