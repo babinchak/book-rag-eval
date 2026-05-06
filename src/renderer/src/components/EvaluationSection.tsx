@@ -2,17 +2,19 @@ import { useEffect, useState } from 'react'
 import type {
   ChunkSetSummary,
   EmbeddingSetSummary,
-  EvalRunResult,
   EvalRunSummary,
   EvalSet,
   EvalSetSummary
 } from '../../../preload/types'
 import AddCaseModal from './AddCaseModal'
+import EvalRunDetailModal from './EvalRunDetailModal'
+import EvalCompareModal from './EvalCompareModal'
 
 interface EvaluationSectionProps {
   bookId: string
   chunkSets: ChunkSetSummary[]
   embeddingSets: EmbeddingSetSummary[]
+  onSelectChunk?: (strategyId: string, chunkId: string) => void
 }
 
 const DEFAULT_K = 5
@@ -20,7 +22,8 @@ const DEFAULT_K = 5
 function EvaluationSection({
   bookId,
   chunkSets,
-  embeddingSets
+  embeddingSets,
+  onSelectChunk
 }: EvaluationSectionProps): React.JSX.Element {
   const [sets, setSets] = useState<EvalSetSummary[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -32,6 +35,8 @@ function EvaluationSection({
   const [running, setRunning] = useState<string | null>(null)
   const [k, setK] = useState(DEFAULT_K)
   const [error, setError] = useState<string | null>(null)
+  const [detailRunId, setDetailRunId] = useState<string | null>(null)
+  const [compareOpen, setCompareOpen] = useState(false)
 
   const fullyEmbedded = embeddingSets.filter((e) => {
     const set = chunkSets.find((s) => s.strategyId === e.strategyId)
@@ -127,9 +132,15 @@ function EvaluationSection({
     }
   }
 
-  function latestRun(setId: string, strategyId: string): EvalRunResult | EvalRunSummary | undefined {
+  function latestRun(setId: string, strategyId: string): EvalRunSummary | undefined {
     return runs.find((r) => r.evalSetId === setId && r.strategyId === strategyId)
   }
+
+  const compareRunIds = activeSet
+    ? fullyEmbedded
+        .map((e) => latestRun(activeSet.id, e.strategyId)?.id)
+        .filter((id): id is string => id !== undefined)
+    : []
 
   return (
     <section style={{ marginTop: 20 }}>
@@ -433,18 +444,60 @@ function EvaluationSection({
                         </button>
                       </div>
                       {last && (
-                        <div style={{ marginTop: 4, color: '#444', fontSize: 11 }}>
-                          R@{last.k}={last.meanRecallAtK.toFixed(2)} · MRR=
-                          {last.meanMRR.toFixed(2)}
-                          <span style={{ color: '#888', marginLeft: 6, fontSize: 10 }}>
-                            {new Date(last.ranAt).toLocaleString()}
-                          </span>
-                        </div>
+                        <>
+                          <div style={{ marginTop: 4, color: '#444', fontSize: 11 }}>
+                            R@{last.k}={last.meanRecallAtK.toFixed(2)} · MRR=
+                            {last.meanMRR.toFixed(2)}
+                            {last.meanCitationPrecision !== undefined && (
+                              <>
+                                {' '}
+                                · CitP={last.meanCitationPrecision.toFixed(2)} · CitR=
+                                {last.meanCitationRecall?.toFixed(2)}
+                              </>
+                            )}
+                          </div>
+                          <div style={{ marginTop: 2, fontSize: 10, color: '#888' }}>
+                            <button
+                              onClick={() => setDetailRunId(last.id)}
+                              style={{
+                                padding: 0,
+                                fontSize: 10,
+                                cursor: 'pointer',
+                                background: 'transparent',
+                                border: 'none',
+                                color: '#2563eb',
+                                textDecoration: 'underline'
+                              }}
+                            >
+                              View details
+                            </button>
+                            <span style={{ marginLeft: 6 }}>
+                              {new Date(last.ranAt).toLocaleString()}
+                            </span>
+                          </div>
+                        </>
                       )}
                     </li>
                   )
                 })}
               </ul>
+              {compareRunIds.length >= 2 && (
+                <button
+                  onClick={() => setCompareOpen(true)}
+                  style={{
+                    width: '100%',
+                    marginTop: 8,
+                    padding: '6px 10px',
+                    fontSize: 11,
+                    cursor: 'pointer',
+                    background: '#fff',
+                    border: '1px solid #d4d4d4',
+                    borderRadius: 4
+                  }}
+                >
+                  Compare {compareRunIds.length} runs
+                </button>
+              )}
             </>
           )}
         </div>
@@ -476,6 +529,25 @@ function EvaluationSection({
             void refreshActiveSet(selectedId)
             void refreshSets()
           }}
+        />
+      )}
+
+      {detailRunId && (
+        <EvalRunDetailModal
+          bookId={bookId}
+          runId={detailRunId}
+          evalSet={activeSet}
+          onClose={() => setDetailRunId(null)}
+          onSelectChunk={onSelectChunk}
+        />
+      )}
+
+      {compareOpen && activeSet && (
+        <EvalCompareModal
+          bookId={bookId}
+          evalSet={activeSet}
+          runIds={compareRunIds}
+          onClose={() => setCompareOpen(false)}
         />
       )}
     </section>

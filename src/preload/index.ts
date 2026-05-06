@@ -12,6 +12,7 @@ import type {
   EvalCaseAddIpcResult,
   EvalCaseRemoveIpcResult,
   EvalLocateIpcResult,
+  EvalRunGetIpcResult,
   EvalRunIpcResult,
   EvalRunsListIpcResult,
   EvalSetCreateIpcResult,
@@ -105,7 +106,9 @@ const api = {
       k: number
     ): Promise<EvalRunIpcResult> => ipcRenderer.invoke('evals:run', bookId, setId, strategyId, k),
     listRuns: (bookId: string): Promise<EvalRunsListIpcResult> =>
-      ipcRenderer.invoke('evals:listRuns', bookId)
+      ipcRenderer.invoke('evals:listRuns', bookId),
+    getRun: (bookId: string, runId: string): Promise<EvalRunGetIpcResult> =>
+      ipcRenderer.invoke('evals:getRun', bookId, runId)
   }
 }
 

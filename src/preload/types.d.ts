@@ -183,6 +183,15 @@ export interface EvalCaseResult {
   recallAtK: number
   mrr: number
   hitRank: number | null
+  // Agentic / citation fields (optional for backward compat with older runs)
+  answer?: string
+  citedRanks?: number[]
+  citedChunkIds?: string[]
+  citationPrecision?: number
+  citationRecall?: number
+  promptTokens?: number
+  completionTokens?: number
+  totalTokens?: number
 }
 
 export interface EvalRunResult {
@@ -194,6 +203,11 @@ export interface EvalRunResult {
   ranAt: number
   meanRecallAtK: number
   meanMRR: number
+  meanCitationPrecision?: number
+  meanCitationRecall?: number
+  totalPromptTokens?: number
+  totalCompletionTokens?: number
+  totalTokens?: number
   cases: EvalCaseResult[]
 }
 
@@ -205,8 +219,12 @@ export interface EvalRunSummary {
   ranAt: number
   meanRecallAtK: number
   meanMRR: number
+  meanCitationPrecision?: number
+  meanCitationRecall?: number
   caseCount: number
 }
+
+export type EvalRunGetIpcResult = { ok: true; data: EvalRunResult } | { ok: false; error: string }
 
 export interface LocateQuoteHit {
   goldSpan: GoldSpan

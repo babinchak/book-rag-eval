@@ -279,6 +279,7 @@ function Reader({ book, onBack }: ReaderProps): React.JSX.Element {
               bookId={book.id}
               chunkSets={chunkSets}
               embeddingSets={embeddingSets}
+              onSelectChunk={selectChunk}
             />
           </div>
         )}

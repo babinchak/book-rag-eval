@@ -20,6 +20,7 @@ import {
   addCase,
   createEvalSet,
   deleteEvalSet,
+  getEvalRun,
   getEvalSet,
   listEvalRuns,
   listEvalSets,
@@ -39,6 +40,7 @@ import type {
   EvalCaseAddIpcResult,
   EvalCaseRemoveIpcResult,
   EvalLocateIpcResult,
+  EvalRunGetIpcResult,
   EvalRunIpcResult,
   EvalRunsListIpcResult,
   EvalSetCreateIpcResult,
@@ -402,6 +404,17 @@ app.whenReady().then(() => {
     async (_, bookId: string): Promise<EvalRunsListIpcResult> => {
       try {
         return { ok: true, runs: await listEvalRuns(bookId) }
+      } catch (err) {
+        return { ok: false, error: (err as Error).message }
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'evals:getRun',
+    async (_, bookId: string, runId: string): Promise<EvalRunGetIpcResult> => {
+      try {
+        return { ok: true, data: await getEvalRun(bookId, runId) }
       } catch (err) {
         return { ok: false, error: (err as Error).message }
       }
