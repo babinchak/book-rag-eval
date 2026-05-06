@@ -9,6 +9,11 @@ import type {
 } from '../../../preload/types'
 import { applyChunkOverlay, clearChunkOverlay } from '../lib/overlay'
 import { DEFAULT_STRATEGIES, strategyIdOf, strategyLabel } from '../../../shared/strategy'
+import AssistantPane from './AssistantPane'
+
+type OverlaySelection =
+  | { kind: 'all'; strategyId: string }
+  | { kind: 'single'; strategyId: string; chunkId: string }
 
 interface ReaderProps {
   book: BookSummary
@@ -26,7 +31,8 @@ function Reader({ book, onBack }: ReaderProps): React.JSX.Element {
   const [runningStrategyId, setRunningStrategyId] = useState<string | null>(null)
   const [embeddingStrategyId, setEmbeddingStrategyId] = useState<string | null>(null)
   const [railOpen, setRailOpen] = useState(true)
-  const [overlayStrategyId, setOverlayStrategyId] = useState<string | null>(null)
+  const [rightRailOpen, setRightRailOpen] = useState(true)
+  const [overlaySelection, setOverlaySelection] = useState<OverlaySelection | null>(null)
   const [overlayApplied, setOverlayApplied] = useState<number | null>(null)
 
   const spineContainerRef = useRef<HTMLDivElement>(null)
@@ -51,14 +57,14 @@ function Reader({ book, onBack }: ReaderProps): React.JSX.Element {
   }, [book.id])
 
   useEffect(() => {
-    if (!overlayStrategyId || !loaded) {
+    if (!overlaySelection || !loaded) {
       clearChunkOverlay()
       setOverlayApplied(null)
       overlayTokenRef.current++
       return
     }
     const token = ++overlayTokenRef.current
-    void window.api.chunks.get(book.id, overlayStrategyId).then((result) => {
+    void window.api.chunks.get(book.id, overlaySelection.strategyId).then((result) => {
       if (token !== overlayTokenRef.current) return
       if (!result.ok) {
         setError(result.error)
@@ -70,10 +76,22 @@ function Reader({ book, onBack }: ReaderProps): React.JSX.Element {
       container
         .querySelectorAll<HTMLElement>('[data-spine-href]')
         .forEach((el) => rootsByHref.set(el.dataset.spineHref ?? '', el))
-      const status = applyChunkOverlay(rootsByHref, result.data.chunks)
+      let chunksToShow = result.data.chunks
+      if (overlaySelection.kind === 'single') {
+        const singleId = overlaySelection.chunkId
+        chunksToShow = chunksToShow.filter((c) => c.id === singleId)
+        if (chunksToShow.length > 0) {
+          const target = chunksToShow[0]
+          const section = container.querySelector<HTMLElement>(
+            `[data-spine-href="${CSS.escape(target.spineHref)}"]`
+          )
+          section?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+      }
+      const status = applyChunkOverlay(rootsByHref, chunksToShow)
       setOverlayApplied(status.applied)
     })
-  }, [overlayStrategyId, loaded, book.id])
+  }, [overlaySelection, loaded, book.id])
 
   useEffect(() => {
     return () => {
@@ -134,12 +152,23 @@ function Reader({ book, onBack }: ReaderProps): React.JSX.Element {
   }
 
   function toggleOverlay(strategyId: string): void {
-    setOverlayStrategyId((prev) => (prev === strategyId ? null : strategyId))
+    setOverlaySelection((prev) => {
+      if (!prev || prev.strategyId !== strategyId) return { kind: 'all', strategyId }
+      if (prev.kind === 'single') return { kind: 'all', strategyId }
+      return null
+    })
+  }
+
+  function selectChunk(strategyId: string, chunkId: string): void {
+    setOverlaySelection({ kind: 'single', strategyId, chunkId })
   }
 
   const spineCount = loaded?.manifest.readingOrder?.length ?? 0
   const existingStrategyIds = new Set(chunkSets.map((s) => s.strategyId))
   const embeddingByStrategy = new Map(embeddingSets.map((e) => [e.strategyId, e]))
+  const overlayStrategyId = overlaySelection?.strategyId ?? null
+  const highlightedChunkId =
+    overlaySelection?.kind === 'single' ? overlaySelection.chunkId : null
 
   return (
     <div style={{ display: 'flex', height: '100vh', color: '#222' }}>
@@ -275,6 +304,64 @@ function Reader({ book, onBack }: ReaderProps): React.JSX.Element {
 
         {loaded && <SpineRenderer items={loaded.spineItems} containerRef={spineContainerRef} />}
       </main>
+
+      <aside
+        style={{
+          width: rightRailOpen ? RAIL_EXPANDED_WIDTH : RAIL_COLLAPSED_WIDTH,
+          flexShrink: 0,
+          background: '#f7f7f8',
+          borderLeft: '1px solid #e5e5e5',
+          display: 'flex',
+          flexDirection: 'column',
+          transition: 'width 120ms ease',
+          overflow: 'hidden'
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: rightRailOpen ? 'space-between' : 'center',
+            padding: '8px 12px 8px 8px',
+            borderBottom: '1px solid #e5e5e5',
+            minHeight: 40
+          }}
+        >
+          <button
+            onClick={() => setRightRailOpen((v) => !v)}
+            title={rightRailOpen ? 'Collapse' : 'Expand'}
+            style={{
+              width: 24,
+              height: 24,
+              padding: 0,
+              border: 'none',
+              background: 'transparent',
+              cursor: 'pointer',
+              fontSize: 14,
+              color: '#666'
+            }}
+          >
+            {rightRailOpen ? '⟩' : '⟨'}
+          </button>
+          {rightRailOpen && (
+            <span style={{ fontSize: 11, fontWeight: 600, color: '#666', letterSpacing: 0.5 }}>
+              ASSISTANT
+            </span>
+          )}
+        </div>
+
+        {rightRailOpen && (
+          <div style={{ flex: 1, minHeight: 0 }}>
+            <AssistantPane
+              bookId={book.id}
+              chunkSets={chunkSets}
+              embeddingSets={embeddingSets}
+              onSelectChunk={selectChunk}
+              highlightedChunkId={highlightedChunkId}
+            />
+          </div>
+        )}
+      </aside>
     </div>
   )
 }

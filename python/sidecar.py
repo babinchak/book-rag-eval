@@ -100,6 +100,30 @@ def main() -> int:
                     "model": model,
                 }
                 _send_response(req_id, result)
+            elif method == "chat":
+                messages = params.get("messages")
+                if not isinstance(messages, list) or not messages:
+                    raise ValueError("params.messages must be a non-empty list")
+                for msg in messages:
+                    if isinstance(msg.get("content"), str):
+                        msg["content"] = _sanitize_text(msg["content"])
+                model = params.get("model") or "gpt-4o-mini"
+                temperature = params.get("temperature", 0.2)
+                response = client.chat.completions.create(
+                    model=model,
+                    messages=messages,
+                    temperature=temperature,
+                )
+                result = {
+                    "content": response.choices[0].message.content or "",
+                    "tokens": {
+                        "prompt": response.usage.prompt_tokens,
+                        "completion": response.usage.completion_tokens,
+                        "total": response.usage.total_tokens,
+                    },
+                    "model": model,
+                }
+                _send_response(req_id, result)
             else:
                 raise ValueError(f"unknown method: {method!r}")
         except Exception as e:

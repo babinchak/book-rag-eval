@@ -119,3 +119,20 @@ export type EmbeddingsRemoveIpcResult = { ok: true } | { ok: false; error: strin
 export type SettingsHasKeyResult = { ok: true; hasKey: boolean } | { ok: false; error: string }
 export type SettingsSetKeyResult = { ok: true } | { ok: false; error: string }
 export type SettingsClearKeyResult = { ok: true } | { ok: false; error: string }
+
+export interface RetrievedChunkPayload {
+  chunk: Chunk
+  distance: number
+  rank: number
+}
+
+export interface AskResultPayload {
+  answer: string
+  retrieved: RetrievedChunkPayload[]
+  promptTokens: number
+  completionTokens: number
+  totalTokens: number
+  model: string
+}
+
+export type AskIpcResult = { ok: true; data: AskResultPayload } | { ok: false; error: string }

@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 import type {
+  AskIpcResult,
   ChunkParams,
   ChunksGetResult,
   ChunksListResult,
@@ -45,6 +46,10 @@ const api = {
       ipcRenderer.invoke('settings:setOpenaiKey', key),
     clearOpenaiKey: (): Promise<SettingsClearKeyResult> =>
       ipcRenderer.invoke('settings:clearOpenaiKey')
+  },
+  ask: {
+    run: (bookId: string, strategyId: string, query: string, k: number): Promise<AskIpcResult> =>
+      ipcRenderer.invoke('ask:run', bookId, strategyId, query, k)
   }
 }
 

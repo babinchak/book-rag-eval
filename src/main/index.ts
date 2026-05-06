@@ -5,8 +5,10 @@ import icon from '../../resources/icon.png?asset'
 import { importEpubFromDialog, listLibrary, openBook, removeBook } from './library'
 import { getChunkSet, listChunkSets, runChunking } from './chunking'
 import { listEmbeddingSets, removeEmbeddings, runEmbedding } from './embeddings'
+import { ask } from './retrieval'
 import { clearOpenaiKey, hasOpenaiKey, setOpenaiKey } from './settings'
 import type {
+  AskIpcResult,
   ChunkParams,
   ChunksGetResult,
   ChunksListResult,
@@ -184,6 +186,23 @@ app.whenReady().then(() => {
       return { ok: false, error: (err as Error).message }
     }
   })
+
+  ipcMain.handle(
+    'ask:run',
+    async (
+      _,
+      bookId: string,
+      strategyId: string,
+      query: string,
+      k: number
+    ): Promise<AskIpcResult> => {
+      try {
+        return { ok: true, data: await ask(bookId, strategyId, query, k) }
+      } catch (err) {
+        return { ok: false, error: (err as Error).message }
+      }
+    }
+  )
 
   createWindow()
 

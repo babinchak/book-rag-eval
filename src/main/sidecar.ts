@@ -20,6 +20,17 @@ export interface EmbedResult {
   model: string
 }
 
+export interface ChatMessage {
+  role: 'system' | 'user' | 'assistant'
+  content: string
+}
+
+export interface ChatResult {
+  content: string
+  tokens: { prompt: number; completion: number; total: number }
+  model: string
+}
+
 class Sidecar {
   private proc: ChildProcess | null = null
   private pending = new Map<string, PendingRequest>()
@@ -160,6 +171,10 @@ class Sidecar {
 
   async embed(texts: string[], model = 'text-embedding-3-large'): Promise<EmbedResult> {
     return this.call<EmbedResult>('embed', { texts, model })
+  }
+
+  async chat(messages: ChatMessage[], model = 'gpt-4o-mini'): Promise<ChatResult> {
+    return this.call<ChatResult>('chat', { messages, model })
   }
 }
 
