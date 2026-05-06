@@ -13,7 +13,7 @@ function App(): React.JSX.Element {
       {view.kind === 'library' ? (
         <Library onOpen={(book) => setView({ kind: 'reader', book })} />
       ) : (
-        <Reader book={view.book} onBack={() => setView({ kind: 'library' })} />
+        <Reader key={view.book.id} book={view.book} onBack={() => setView({ kind: 'library' })} />
       )}
     </div>
   )

@@ -1,5 +1,11 @@
-import { useEffect, useState } from 'react'
-import type { BookSummary, ChunkSetSummary, LoadedEpub } from '../../../preload/types'
+import { memo, useEffect, useRef, useState } from 'react'
+import type {
+  BookSummary,
+  ChunkSetSummary,
+  LoadedEpub,
+  SpineItem
+} from '../../../preload/types'
+import { applyChunkOverlay, clearChunkOverlay } from '../lib/overlay'
 
 interface ReaderProps {
   book: BookSummary
@@ -16,23 +22,59 @@ function Reader({ book, onBack }: ReaderProps): React.JSX.Element {
   const [chunkSets, setChunkSets] = useState<ChunkSetSummary[]>([])
   const [running, setRunning] = useState(false)
   const [railOpen, setRailOpen] = useState(true)
+  const [overlayStrategyId, setOverlayStrategyId] = useState<string | null>(null)
+  const [overlayApplied, setOverlayApplied] = useState<number | null>(null)
+
+  const spineContainerRef = useRef<HTMLDivElement>(null)
+  const overlayTokenRef = useRef(0)
 
   useEffect(() => {
     let cancelled = false
-    setLoaded(null)
-    setError(null)
-    setChunkSets([])
     void window.api.library.open(book.id).then((result) => {
       if (cancelled) return
       if (result.ok) setLoaded(result.data)
       else setError(result.error)
     })
-    void refreshChunkSets()
     return () => {
       cancelled = true
     }
+  }, [book.id])
+
+  useEffect(() => {
+    void refreshChunkSets()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [book.id])
+
+  useEffect(() => {
+    if (!overlayStrategyId || !loaded) {
+      clearChunkOverlay()
+      setOverlayApplied(null)
+      overlayTokenRef.current++
+      return
+    }
+    const token = ++overlayTokenRef.current
+    void window.api.chunks.get(book.id, overlayStrategyId).then((result) => {
+      if (token !== overlayTokenRef.current) return
+      if (!result.ok) {
+        setError(result.error)
+        return
+      }
+      const container = spineContainerRef.current
+      if (!container) return
+      const rootsByHref = new Map<string, Element>()
+      container
+        .querySelectorAll<HTMLElement>('[data-spine-href]')
+        .forEach((el) => rootsByHref.set(el.dataset.spineHref ?? '', el))
+      const status = applyChunkOverlay(rootsByHref, result.data.chunks)
+      setOverlayApplied(status.applied)
+    })
+  }, [overlayStrategyId, loaded, book.id])
+
+  useEffect(() => {
+    return () => {
+      clearChunkOverlay()
+    }
+  }, [])
 
   async function refreshChunkSets(): Promise<void> {
     const result = await window.api.chunks.list(book.id)
@@ -55,7 +97,10 @@ function Reader({ book, onBack }: ReaderProps): React.JSX.Element {
     }
   }
 
-  const concatenatedHtml = loaded?.spineItems.map((s) => s.html).join('\n<hr />\n') ?? ''
+  function toggleOverlay(strategyId: string): void {
+    setOverlayStrategyId((prev) => (prev === strategyId ? null : strategyId))
+  }
+
   const spineCount = loaded?.manifest.readingOrder?.length ?? 0
   const hasFixedDefault = chunkSets.some(
     (s) =>
@@ -117,6 +162,9 @@ function Reader({ book, onBack }: ReaderProps): React.JSX.Element {
               running={running}
               hasFixedDefault={hasFixedDefault}
               onRun={handleRunFixed}
+              overlayStrategyId={overlayStrategyId}
+              overlayApplied={overlayApplied}
+              onToggleOverlay={toggleOverlay}
             />
           </div>
         )}
@@ -188,34 +236,60 @@ function Reader({ book, onBack }: ReaderProps): React.JSX.Element {
           </pre>
         )}
 
-        {loaded && (
-          <div
-            style={{
-              flex: 1,
-              padding: 24,
-              overflowY: 'auto',
-              lineHeight: 1.6
-            }}
-            dangerouslySetInnerHTML={{ __html: concatenatedHtml }}
-          />
-        )}
+        {loaded && <SpineRenderer items={loaded.spineItems} containerRef={spineContainerRef} />}
       </main>
     </div>
   )
 }
+
+interface SpineRendererProps {
+  items: SpineItem[]
+  containerRef: React.RefObject<HTMLDivElement | null>
+}
+
+const SpineRenderer = memo(function SpineRenderer({
+  items,
+  containerRef
+}: SpineRendererProps): React.JSX.Element {
+  return (
+    <div
+      ref={containerRef}
+      style={{
+        flex: 1,
+        padding: 24,
+        overflowY: 'auto',
+        lineHeight: 1.6
+      }}
+    >
+      {items.map((item, i) => (
+        <section
+          key={`${item.href}-${i}`}
+          data-spine-href={item.href}
+          dangerouslySetInnerHTML={{ __html: item.html }}
+        />
+      ))}
+    </div>
+  )
+})
 
 interface ChunkingSectionProps {
   chunkSets: ChunkSetSummary[]
   running: boolean
   hasFixedDefault: boolean
   onRun: () => void
+  overlayStrategyId: string | null
+  overlayApplied: number | null
+  onToggleOverlay: (strategyId: string) => void
 }
 
 function ChunkingSection({
   chunkSets,
   running,
   hasFixedDefault,
-  onRun
+  onRun,
+  overlayStrategyId,
+  overlayApplied,
+  onToggleOverlay
 }: ChunkingSectionProps): React.JSX.Element {
   return (
     <section>
@@ -259,26 +333,67 @@ function ChunkingSection({
             : `${chunkSets.length} chunk set${chunkSets.length === 1 ? '' : 's'}`}
         </div>
         <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'grid', gap: 6 }}>
-          {chunkSets.map((s) => (
-            <li
-              key={s.strategyId}
-              title={new Date(s.generatedAt).toLocaleString()}
-              style={{
-                fontSize: 12,
-                background: '#fff',
-                border: '1px solid #e5e5e5',
-                borderRadius: 4,
-                padding: '6px 8px'
-              }}
-            >
-              <div style={{ fontFamily: 'monospace', fontSize: 11, color: '#444' }}>
-                {s.strategyId}
-              </div>
-              <div style={{ color: '#888', fontSize: 11, marginTop: 2 }}>
-                {s.count} chunk{s.count === 1 ? '' : 's'}
-              </div>
-            </li>
-          ))}
+          {chunkSets.map((s) => {
+            const active = overlayStrategyId === s.strategyId
+            return (
+              <li
+                key={s.strategyId}
+                style={{
+                  background: active ? '#fff8d8' : '#fff',
+                  border: active ? '1px solid #d4b94d' : '1px solid #e5e5e5',
+                  borderRadius: 4,
+                  padding: '6px 8px'
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 6
+                  }}
+                >
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div
+                      style={{
+                        fontFamily: 'monospace',
+                        fontSize: 11,
+                        color: '#444',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis'
+                      }}
+                      title={new Date(s.generatedAt).toLocaleString()}
+                    >
+                      {s.strategyId}
+                    </div>
+                    <div style={{ color: '#888', fontSize: 11, marginTop: 2 }}>
+                      {s.count} chunk{s.count === 1 ? '' : 's'}
+                      {active && overlayApplied !== null && overlayApplied !== s.count && (
+                        <span style={{ color: '#b06400' }}> · {overlayApplied} shown</span>
+                      )}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => onToggleOverlay(s.strategyId)}
+                    title={active ? 'Hide overlay' : 'Show overlay'}
+                    style={{
+                      flexShrink: 0,
+                      padding: '4px 8px',
+                      fontSize: 11,
+                      cursor: 'pointer',
+                      background: active ? '#d4b94d' : '#fff',
+                      color: active ? '#fff' : '#444',
+                      border: '1px solid ' + (active ? '#d4b94d' : '#ccc'),
+                      borderRadius: 3
+                    }}
+                  >
+                    {active ? 'On' : 'Off'}
+                  </button>
+                </div>
+              </li>
+            )
+          })}
         </ul>
       </div>
     </section>
