@@ -24,9 +24,9 @@ body {
 }
 
 ::highlight(chunk-a) {
-  background-color: rgba(255, 220, 100, 0.4);
+  background-color: rgba(250, 204, 21, 0.55);
 }
 
 ::highlight(chunk-b) {
-  background-color: rgba(140, 200, 255, 0.45);
+  background-color: rgba(248, 113, 113, 0.5);
 }
