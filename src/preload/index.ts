@@ -1,9 +1,19 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
-import type { LoadEpubResult } from './types'
+import type {
+  LibraryImportResult,
+  LibraryListResult,
+  LibraryOpenResult,
+  LibraryRemoveResult
+} from './types'
 
 const api = {
-  loadEpub: (): Promise<LoadEpubResult> => ipcRenderer.invoke('epub:load')
+  library: {
+    list: (): Promise<LibraryListResult> => ipcRenderer.invoke('library:list'),
+    import: (): Promise<LibraryImportResult> => ipcRenderer.invoke('library:import'),
+    open: (id: string): Promise<LibraryOpenResult> => ipcRenderer.invoke('library:open', id),
+    remove: (id: string): Promise<LibraryRemoveResult> => ipcRenderer.invoke('library:remove', id)
+  }
 }
 
 if (process.contextIsolated) {

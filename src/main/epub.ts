@@ -1,11 +1,10 @@
 import { spawn } from 'node:child_process'
-import { dialog } from 'electron'
 import AdmZip from 'adm-zip'
-import type { LoadedEpub, ReadiumManifest, SpineItem } from '../preload/types'
+import type { ReadiumManifest, SpineItem } from '../preload/types'
 
 const READIUM_BIN = process.env.READIUM_BIN || 'readium'
 
-function runReadiumManifest(epubPath: string): Promise<ReadiumManifest> {
+export function runReadiumManifest(epubPath: string): Promise<ReadiumManifest> {
   return new Promise((resolve, reject) => {
     const child = spawn(READIUM_BIN, ['manifest', epubPath], { windowsHide: true })
     let stdout = ''
@@ -101,7 +100,7 @@ function inlineXhtml(
     )
 }
 
-function extractSpineHtml(epubPath: string, manifest: ReadiumManifest): SpineItem[] {
+export function extractSpineHtml(epubPath: string, manifest: ReadiumManifest): SpineItem[] {
   const readingOrder = manifest.readingOrder ?? []
   if (readingOrder.length === 0) return []
 
@@ -117,17 +116,4 @@ function extractSpineHtml(epubPath: string, manifest: ReadiumManifest): SpineIte
     const html = entry ? inlineXhtml(rawHtml, candidate, byPath) : rawHtml
     return { href, html }
   })
-}
-
-export async function pickAndLoadEpub(): Promise<LoadedEpub | null> {
-  const result = await dialog.showOpenDialog({
-    title: 'Select EPUB',
-    properties: ['openFile'],
-    filters: [{ name: 'EPUB', extensions: ['epub'] }]
-  })
-  if (result.canceled || result.filePaths.length === 0) return null
-  const path = result.filePaths[0]
-  const manifest = await runReadiumManifest(path)
-  const spineItems = extractSpineHtml(path, manifest)
-  return { path, manifest, spineItems }
 }

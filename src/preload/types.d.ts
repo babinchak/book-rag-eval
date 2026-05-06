@@ -24,11 +24,33 @@ export interface SpineItem {
 }
 
 export interface LoadedEpub {
-  path: string
+  id: string
   manifest: ReadiumManifest
   spineItems: SpineItem[]
 }
 
-export type LoadEpubResult =
-  | { ok: true; data: LoadedEpub | null }
+export interface BookSummary {
+  id: string
+  title: string
+  author: string | null
+  addedAt: number
+  sizeBytes: number
+  coverDataUrl: string | null
+}
+
+export interface ImportOutcome {
+  summary: BookSummary
+  alreadyExisted: boolean
+}
+
+export type LibraryListResult =
+  | { ok: true; books: BookSummary[] }
   | { ok: false; error: string }
+
+export type LibraryImportResult =
+  | { ok: true; data: ImportOutcome | null }
+  | { ok: false; error: string }
+
+export type LibraryOpenResult = { ok: true; data: LoadedEpub } | { ok: false; error: string }
+
+export type LibraryRemoveResult = { ok: true } | { ok: false; error: string }
