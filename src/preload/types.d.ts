@@ -91,3 +91,31 @@ export type ChunksListResult =
   | { ok: false; error: string }
 
 export type ChunksGetResult = { ok: true; data: ChunkSet } | { ok: false; error: string }
+
+export interface EmbeddingSetSummary {
+  strategyId: string
+  count: number
+  model: string
+  updatedAt: number
+}
+
+export interface EmbedRunResult {
+  embedded: number
+  skipped: number
+  totalTokens: number
+  model: string
+}
+
+export type EmbedRunIpcResult =
+  | { ok: true; data: EmbedRunResult }
+  | { ok: false; error: string }
+
+export type EmbeddingsListIpcResult =
+  | { ok: true; sets: EmbeddingSetSummary[] }
+  | { ok: false; error: string }
+
+export type EmbeddingsRemoveIpcResult = { ok: true } | { ok: false; error: string }
+
+export type SettingsHasKeyResult = { ok: true; hasKey: boolean } | { ok: false; error: string }
+export type SettingsSetKeyResult = { ok: true } | { ok: false; error: string }
+export type SettingsClearKeyResult = { ok: true } | { ok: false; error: string }

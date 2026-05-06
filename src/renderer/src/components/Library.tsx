@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { BookSummary } from '../../../preload/types'
+import SettingsModal from './SettingsModal'
 
 interface LibraryProps {
   onOpen: (book: BookSummary) => void
@@ -9,6 +10,7 @@ function Library({ onOpen }: LibraryProps): React.JSX.Element {
   const [books, setBooks] = useState<BookSummary[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [importing, setImporting] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   async function refresh(): Promise<void> {
     const result = await window.api.library.list()
@@ -55,7 +57,23 @@ function Library({ onOpen }: LibraryProps): React.JSX.Element {
         <span style={{ color: '#888', fontSize: 13 }}>
           {books ? `${books.length} ${books.length === 1 ? 'book' : 'books'}` : 'loading…'}
         </span>
+        <button
+          onClick={() => setSettingsOpen(true)}
+          title="Settings"
+          style={{
+            marginLeft: 'auto',
+            padding: '6px 12px',
+            fontSize: 13,
+            cursor: 'pointer',
+            background: '#fff',
+            border: '1px solid #ccc',
+            borderRadius: 4
+          }}
+        >
+          ⚙ Settings
+        </button>
       </header>
+      <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
 
       {error && (
         <pre

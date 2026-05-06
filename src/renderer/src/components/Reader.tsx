@@ -3,6 +3,7 @@ import type {
   BookSummary,
   ChunkParams,
   ChunkSetSummary,
+  EmbeddingSetSummary,
   LoadedEpub,
   SpineItem
 } from '../../../preload/types'
@@ -21,7 +22,9 @@ function Reader({ book, onBack }: ReaderProps): React.JSX.Element {
   const [loaded, setLoaded] = useState<LoadedEpub | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [chunkSets, setChunkSets] = useState<ChunkSetSummary[]>([])
+  const [embeddingSets, setEmbeddingSets] = useState<EmbeddingSetSummary[]>([])
   const [runningStrategyId, setRunningStrategyId] = useState<string | null>(null)
+  const [embeddingStrategyId, setEmbeddingStrategyId] = useState<string | null>(null)
   const [railOpen, setRailOpen] = useState(true)
   const [overlayStrategyId, setOverlayStrategyId] = useState<string | null>(null)
   const [overlayApplied, setOverlayApplied] = useState<number | null>(null)
@@ -43,6 +46,7 @@ function Reader({ book, onBack }: ReaderProps): React.JSX.Element {
 
   useEffect(() => {
     void refreshChunkSets()
+    void refreshEmbeddingSets()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [book.id])
 
@@ -83,6 +87,36 @@ function Reader({ book, onBack }: ReaderProps): React.JSX.Element {
     else setError(result.error)
   }
 
+  async function refreshEmbeddingSets(): Promise<void> {
+    const result = await window.api.embeddings.list(book.id)
+    if (result.ok) setEmbeddingSets(result.sets)
+    else setError(result.error)
+  }
+
+  async function handleEmbed(strategyId: string): Promise<void> {
+    setEmbeddingStrategyId(strategyId)
+    setError(null)
+    try {
+      const result = await window.api.embeddings.run(book.id, strategyId)
+      if (!result.ok) {
+        setError(result.error)
+        return
+      }
+      await refreshEmbeddingSets()
+    } finally {
+      setEmbeddingStrategyId(null)
+    }
+  }
+
+  async function handleClearEmbeddings(strategyId: string): Promise<void> {
+    const result = await window.api.embeddings.remove(book.id, strategyId)
+    if (!result.ok) {
+      setError(result.error)
+      return
+    }
+    await refreshEmbeddingSets()
+  }
+
   async function handleRun(params: ChunkParams): Promise<void> {
     const sid = strategyIdOf(params)
     setRunningStrategyId(sid)
@@ -105,6 +139,7 @@ function Reader({ book, onBack }: ReaderProps): React.JSX.Element {
 
   const spineCount = loaded?.manifest.readingOrder?.length ?? 0
   const existingStrategyIds = new Set(chunkSets.map((s) => s.strategyId))
+  const embeddingByStrategy = new Map(embeddingSets.map((e) => [e.strategyId, e]))
 
   return (
     <div style={{ display: 'flex', height: '100vh', color: '#222' }}>
@@ -157,9 +192,13 @@ function Reader({ book, onBack }: ReaderProps): React.JSX.Element {
           <div style={{ overflowY: 'auto', padding: 12 }}>
             <ChunkingSection
               chunkSets={chunkSets}
+              embeddingByStrategy={embeddingByStrategy}
               runningStrategyId={runningStrategyId}
+              embeddingStrategyId={embeddingStrategyId}
               existingStrategyIds={existingStrategyIds}
               onRun={handleRun}
+              onEmbed={handleEmbed}
+              onClearEmbeddings={handleClearEmbeddings}
               overlayStrategyId={overlayStrategyId}
               overlayApplied={overlayApplied}
               onToggleOverlay={toggleOverlay}
@@ -272,9 +311,13 @@ const SpineRenderer = memo(function SpineRenderer({
 
 interface ChunkingSectionProps {
   chunkSets: ChunkSetSummary[]
+  embeddingByStrategy: Map<string, EmbeddingSetSummary>
   runningStrategyId: string | null
+  embeddingStrategyId: string | null
   existingStrategyIds: Set<string>
   onRun: (params: ChunkParams) => void
+  onEmbed: (strategyId: string) => void
+  onClearEmbeddings: (strategyId: string) => void
   overlayStrategyId: string | null
   overlayApplied: number | null
   onToggleOverlay: (strategyId: string) => void
@@ -282,9 +325,13 @@ interface ChunkingSectionProps {
 
 function ChunkingSection({
   chunkSets,
+  embeddingByStrategy,
   runningStrategyId,
+  embeddingStrategyId,
   existingStrategyIds,
   onRun,
+  onEmbed,
+  onClearEmbeddings,
   overlayStrategyId,
   overlayApplied,
   onToggleOverlay
@@ -416,12 +463,107 @@ function ChunkingSection({
                     {active ? 'On' : 'Off'}
                   </button>
                 </div>
+                <EmbeddingRow
+                  chunkCount={s.count}
+                  embedding={embeddingByStrategy.get(s.strategyId)}
+                  isEmbedding={embeddingStrategyId === s.strategyId}
+                  anyEmbedding={embeddingStrategyId !== null}
+                  onEmbed={() => onEmbed(s.strategyId)}
+                  onClear={() => onClearEmbeddings(s.strategyId)}
+                />
               </li>
             )
           })}
         </ul>
       </div>
     </section>
+  )
+}
+
+interface EmbeddingRowProps {
+  chunkCount: number
+  embedding: EmbeddingSetSummary | undefined
+  isEmbedding: boolean
+  anyEmbedding: boolean
+  onEmbed: () => void
+  onClear: () => void
+}
+
+function EmbeddingRow({
+  chunkCount,
+  embedding,
+  isEmbedding,
+  anyEmbedding,
+  onEmbed,
+  onClear
+}: EmbeddingRowProps): React.JSX.Element {
+  const fullyEmbedded = embedding !== undefined && embedding.count === chunkCount
+  const partiallyEmbedded =
+    embedding !== undefined && embedding.count > 0 && embedding.count < chunkCount
+
+  return (
+    <div
+      style={{
+        marginTop: 6,
+        paddingTop: 6,
+        borderTop: '1px solid #f0f0f0',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 6
+      }}
+    >
+      <div style={{ fontSize: 10, color: '#888', minWidth: 0, flex: 1 }}>
+        {isEmbedding ? (
+          <span style={{ color: '#2563eb' }}>Embedding…</span>
+        ) : fullyEmbedded ? (
+          <span style={{ color: '#10b981' }}>
+            ✓ {embedding.count}/{chunkCount} embedded
+          </span>
+        ) : partiallyEmbedded ? (
+          <span style={{ color: '#b06400' }}>
+            {embedding!.count}/{chunkCount} embedded
+          </span>
+        ) : (
+          <span>Not embedded</span>
+        )}
+      </div>
+      <button
+        onClick={onEmbed}
+        disabled={anyEmbedding}
+        title={fullyEmbedded ? 'Re-run embedding' : 'Generate embeddings'}
+        style={{
+          flexShrink: 0,
+          padding: '3px 7px',
+          fontSize: 10,
+          cursor: anyEmbedding ? 'wait' : 'pointer',
+          background: '#fff',
+          border: '1px solid #ccc',
+          borderRadius: 3
+        }}
+      >
+        {isEmbedding ? '…' : fullyEmbedded ? 'Re-embed' : 'Embed'}
+      </button>
+      {embedding && !isEmbedding && (
+        <button
+          onClick={onClear}
+          disabled={anyEmbedding}
+          title="Delete embeddings"
+          style={{
+            flexShrink: 0,
+            padding: '3px 7px',
+            fontSize: 10,
+            cursor: anyEmbedding ? 'wait' : 'pointer',
+            background: '#fff',
+            color: '#b91c1c',
+            border: '1px solid #fca5a5',
+            borderRadius: 3
+          }}
+        >
+          ×
+        </button>
+      )}
+    </div>
   )
 }
 

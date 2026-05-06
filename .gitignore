@@ -4,3 +4,8 @@ out
 .DS_Store
 .eslintcache
 *.log*
+
+# Python sidecar
+python/.venv/
+python/__pycache__/
+python/*.pyc

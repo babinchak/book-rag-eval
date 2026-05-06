@@ -4,15 +4,23 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { importEpubFromDialog, listLibrary, openBook, removeBook } from './library'
 import { getChunkSet, listChunkSets, runChunking } from './chunking'
+import { listEmbeddingSets, removeEmbeddings, runEmbedding } from './embeddings'
+import { clearOpenaiKey, hasOpenaiKey, setOpenaiKey } from './settings'
 import type {
   ChunkParams,
   ChunksGetResult,
   ChunksListResult,
   ChunksRunResult,
+  EmbedRunIpcResult,
+  EmbeddingsListIpcResult,
+  EmbeddingsRemoveIpcResult,
   LibraryImportResult,
   LibraryListResult,
   LibraryOpenResult,
-  LibraryRemoveResult
+  LibraryRemoveResult,
+  SettingsClearKeyResult,
+  SettingsHasKeyResult,
+  SettingsSetKeyResult
 } from '../preload/types'
 
 function createWindow(): void {
@@ -113,6 +121,69 @@ app.whenReady().then(() => {
       }
     }
   )
+
+  ipcMain.handle(
+    'embeddings:run',
+    async (_, bookId: string, strategyId: string): Promise<EmbedRunIpcResult> => {
+      try {
+        return { ok: true, data: await runEmbedding(bookId, strategyId) }
+      } catch (err) {
+        return { ok: false, error: (err as Error).message }
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'embeddings:list',
+    async (_, bookId: string): Promise<EmbeddingsListIpcResult> => {
+      try {
+        return { ok: true, sets: await listEmbeddingSets(bookId) }
+      } catch (err) {
+        return { ok: false, error: (err as Error).message }
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'embeddings:remove',
+    async (_, bookId: string, strategyId: string): Promise<EmbeddingsRemoveIpcResult> => {
+      try {
+        await removeEmbeddings(bookId, strategyId)
+        return { ok: true }
+      } catch (err) {
+        return { ok: false, error: (err as Error).message }
+      }
+    }
+  )
+
+  ipcMain.handle('settings:hasOpenaiKey', async (): Promise<SettingsHasKeyResult> => {
+    try {
+      return { ok: true, hasKey: await hasOpenaiKey() }
+    } catch (err) {
+      return { ok: false, error: (err as Error).message }
+    }
+  })
+
+  ipcMain.handle(
+    'settings:setOpenaiKey',
+    async (_, key: string): Promise<SettingsSetKeyResult> => {
+      try {
+        await setOpenaiKey(key)
+        return { ok: true }
+      } catch (err) {
+        return { ok: false, error: (err as Error).message }
+      }
+    }
+  )
+
+  ipcMain.handle('settings:clearOpenaiKey', async (): Promise<SettingsClearKeyResult> => {
+    try {
+      await clearOpenaiKey()
+      return { ok: true }
+    } catch (err) {
+      return { ok: false, error: (err as Error).message }
+    }
+  })
 
   createWindow()
 

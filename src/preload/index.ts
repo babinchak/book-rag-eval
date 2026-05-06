@@ -5,10 +5,16 @@ import type {
   ChunksGetResult,
   ChunksListResult,
   ChunksRunResult,
+  EmbedRunIpcResult,
+  EmbeddingsListIpcResult,
+  EmbeddingsRemoveIpcResult,
   LibraryImportResult,
   LibraryListResult,
   LibraryOpenResult,
-  LibraryRemoveResult
+  LibraryRemoveResult,
+  SettingsClearKeyResult,
+  SettingsHasKeyResult,
+  SettingsSetKeyResult
 } from './types'
 
 const api = {
@@ -24,6 +30,21 @@ const api = {
     list: (bookId: string): Promise<ChunksListResult> => ipcRenderer.invoke('chunks:list', bookId),
     get: (bookId: string, strategyId: string): Promise<ChunksGetResult> =>
       ipcRenderer.invoke('chunks:get', bookId, strategyId)
+  },
+  embeddings: {
+    run: (bookId: string, strategyId: string): Promise<EmbedRunIpcResult> =>
+      ipcRenderer.invoke('embeddings:run', bookId, strategyId),
+    list: (bookId: string): Promise<EmbeddingsListIpcResult> =>
+      ipcRenderer.invoke('embeddings:list', bookId),
+    remove: (bookId: string, strategyId: string): Promise<EmbeddingsRemoveIpcResult> =>
+      ipcRenderer.invoke('embeddings:remove', bookId, strategyId)
+  },
+  settings: {
+    hasOpenaiKey: (): Promise<SettingsHasKeyResult> => ipcRenderer.invoke('settings:hasOpenaiKey'),
+    setOpenaiKey: (key: string): Promise<SettingsSetKeyResult> =>
+      ipcRenderer.invoke('settings:setOpenaiKey', key),
+    clearOpenaiKey: (): Promise<SettingsClearKeyResult> =>
+      ipcRenderer.invoke('settings:clearOpenaiKey')
   }
 }
 
