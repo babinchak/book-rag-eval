@@ -30,3 +30,8 @@ body {
 ::highlight(chunk-b) {
   background-color: rgba(248, 113, 113, 0.5);
 }
+
+::highlight(chunk-selected) {
+  background-color: rgba(34, 197, 94, 0.75);
+  color: #052e16;
+}

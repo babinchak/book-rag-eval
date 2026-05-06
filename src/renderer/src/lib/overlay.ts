@@ -10,7 +10,7 @@ interface OffsetIndex {
   positions: Position[]
 }
 
-const HIGHLIGHT_NAMES = ['chunk-a', 'chunk-b'] as const
+const HIGHLIGHT_NAMES = ['chunk-a', 'chunk-b', 'chunk-selected'] as const
 
 function isWhitespace(c: string): boolean {
   return c === ' ' || c === '\t' || c === '\n' || c === '\r' || c === '\f' || c === '\v'
@@ -83,6 +83,14 @@ function rangeForOffsets(idx: OffsetIndex, start: number, end: number): Range | 
   return range
 }
 
+export function buildRangeForChunk(
+  root: Element,
+  textStart: number,
+  textEnd: number
+): Range | null {
+  return rangeForOffsets(buildOffsetIndex(root), textStart, textEnd)
+}
+
 interface HighlightsHost {
   highlights?: Map<string, Highlight>
 }
@@ -94,7 +102,8 @@ function highlightsHost(): Map<string, Highlight> | null {
 
 export function applyChunkOverlay(
   rootsByHref: Map<string, Element>,
-  chunks: Chunk[]
+  chunks: Chunk[],
+  selectedChunks: Chunk[] = []
 ): { applied: number; missingSpines: string[] } {
   clearChunkOverlay()
   const host = highlightsHost()
@@ -110,7 +119,8 @@ export function applyChunkOverlay(
     else byHref.set(chunk.spineHref, [chunk])
   }
 
-  const ranges: Range[][] = HIGHLIGHT_NAMES.map(() => [])
+  const altRanges: Range[][] = [[], []] // chunk-a, chunk-b
+  const selectedRanges: Range[] = []
   const indexCache = new Map<string, OffsetIndex>()
   const missingSpines: string[] = []
   let applied = 0
@@ -131,15 +141,38 @@ export function applyChunkOverlay(
       const chunk = hrefChunks[i]
       const range = rangeForOffsets(idx, chunk.textStart, chunk.textEnd)
       if (range) {
-        ranges[i % HIGHLIGHT_NAMES.length].push(range)
+        altRanges[i % 2].push(range)
         applied++
       }
     }
   }
 
-  for (let i = 0; i < HIGHLIGHT_NAMES.length; i++) {
-    if (ranges[i].length === 0) continue
-    host.set(HIGHLIGHT_NAMES[i], new Highlight(...ranges[i]))
+  for (const sel of selectedChunks) {
+    const root = rootsByHref.get(sel.spineHref)
+    if (!root) continue
+    let idx = indexCache.get(sel.spineHref)
+    if (!idx) {
+      idx = buildOffsetIndex(root)
+      indexCache.set(sel.spineHref, idx)
+    }
+    const range = rangeForOffsets(idx, sel.textStart, sel.textEnd)
+    if (range) selectedRanges.push(range)
+  }
+
+  if (altRanges[0].length > 0) {
+    const h = new Highlight(...altRanges[0])
+    h.priority = 0
+    host.set('chunk-a', h)
+  }
+  if (altRanges[1].length > 0) {
+    const h = new Highlight(...altRanges[1])
+    h.priority = 0
+    host.set('chunk-b', h)
+  }
+  if (selectedRanges.length > 0) {
+    const h = new Highlight(...selectedRanges)
+    h.priority = 10
+    host.set('chunk-selected', h)
   }
 
   return { applied, missingSpines }

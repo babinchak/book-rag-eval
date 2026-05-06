@@ -1,19 +1,25 @@
 import { memo, useEffect, useRef, useState } from 'react'
 import type {
   BookSummary,
+  Chunk,
   ChunkParams,
   ChunkSetSummary,
   EmbeddingSetSummary,
   LoadedEpub,
   SpineItem
 } from '../../../preload/types'
-import { applyChunkOverlay, clearChunkOverlay } from '../lib/overlay'
+import { applyChunkOverlay, buildRangeForChunk, clearChunkOverlay } from '../lib/overlay'
 import { DEFAULT_STRATEGIES, strategyIdOf, strategyLabel } from '../../../shared/strategy'
 import AssistantPane from './AssistantPane'
 
-type OverlaySelection =
-  | { kind: 'all'; strategyId: string }
-  | { kind: 'single'; strategyId: string; chunkId: string }
+interface ChunkSetOverlayState {
+  strategyId: string
+}
+
+interface SelectedChunkState {
+  strategyId: string
+  chunkId: string
+}
 
 interface ReaderProps {
   book: BookSummary
@@ -32,11 +38,13 @@ function Reader({ book, onBack }: ReaderProps): React.JSX.Element {
   const [embeddingStrategyId, setEmbeddingStrategyId] = useState<string | null>(null)
   const [railOpen, setRailOpen] = useState(true)
   const [rightRailOpen, setRightRailOpen] = useState(true)
-  const [overlaySelection, setOverlaySelection] = useState<OverlaySelection | null>(null)
+  const [chunkSetOverlay, setChunkSetOverlay] = useState<ChunkSetOverlayState | null>(null)
+  const [selectedChunk, setSelectedChunk] = useState<SelectedChunkState | null>(null)
   const [overlayApplied, setOverlayApplied] = useState<number | null>(null)
 
   const spineContainerRef = useRef<HTMLDivElement>(null)
   const overlayTokenRef = useRef(0)
+  const lastScrolledChunkIdRef = useRef<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -57,41 +65,76 @@ function Reader({ book, onBack }: ReaderProps): React.JSX.Element {
   }, [book.id])
 
   useEffect(() => {
-    if (!overlaySelection || !loaded) {
+    if (!loaded || (!chunkSetOverlay && !selectedChunk)) {
       clearChunkOverlay()
       setOverlayApplied(null)
       overlayTokenRef.current++
       return
     }
     const token = ++overlayTokenRef.current
-    void window.api.chunks.get(book.id, overlaySelection.strategyId).then((result) => {
+
+    const strategiesToFetch = new Set<string>()
+    if (chunkSetOverlay) strategiesToFetch.add(chunkSetOverlay.strategyId)
+    if (selectedChunk) strategiesToFetch.add(selectedChunk.strategyId)
+
+    void Promise.all(
+      Array.from(strategiesToFetch).map((sid) =>
+        window.api.chunks.get(book.id, sid).then((r) => ({ sid, r }))
+      )
+    ).then((results) => {
       if (token !== overlayTokenRef.current) return
-      if (!result.ok) {
-        setError(result.error)
-        return
-      }
       const container = spineContainerRef.current
       if (!container) return
+
+      let allChunks: Chunk[] = []
+      let selected: Chunk[] = []
+
+      for (const { sid, r } of results) {
+        if (!r.ok) {
+          setError(r.error)
+          continue
+        }
+        if (chunkSetOverlay && chunkSetOverlay.strategyId === sid) {
+          allChunks = r.data.chunks
+        }
+        if (selectedChunk && selectedChunk.strategyId === sid) {
+          const found = r.data.chunks.find((c) => c.id === selectedChunk.chunkId)
+          if (found) selected = [found]
+        }
+      }
+
       const rootsByHref = new Map<string, Element>()
       container
         .querySelectorAll<HTMLElement>('[data-spine-href]')
         .forEach((el) => rootsByHref.set(el.dataset.spineHref ?? '', el))
-      let chunksToShow = result.data.chunks
-      if (overlaySelection.kind === 'single') {
-        const singleId = overlaySelection.chunkId
-        chunksToShow = chunksToShow.filter((c) => c.id === singleId)
-        if (chunksToShow.length > 0) {
-          const target = chunksToShow[0]
-          const section = container.querySelector<HTMLElement>(
-            `[data-spine-href="${CSS.escape(target.spineHref)}"]`
-          )
-          section?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+
+      const status = applyChunkOverlay(rootsByHref, allChunks, selected)
+      setOverlayApplied(status.applied)
+
+      if (
+        selectedChunk &&
+        selected.length > 0 &&
+        lastScrolledChunkIdRef.current !== selectedChunk.chunkId
+      ) {
+        lastScrolledChunkIdRef.current = selectedChunk.chunkId
+        const target = selected[0]
+        const section = rootsByHref.get(target.spineHref)
+        if (section) {
+          const range = buildRangeForChunk(section, target.textStart, target.textEnd)
+          const scrollNode =
+            range?.startContainer.nodeType === Node.TEXT_NODE
+              ? range.startContainer.parentElement
+              : (range?.startContainer as Element | null)
+          if (scrollNode) {
+            scrollNode.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          } else {
+            ;(section as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'start' })
+          }
         }
       }
-      const status = applyChunkOverlay(rootsByHref, chunksToShow)
-      setOverlayApplied(status.applied)
+      if (!selectedChunk) lastScrolledChunkIdRef.current = null
     })
-  }, [overlaySelection, loaded, book.id])
+  }, [chunkSetOverlay, selectedChunk, loaded, book.id])
 
   useEffect(() => {
     return () => {
@@ -152,23 +195,22 @@ function Reader({ book, onBack }: ReaderProps): React.JSX.Element {
   }
 
   function toggleOverlay(strategyId: string): void {
-    setOverlaySelection((prev) => {
-      if (!prev || prev.strategyId !== strategyId) return { kind: 'all', strategyId }
-      if (prev.kind === 'single') return { kind: 'all', strategyId }
-      return null
-    })
+    setChunkSetOverlay((prev) => (prev?.strategyId === strategyId ? null : { strategyId }))
   }
 
   function selectChunk(strategyId: string, chunkId: string): void {
-    setOverlaySelection({ kind: 'single', strategyId, chunkId })
+    setSelectedChunk((prev) =>
+      prev?.strategyId === strategyId && prev.chunkId === chunkId
+        ? null
+        : { strategyId, chunkId }
+    )
   }
 
   const spineCount = loaded?.manifest.readingOrder?.length ?? 0
   const existingStrategyIds = new Set(chunkSets.map((s) => s.strategyId))
   const embeddingByStrategy = new Map(embeddingSets.map((e) => [e.strategyId, e]))
-  const overlayStrategyId = overlaySelection?.strategyId ?? null
-  const highlightedChunkId =
-    overlaySelection?.kind === 'single' ? overlaySelection.chunkId : null
+  const overlayStrategyId = chunkSetOverlay?.strategyId ?? null
+  const highlightedChunkId = selectedChunk?.chunkId ?? null
 
   return (
     <div style={{ display: 'flex', height: '100vh', color: '#222' }}>
