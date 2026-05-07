@@ -11,7 +11,7 @@ import type {
 import { applyChunkOverlay, buildRangeForChunk, clearChunkOverlay } from '../lib/overlay'
 import { DEFAULT_STRATEGIES, strategyIdOf, strategyLabel } from '../../../shared/strategy'
 import AssistantPane from './AssistantPane'
-import EvaluationSection from './EvaluationSection'
+import EvalRunnerPanel from './EvalRunnerPanel'
 
 interface ChunkSetOverlayState {
   strategyId: string
@@ -39,6 +39,8 @@ function Reader({ book, onBack }: ReaderProps): React.JSX.Element {
   const [embeddingStrategyId, setEmbeddingStrategyId] = useState<string | null>(null)
   const [railOpen, setRailOpen] = useState(true)
   const [rightRailOpen, setRightRailOpen] = useState(true)
+  const [rightTab, setRightTab] = useState<'ask' | 'eval'>('ask')
+  const [selectedEvalSetId, setSelectedEvalSetId] = useState<string | null>(null)
   const [chunkSetOverlay, setChunkSetOverlay] = useState<ChunkSetOverlayState | null>(null)
   const [selectedChunk, setSelectedChunk] = useState<SelectedChunkState | null>(null)
   const [overlayApplied, setOverlayApplied] = useState<number | null>(null)
@@ -275,12 +277,6 @@ function Reader({ book, onBack }: ReaderProps): React.JSX.Element {
               overlayApplied={overlayApplied}
               onToggleOverlay={toggleOverlay}
             />
-            <EvaluationSection
-              bookId={book.id}
-              chunkSets={chunkSets}
-              embeddingSets={embeddingSets}
-              onSelectChunk={selectChunk}
-            />
           </div>
         )}
       </aside>
@@ -370,8 +366,8 @@ function Reader({ book, onBack }: ReaderProps): React.JSX.Element {
           style={{
             display: 'flex',
             alignItems: 'center',
-            justifyContent: rightRailOpen ? 'space-between' : 'center',
-            padding: '8px 12px 8px 8px',
+            gap: 4,
+            padding: '6px 8px',
             borderBottom: '1px solid #e5e5e5',
             minHeight: 40
           }}
@@ -387,27 +383,44 @@ function Reader({ book, onBack }: ReaderProps): React.JSX.Element {
               background: 'transparent',
               cursor: 'pointer',
               fontSize: 14,
-              color: '#666'
+              color: '#666',
+              flexShrink: 0
             }}
           >
             {rightRailOpen ? '⟩' : '⟨'}
           </button>
           {rightRailOpen && (
-            <span style={{ fontSize: 11, fontWeight: 600, color: '#666', letterSpacing: 0.5 }}>
-              ASSISTANT
-            </span>
+            <div style={{ display: 'flex', gap: 2, flex: 1, justifyContent: 'flex-end' }}>
+              <TabButton active={rightTab === 'ask'} onClick={() => setRightTab('ask')}>
+                Ask
+              </TabButton>
+              <TabButton active={rightTab === 'eval'} onClick={() => setRightTab('eval')}>
+                Eval
+              </TabButton>
+            </div>
           )}
         </div>
 
         {rightRailOpen && (
           <div style={{ flex: 1, minHeight: 0 }}>
-            <AssistantPane
-              bookId={book.id}
-              chunkSets={chunkSets}
-              embeddingSets={embeddingSets}
-              onSelectChunk={selectChunk}
-              highlightedChunkId={highlightedChunkId}
-            />
+            {rightTab === 'ask' ? (
+              <AssistantPane
+                bookId={book.id}
+                chunkSets={chunkSets}
+                embeddingSets={embeddingSets}
+                onSelectChunk={selectChunk}
+                highlightedChunkId={highlightedChunkId}
+              />
+            ) : (
+              <EvalRunnerPanel
+                bookId={book.id}
+                selectedEvalSetId={selectedEvalSetId}
+                onSelectEvalSet={setSelectedEvalSetId}
+                chunkSets={chunkSets}
+                embeddingSets={embeddingSets}
+                onSelectChunk={selectChunk}
+              />
+            )}
           </div>
         )}
       </aside>
@@ -700,6 +713,35 @@ function EmbeddingRow({
         </button>
       )}
     </div>
+  )
+}
+
+function TabButton({
+  active,
+  onClick,
+  children
+}: {
+  active: boolean
+  onClick: () => void
+  children: React.ReactNode
+}): React.JSX.Element {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        padding: '4px 12px',
+        fontSize: 11,
+        fontWeight: active ? 600 : 500,
+        cursor: 'pointer',
+        background: active ? '#fff' : 'transparent',
+        color: active ? '#222' : '#666',
+        border: '1px solid ' + (active ? '#d4d4d4' : 'transparent'),
+        borderRadius: 4,
+        letterSpacing: 0.3
+      }}
+    >
+      {children}
+    </button>
   )
 }
 
