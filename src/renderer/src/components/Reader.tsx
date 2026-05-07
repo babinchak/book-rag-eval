@@ -299,7 +299,15 @@ function Reader({ book, onBack }: ReaderProps): React.JSX.Element {
             onToggleOverlay={toggleOverlay}
             onSelectChunk={selectChunk}
             highlightedChunkId={highlightedChunkId}
-            onGoToStrategies={() => setView('strategies')}
+            selectedEvalSetId={selectedEvalSetId}
+            onSelectEvalSet={setSelectedEvalSetId}
+            runningStrategyId={runningStrategyId}
+            embeddingStrategyId={embeddingStrategyId}
+            existingStrategyIds={existingStrategyIds}
+            embeddingByStrategy={embeddingByStrategy}
+            onRun={handleRun}
+            onEmbed={handleEmbed}
+            onClearEmbeddings={handleClearEmbeddings}
           />
         )}
       </div>
@@ -318,7 +326,15 @@ interface ReaderPaneProps {
   onToggleOverlay: (strategyId: string) => void
   onSelectChunk: (strategyId: string, chunkId: string) => void
   highlightedChunkId: string | null
-  onGoToStrategies: () => void
+  selectedEvalSetId: string | null
+  onSelectEvalSet: (id: string | null) => void
+  runningStrategyId: string | null
+  embeddingStrategyId: string | null
+  existingStrategyIds: Set<string>
+  embeddingByStrategy: Map<string, EmbeddingSetSummary>
+  onRun: (params: ChunkParams) => void
+  onEmbed: (strategyId: string) => void
+  onClearEmbeddings: (strategyId: string) => void
 }
 
 function ReaderPane({
@@ -332,17 +348,26 @@ function ReaderPane({
   onToggleOverlay,
   onSelectChunk,
   highlightedChunkId,
-  onGoToStrategies
+  selectedEvalSetId,
+  onSelectEvalSet,
+  runningStrategyId,
+  embeddingStrategyId,
+  existingStrategyIds,
+  embeddingByStrategy,
+  onRun,
+  onEmbed,
+  onClearEmbeddings
 }: ReaderPaneProps): React.JSX.Element {
-  const [overlayRailOpen, setOverlayRailOpen] = useState(true)
-  const [askRailOpen, setAskRailOpen] = useState(true)
+  const [leftRailOpen, setLeftRailOpen] = useState(true)
+  const [rightRailOpen, setRightRailOpen] = useState(true)
+  const [rightTab, setRightTab] = useState<'ask' | 'eval'>('ask')
 
   return (
     <div style={{ display: 'flex', height: '100%' }}>
-      {/* Overlay rail */}
+      {/* Left rail: full strategy management */}
       <aside
         style={{
-          width: overlayRailOpen ? 200 : 36,
+          width: leftRailOpen ? 280 : 36,
           flexShrink: 0,
           background: '#f7f7f8',
           borderRight: '1px solid #e5e5e5',
@@ -356,95 +381,41 @@ function ReaderPane({
           style={{
             display: 'flex',
             alignItems: 'center',
-            justifyContent: overlayRailOpen ? 'space-between' : 'center',
-            padding: '8px 8px 8px 10px',
+            justifyContent: leftRailOpen ? 'space-between' : 'center',
+            padding: '8px 8px 8px 12px',
             borderBottom: '1px solid #e5e5e5',
             minHeight: 36,
             flexShrink: 0
           }}
         >
-          {overlayRailOpen && (
+          {leftRailOpen && (
             <span style={{ fontSize: 10, fontWeight: 600, color: '#666', letterSpacing: 0.5, textTransform: 'uppercase' }}>
-              Overlay
+              Tools
             </span>
           )}
           <button
-            onClick={() => setOverlayRailOpen((v) => !v)}
+            onClick={() => setLeftRailOpen((v) => !v)}
             style={{ width: 22, height: 22, padding: 0, border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, color: '#666' }}
           >
-            {overlayRailOpen ? '⟨' : '⟩'}
+            {leftRailOpen ? '⟨' : '⟩'}
           </button>
         </div>
 
-        {overlayRailOpen && (
-          <div style={{ padding: 10, overflowY: 'auto', flex: 1 }}>
-            {chunkSets.length === 0 ? (
-              <div style={{ fontSize: 11, color: '#888', lineHeight: 1.4 }}>
-                No chunk sets.{' '}
-                <button
-                  onClick={onGoToStrategies}
-                  style={{ padding: 0, border: 'none', background: 'transparent', color: '#2563eb', cursor: 'pointer', fontSize: 11, textDecoration: 'underline' }}
-                >
-                  Build in Strategies
-                </button>
-              </div>
-            ) : (
-              <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'grid', gap: 4 }}>
-                {chunkSets.map((s) => {
-                  const active = overlayStrategyId === s.strategyId
-                  return (
-                    <li key={s.strategyId} style={{ fontSize: 11 }}>
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 6,
-                          padding: '4px 6px',
-                          background: active ? '#fff8d8' : '#fff',
-                          border: active ? '1px solid #d4b94d' : '1px solid #e5e5e5',
-                          borderRadius: 4
-                        }}
-                      >
-                        <span
-                          style={{
-                            flex: 1,
-                            fontFamily: 'monospace',
-                            fontSize: 10,
-                            color: '#444',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap'
-                          }}
-                          title={s.strategyId}
-                        >
-                          {s.strategyId}
-                        </span>
-                        <button
-                          onClick={() => onToggleOverlay(s.strategyId)}
-                          style={{
-                            flexShrink: 0,
-                            padding: '2px 6px',
-                            fontSize: 10,
-                            cursor: 'pointer',
-                            background: active ? '#d4b94d' : '#fff',
-                            color: active ? '#fff' : '#444',
-                            border: '1px solid ' + (active ? '#d4b94d' : '#ccc'),
-                            borderRadius: 3
-                          }}
-                        >
-                          {active ? 'On' : 'Off'}
-                        </button>
-                      </div>
-                      {active && overlayApplied !== null && overlayApplied !== s.count && (
-                        <div style={{ fontSize: 10, color: '#b06400', padding: '2px 6px' }}>
-                          {overlayApplied}/{s.count} shown
-                        </div>
-                      )}
-                    </li>
-                  )
-                })}
-              </ul>
-            )}
+        {leftRailOpen && (
+          <div style={{ overflowY: 'auto', padding: 12 }}>
+            <ChunkingSection
+              chunkSets={chunkSets}
+              embeddingByStrategy={embeddingByStrategy}
+              runningStrategyId={runningStrategyId}
+              embeddingStrategyId={embeddingStrategyId}
+              existingStrategyIds={existingStrategyIds}
+              onRun={onRun}
+              onEmbed={onEmbed}
+              onClearEmbeddings={onClearEmbeddings}
+              overlayStrategyId={overlayStrategyId}
+              overlayApplied={overlayApplied}
+              onToggleOverlay={onToggleOverlay}
+            />
           </div>
         )}
       </aside>
@@ -458,10 +429,10 @@ function ReaderPane({
         )}
       </main>
 
-      {/* Ask rail */}
+      {/* Right rail: Ask / Eval tabs */}
       <aside
         style={{
-          width: askRailOpen ? 280 : 36,
+          width: rightRailOpen ? 320 : 36,
           flexShrink: 0,
           background: '#f7f7f8',
           borderLeft: '1px solid #e5e5e5',
@@ -483,30 +454,317 @@ function ReaderPane({
           }}
         >
           <button
-            onClick={() => setAskRailOpen((v) => !v)}
+            onClick={() => setRightRailOpen((v) => !v)}
             style={{ width: 22, height: 22, padding: 0, border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, color: '#666', flexShrink: 0 }}
           >
-            {askRailOpen ? '⟩' : '⟨'}
+            {rightRailOpen ? '⟩' : '⟨'}
           </button>
-          {askRailOpen && (
-            <span style={{ fontSize: 10, fontWeight: 600, color: '#666', letterSpacing: 0.5, textTransform: 'uppercase' }}>
-              Ask
-            </span>
+          {rightRailOpen && (
+            <div style={{ display: 'flex', gap: 2, flex: 1, justifyContent: 'flex-end' }}>
+              <RailTab active={rightTab === 'ask'} onClick={() => setRightTab('ask')}>Ask</RailTab>
+              <RailTab active={rightTab === 'eval'} onClick={() => setRightTab('eval')}>Eval</RailTab>
+            </div>
           )}
         </div>
-        {askRailOpen && (
+
+        {rightRailOpen && (
           <div style={{ flex: 1, minHeight: 0 }}>
-            <AssistantPane
-              bookId={book.id}
-              chunkSets={chunkSets}
-              embeddingSets={embeddingSets}
-              onSelectChunk={onSelectChunk}
-              highlightedChunkId={highlightedChunkId}
-            />
+            {rightTab === 'ask' ? (
+              <AssistantPane
+                bookId={book.id}
+                chunkSets={chunkSets}
+                embeddingSets={embeddingSets}
+                onSelectChunk={onSelectChunk}
+                highlightedChunkId={highlightedChunkId}
+              />
+            ) : (
+              <EvalRunnerPanel
+                bookId={book.id}
+                selectedEvalSetId={selectedEvalSetId}
+                onSelectEvalSet={onSelectEvalSet}
+                chunkSets={chunkSets}
+                embeddingSets={embeddingSets}
+                onSelectChunk={onSelectChunk}
+              />
+            )}
           </div>
         )}
       </aside>
     </div>
+  )
+}
+
+interface ChunkingSectionProps {
+  chunkSets: ChunkSetSummary[]
+  embeddingByStrategy: Map<string, EmbeddingSetSummary>
+  runningStrategyId: string | null
+  embeddingStrategyId: string | null
+  existingStrategyIds: Set<string>
+  onRun: (params: ChunkParams) => void
+  onEmbed: (strategyId: string) => void
+  onClearEmbeddings: (strategyId: string) => void
+  overlayStrategyId: string | null
+  overlayApplied: number | null
+  onToggleOverlay: (strategyId: string) => void
+}
+
+function ChunkingSection({
+  chunkSets,
+  embeddingByStrategy,
+  runningStrategyId,
+  embeddingStrategyId,
+  existingStrategyIds,
+  onRun,
+  onEmbed,
+  onClearEmbeddings,
+  overlayStrategyId,
+  overlayApplied,
+  onToggleOverlay
+}: ChunkingSectionProps): React.JSX.Element {
+  const anyRunning = runningStrategyId !== null
+  return (
+    <section>
+      <h3
+        style={{
+          margin: '0 0 8px',
+          fontSize: 12,
+          fontWeight: 600,
+          color: '#444',
+          textTransform: 'uppercase',
+          letterSpacing: 0.5
+        }}
+      >
+        Strategies
+      </h3>
+      <div style={{ display: 'grid', gap: 6 }}>
+        {DEFAULT_STRATEGIES.map((params) => {
+          const sid = strategyIdOf(params)
+          const isRunning = runningStrategyId === sid
+          const exists = existingStrategyIds.has(sid)
+          return (
+            <button
+              key={sid}
+              onClick={() => onRun(params)}
+              disabled={anyRunning}
+              style={{
+                width: '100%',
+                padding: '7px 10px',
+                fontSize: 12,
+                textAlign: 'left',
+                cursor: anyRunning ? 'wait' : 'pointer',
+                background: '#fff',
+                border: '1px solid #d4d4d4',
+                borderRadius: 4,
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                gap: 6
+              }}
+            >
+              <span>
+                {isRunning ? 'Running…' : exists ? 'Re-run ' : 'Run '}
+                {strategyLabel(params)}
+              </span>
+              {exists && !isRunning && <span style={{ color: '#10b981', fontSize: 11 }}>✓</span>}
+            </button>
+          )
+        })}
+      </div>
+
+      <div style={{ marginTop: 16 }}>
+        <div
+          style={{
+            fontSize: 11,
+            fontWeight: 600,
+            color: '#444',
+            textTransform: 'uppercase',
+            letterSpacing: 0.5,
+            marginBottom: 6
+          }}
+        >
+          Chunk sets
+        </div>
+        <div style={{ fontSize: 11, color: '#888', marginBottom: 6 }}>
+          {chunkSets.length === 0 ? 'None generated yet' : `${chunkSets.length} generated`}
+        </div>
+        <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'grid', gap: 6 }}>
+          {chunkSets.map((s) => {
+            const active = overlayStrategyId === s.strategyId
+            return (
+              <li
+                key={s.strategyId}
+                style={{
+                  background: active ? '#fff8d8' : '#fff',
+                  border: active ? '1px solid #d4b94d' : '1px solid #e5e5e5',
+                  borderRadius: 4,
+                  padding: '6px 8px'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div
+                      style={{
+                        fontFamily: 'monospace',
+                        fontSize: 11,
+                        color: '#444',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis'
+                      }}
+                      title={new Date(s.generatedAt).toLocaleString()}
+                    >
+                      {s.strategyId}
+                    </div>
+                    <div style={{ color: '#888', fontSize: 11, marginTop: 2 }}>
+                      {s.count} chunk{s.count === 1 ? '' : 's'}
+                      {active && overlayApplied !== null && overlayApplied !== s.count && (
+                        <span style={{ color: '#b06400' }}> · {overlayApplied} shown</span>
+                      )}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => onToggleOverlay(s.strategyId)}
+                    title={active ? 'Hide overlay' : 'Show overlay'}
+                    style={{
+                      flexShrink: 0,
+                      padding: '4px 8px',
+                      fontSize: 11,
+                      cursor: 'pointer',
+                      background: active ? '#d4b94d' : '#fff',
+                      color: active ? '#fff' : '#444',
+                      border: '1px solid ' + (active ? '#d4b94d' : '#ccc'),
+                      borderRadius: 3
+                    }}
+                  >
+                    {active ? 'On' : 'Off'}
+                  </button>
+                </div>
+                <EmbeddingRow
+                  chunkCount={s.count}
+                  embedding={embeddingByStrategy.get(s.strategyId)}
+                  isEmbedding={embeddingStrategyId === s.strategyId}
+                  anyEmbedding={embeddingStrategyId !== null}
+                  onEmbed={() => onEmbed(s.strategyId)}
+                  onClear={() => onClearEmbeddings(s.strategyId)}
+                />
+              </li>
+            )
+          })}
+        </ul>
+      </div>
+    </section>
+  )
+}
+
+interface EmbeddingRowProps {
+  chunkCount: number
+  embedding: EmbeddingSetSummary | undefined
+  isEmbedding: boolean
+  anyEmbedding: boolean
+  onEmbed: () => void
+  onClear: () => void
+}
+
+function EmbeddingRow({
+  chunkCount,
+  embedding,
+  isEmbedding,
+  anyEmbedding,
+  onEmbed,
+  onClear
+}: EmbeddingRowProps): React.JSX.Element {
+  const fullyEmbedded = embedding !== undefined && embedding.count === chunkCount
+  const partiallyEmbedded =
+    embedding !== undefined && embedding.count > 0 && embedding.count < chunkCount
+
+  return (
+    <div
+      style={{
+        marginTop: 6,
+        paddingTop: 6,
+        borderTop: '1px solid #f0f0f0',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 6
+      }}
+    >
+      <div style={{ fontSize: 10, color: '#888', minWidth: 0, flex: 1 }}>
+        {isEmbedding ? (
+          <span style={{ color: '#2563eb' }}>Embedding…</span>
+        ) : fullyEmbedded ? (
+          <span style={{ color: '#10b981' }}>✓ {embedding.count}/{chunkCount} embedded</span>
+        ) : partiallyEmbedded ? (
+          <span style={{ color: '#b06400' }}>{embedding!.count}/{chunkCount} embedded</span>
+        ) : (
+          <span>Not embedded</span>
+        )}
+      </div>
+      <button
+        onClick={onEmbed}
+        disabled={anyEmbedding}
+        title={fullyEmbedded ? 'Re-run embedding' : 'Generate embeddings'}
+        style={{
+          flexShrink: 0,
+          padding: '3px 7px',
+          fontSize: 10,
+          cursor: anyEmbedding ? 'wait' : 'pointer',
+          background: '#fff',
+          border: '1px solid #ccc',
+          borderRadius: 3
+        }}
+      >
+        {isEmbedding ? '…' : fullyEmbedded ? 'Re-embed' : 'Embed'}
+      </button>
+      {embedding && !isEmbedding && (
+        <button
+          onClick={onClear}
+          disabled={anyEmbedding}
+          title="Delete embeddings"
+          style={{
+            flexShrink: 0,
+            padding: '3px 7px',
+            fontSize: 10,
+            cursor: anyEmbedding ? 'wait' : 'pointer',
+            background: '#fff',
+            color: '#b91c1c',
+            border: '1px solid #fca5a5',
+            borderRadius: 3
+          }}
+        >
+          ×
+        </button>
+      )}
+    </div>
+  )
+}
+
+function RailTab({
+  active,
+  onClick,
+  children
+}: {
+  active: boolean
+  onClick: () => void
+  children: React.ReactNode
+}): React.JSX.Element {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        padding: '4px 12px',
+        fontSize: 11,
+        fontWeight: active ? 600 : 500,
+        cursor: 'pointer',
+        background: active ? '#fff' : 'transparent',
+        color: active ? '#222' : '#666',
+        border: '1px solid ' + (active ? '#d4d4d4' : 'transparent'),
+        borderRadius: 4,
+        letterSpacing: 0.3
+      }}
+    >
+      {children}
+    </button>
   )
 }
 
