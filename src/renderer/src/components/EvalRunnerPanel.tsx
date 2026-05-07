@@ -6,6 +6,7 @@ import type {
   EvalSet,
   EvalSetSummary
 } from '../../../preload/types'
+import { cv } from '../lib/theme'
 import AddCaseModal from './AddCaseModal'
 import EvalRunDetailModal from './EvalRunDetailModal'
 import EvalCompareModal from './EvalCompareModal'
@@ -168,6 +169,49 @@ function EvalRunnerPanel({
     </>
   )
 
+  const inputStyle: React.CSSProperties = {
+    flex: 1,
+    padding: '5px 7px',
+    fontSize: 12,
+    fontFamily: 'monospace',
+    border: `1px solid ${cv.border2}`,
+    borderRadius: 4,
+    background: cv.bg,
+    color: cv.text1
+  }
+
+  const primaryBtn: React.CSSProperties = {
+    padding: '6px 10px',
+    fontSize: 11,
+    cursor: 'pointer',
+    background: cv.accent,
+    color: cv.accentText,
+    border: 'none',
+    borderRadius: 4
+  }
+
+  const ghostBtn: React.CSSProperties = {
+    padding: '6px 10px',
+    fontSize: 11,
+    cursor: 'pointer',
+    background: cv.bg,
+    color: cv.text2,
+    border: `1px solid ${cv.border3}`,
+    borderRadius: 4
+  }
+
+  const newSetBtn: React.CSSProperties = {
+    width: '100%',
+    padding: '6px 10px',
+    fontSize: 12,
+    cursor: 'pointer',
+    background: cv.bg,
+    color: cv.text3,
+    border: `1px dashed ${cv.border2}`,
+    borderRadius: 4,
+    marginBottom: 8
+  }
+
   if (layout === 'full') {
     return (
       <div style={{ display: 'flex', height: '100%', overflow: 'hidden' }}>
@@ -176,13 +220,13 @@ function EvalRunnerPanel({
           style={{
             width: 240,
             flexShrink: 0,
-            borderRight: '1px solid #e5e5e5',
+            borderRight: `1px solid ${cv.border}`,
             display: 'flex',
             flexDirection: 'column',
             overflow: 'hidden'
           }}
         >
-          <div style={{ padding: '14px 16px 10px', borderBottom: '1px solid #f0f0f0', flexShrink: 0 }}>
+          <div style={{ padding: '14px 16px 10px', borderBottom: `1px solid ${cv.border}`, flexShrink: 0 }}>
             <ColHeader>Eval sets</ColHeader>
           </div>
           <div style={{ flex: 1, overflowY: 'auto', padding: '10px 16px' }}>
@@ -198,14 +242,7 @@ function EvalRunnerPanel({
                     if (e.key === 'Escape') setCreating(false)
                   }}
                   autoFocus
-                  style={{
-                    flex: 1,
-                    padding: '5px 7px',
-                    fontSize: 12,
-                    fontFamily: 'monospace',
-                    border: '1px solid #d4d4d4',
-                    borderRadius: 4
-                  }}
+                  style={inputStyle}
                 />
                 <button onClick={handleCreate} disabled={!newSetId.trim()} style={primaryBtn}>✓</button>
                 <button onClick={() => setCreating(false)} style={ghostBtn}>×</button>
@@ -217,7 +254,7 @@ function EvalRunnerPanel({
             )}
 
             {sets.length === 0 ? (
-              <div style={{ fontSize: 11, color: '#888' }}>No eval sets yet</div>
+              <div style={{ fontSize: 11, color: cv.text4 }}>No eval sets yet</div>
             ) : (
               <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'grid', gap: 4 }}>
                 {sets.map((s) => {
@@ -232,17 +269,17 @@ function EvalRunnerPanel({
                         gap: 4,
                         padding: '6px 8px',
                         fontSize: 12,
-                        background: selected ? '#eef2ff' : '#fff',
-                        border: selected ? '1px solid #818cf8' : '1px solid #e5e5e5',
+                        background: selected ? cv.selectedBg : cv.bg,
+                        border: `1px solid ${selected ? cv.selectedBorder : cv.border}`,
                         borderRadius: 4,
                         cursor: 'pointer'
                       }}
                     >
-                      <span style={{ flex: 1, fontFamily: 'monospace', fontSize: 11 }}>{s.id}</span>
-                      <span style={{ color: '#888', fontSize: 11 }}>{s.caseCount}</span>
+                      <span style={{ flex: 1, fontFamily: 'monospace', fontSize: 11, color: cv.text1 }}>{s.id}</span>
+                      <span style={{ color: cv.text4, fontSize: 11 }}>{s.caseCount}</span>
                       <button
                         onClick={(e) => { e.stopPropagation(); void handleDelete(s.id) }}
-                        style={{ padding: '0 5px', fontSize: 12, cursor: 'pointer', background: 'transparent', color: '#bbb', border: 'none' }}
+                        style={{ padding: '0 5px', fontSize: 12, cursor: 'pointer', background: 'transparent', color: cv.text5, border: 'none' }}
                       >
                         ×
                       </button>
@@ -259,22 +296,22 @@ function EvalRunnerPanel({
           style={{
             width: 300,
             flexShrink: 0,
-            borderRight: '1px solid #e5e5e5',
+            borderRight: `1px solid ${cv.border}`,
             display: 'flex',
             flexDirection: 'column',
             overflow: 'hidden'
           }}
         >
-          <div style={{ padding: '14px 16px 10px', borderBottom: '1px solid #f0f0f0', flexShrink: 0 }}>
+          <div style={{ padding: '14px 16px 10px', borderBottom: `1px solid ${cv.border}`, flexShrink: 0 }}>
             <ColHeader>
               {activeSet ? `Cases (${activeSet.cases.length})` : 'Cases'}
             </ColHeader>
           </div>
           <div style={{ flex: 1, overflowY: 'auto', padding: '10px 16px' }}>
             {!activeSet ? (
-              <div style={{ fontSize: 12, color: '#aaa' }}>Select an eval set</div>
+              <div style={{ fontSize: 12, color: cv.text5 }}>Select an eval set</div>
             ) : activeSet.cases.length === 0 ? (
-              <div style={{ fontSize: 12, color: '#888', marginBottom: 8 }}>No cases yet.</div>
+              <div style={{ fontSize: 12, color: cv.text4, marginBottom: 8 }}>No cases yet.</div>
             ) : (
               <ul style={{ margin: '0 0 8px', padding: 0, listStyle: 'none', display: 'grid', gap: 4 }}>
                 {activeSet.cases.map((c) => (
@@ -282,13 +319,14 @@ function EvalRunnerPanel({
                     key={c.id}
                     style={{
                       fontSize: 12,
-                      background: '#fff',
-                      border: '1px solid #e5e5e5',
+                      background: cv.bg,
+                      border: `1px solid ${cv.border}`,
                       borderRadius: 4,
                       padding: '6px 8px',
                       display: 'flex',
                       gap: 4,
-                      alignItems: 'flex-start'
+                      alignItems: 'flex-start',
+                      color: cv.text1
                     }}
                   >
                     <span
@@ -305,7 +343,7 @@ function EvalRunnerPanel({
                     </span>
                     <button
                       onClick={() => void handleRemoveCase(c.id)}
-                      style={{ padding: '0 4px', fontSize: 11, cursor: 'pointer', background: 'transparent', color: '#bbb', border: 'none', flexShrink: 0 }}
+                      style={{ padding: '0 4px', fontSize: 11, cursor: 'pointer', background: 'transparent', color: cv.text5, border: 'none', flexShrink: 0 }}
                     >
                       ×
                     </button>
@@ -323,10 +361,10 @@ function EvalRunnerPanel({
 
         {/* Col 3: Run + Results */}
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          <div style={{ padding: '14px 20px 10px', borderBottom: '1px solid #f0f0f0', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+          <div style={{ padding: '14px 20px 10px', borderBottom: `1px solid ${cv.border}`, display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
             <ColHeader>Results</ColHeader>
             {activeSet && activeSet.cases.length > 0 && (
-              <label style={{ fontSize: 12, color: '#666', display: 'flex', alignItems: 'center', gap: 4, marginLeft: 'auto' }}>
+              <label style={{ fontSize: 12, color: cv.text3, display: 'flex', alignItems: 'center', gap: 4, marginLeft: 'auto' }}>
                 k =
                 <input
                   type="number"
@@ -334,24 +372,24 @@ function EvalRunnerPanel({
                   min={1}
                   max={20}
                   onChange={(e) => setK(Math.max(1, Math.min(20, parseInt(e.target.value) || 1)))}
-                  style={{ width: 40, padding: '3px 5px', fontSize: 12, border: '1px solid #d4d4d4', borderRadius: 3 }}
+                  style={{ width: 40, padding: '3px 5px', fontSize: 12, border: `1px solid ${cv.border2}`, borderRadius: 3, background: cv.bg, color: cv.text1 }}
                 />
               </label>
             )}
           </div>
           <div style={{ flex: 1, overflowY: 'auto', padding: '10px 20px' }}>
             {error && (
-              <pre style={{ color: '#b00', whiteSpace: 'pre-wrap', background: '#fee', padding: 8, border: '1px solid #fbb', borderRadius: 4, fontSize: 10, marginBottom: 12 }}>
+              <pre style={{ color: cv.errorText, whiteSpace: 'pre-wrap', background: cv.errorBg, padding: 8, border: `1px solid ${cv.errorBorder}`, borderRadius: 4, fontSize: 10, marginBottom: 12 }}>
                 {error}
               </pre>
             )}
 
             {!activeSet ? (
-              <div style={{ fontSize: 12, color: '#aaa' }}>Select an eval set to run</div>
+              <div style={{ fontSize: 12, color: cv.text5 }}>Select an eval set to run</div>
             ) : activeSet.cases.length === 0 ? (
-              <div style={{ fontSize: 12, color: '#aaa' }}>Add cases to run evals</div>
+              <div style={{ fontSize: 12, color: cv.text5 }}>Add cases to run evals</div>
             ) : fullyEmbedded.length === 0 ? (
-              <div style={{ fontSize: 12, color: '#888' }}>
+              <div style={{ fontSize: 12, color: cv.text4 }}>
                 No fully-embedded strategies. Go to the Strategies tab to embed one.
               </div>
             ) : (
@@ -363,10 +401,10 @@ function EvalRunnerPanel({
                     return (
                       <div
                         key={e.strategyId}
-                        style={{ background: '#fff', border: '1px solid #e5e5e5', borderRadius: 6, padding: '12px 14px' }}
+                        style={{ background: cv.bg, border: `1px solid ${cv.border}`, borderRadius: 6, padding: '12px 14px' }}
                       >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginBottom: last ? 8 : 0 }}>
-                          <span style={{ fontFamily: 'monospace', fontSize: 12, color: '#333' }}>
+                          <span style={{ fontFamily: 'monospace', fontSize: 12, color: cv.text1 }}>
                             {e.strategyId}
                           </span>
                           <button
@@ -376,9 +414,9 @@ function EvalRunnerPanel({
                               padding: '5px 14px',
                               fontSize: 12,
                               cursor: running !== null ? 'wait' : 'pointer',
-                              background: last ? '#fff' : '#2563eb',
-                              color: last ? '#444' : '#fff',
-                              border: last ? '1px solid #d4d4d4' : 'none',
+                              background: last ? cv.bg : cv.accent,
+                              color: last ? cv.text2 : cv.accentText,
+                              border: last ? `1px solid ${cv.border2}` : 'none',
                               borderRadius: 5,
                               flexShrink: 0
                             }}
@@ -398,10 +436,10 @@ function EvalRunnerPanel({
                                 </>
                               )}
                             </div>
-                            <div style={{ fontSize: 11, color: '#888', display: 'flex', gap: 10, alignItems: 'center' }}>
+                            <div style={{ fontSize: 11, color: cv.text4, display: 'flex', gap: 10, alignItems: 'center' }}>
                               <button
                                 onClick={() => setDetailRunId(last.id)}
-                                style={{ padding: 0, fontSize: 11, cursor: 'pointer', background: 'transparent', border: 'none', color: '#2563eb', textDecoration: 'underline' }}
+                                style={{ padding: 0, fontSize: 11, cursor: 'pointer', background: 'transparent', border: 'none', color: cv.accent, textDecoration: 'underline' }}
                               >
                                 View details
                               </button>
@@ -417,7 +455,7 @@ function EvalRunnerPanel({
                 {compareRunIds.length >= 2 && (
                   <button
                     onClick={() => setCompareOpen(true)}
-                    style={{ width: '100%', marginTop: 10, padding: '8px 14px', fontSize: 12, cursor: 'pointer', background: '#fff', border: '1px solid #d4d4d4', borderRadius: 5 }}
+                    style={{ width: '100%', marginTop: 10, padding: '8px 14px', fontSize: 12, cursor: 'pointer', background: cv.bg, color: cv.text2, border: `1px solid ${cv.border2}`, borderRadius: 5 }}
                   >
                     Compare {compareRunIds.length} runs
                   </button>
@@ -432,7 +470,7 @@ function EvalRunnerPanel({
     )
   }
 
-  // Sidebar layout (original)
+  // Sidebar layout
   return (
     <div style={{ overflowY: 'auto', padding: 12, height: '100%' }}>
       <SectionHeader>Eval sets</SectionHeader>
@@ -449,19 +487,19 @@ function EvalRunnerPanel({
               if (e.key === 'Escape') setCreating(false)
             }}
             autoFocus
-            style={{ flex: 1, padding: '6px 8px', fontSize: 12, fontFamily: 'monospace', border: '1px solid #d4d4d4', borderRadius: 4 }}
+            style={{ flex: 1, padding: '6px 8px', fontSize: 12, fontFamily: 'monospace', border: `1px solid ${cv.border2}`, borderRadius: 4, background: cv.bg, color: cv.text1 }}
           />
           <button onClick={handleCreate} disabled={!newSetId.trim()} style={primaryBtn}>✓</button>
           <button onClick={() => setCreating(false)} style={ghostBtn}>×</button>
         </div>
       ) : (
-        <button onClick={() => setCreating(true)} style={{ width: '100%', padding: '6px 10px', fontSize: 12, cursor: 'pointer', background: '#fff', border: '1px dashed #d4d4d4', borderRadius: 4, marginBottom: 8 }}>
+        <button onClick={() => setCreating(true)} style={newSetBtn}>
           + New eval set
         </button>
       )}
 
       {sets.length === 0 ? (
-        <div style={{ fontSize: 11, color: '#888' }}>No eval sets yet</div>
+        <div style={{ fontSize: 11, color: cv.text4 }}>No eval sets yet</div>
       ) : (
         <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'grid', gap: 4 }}>
           {sets.map((s) => {
@@ -470,11 +508,11 @@ function EvalRunnerPanel({
               <li
                 key={s.id}
                 onClick={() => onSelectEvalSet(s.id)}
-                style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 8px', fontSize: 12, background: selected ? '#eef2ff' : '#fff', border: selected ? '1px solid #818cf8' : '1px solid #e5e5e5', borderRadius: 4, cursor: 'pointer' }}
+                style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 8px', fontSize: 12, background: selected ? cv.selectedBg : cv.bg, border: `1px solid ${selected ? cv.selectedBorder : cv.border}`, borderRadius: 4, cursor: 'pointer' }}
               >
-                <span style={{ flex: 1, fontFamily: 'monospace', fontSize: 11 }}>{s.id}</span>
-                <span style={{ color: '#888', fontSize: 11 }}>{s.caseCount}</span>
-                <button onClick={(e) => { e.stopPropagation(); void handleDelete(s.id) }} style={{ padding: '0 6px', fontSize: 12, cursor: 'pointer', background: 'transparent', color: '#999', border: 'none' }}>×</button>
+                <span style={{ flex: 1, fontFamily: 'monospace', fontSize: 11, color: cv.text1 }}>{s.id}</span>
+                <span style={{ color: cv.text4, fontSize: 11 }}>{s.caseCount}</span>
+                <button onClick={(e) => { e.stopPropagation(); void handleDelete(s.id) }} style={{ padding: '0 6px', fontSize: 12, cursor: 'pointer', background: 'transparent', color: cv.text5, border: 'none' }}>×</button>
               </li>
             )
           })}
@@ -486,51 +524,51 @@ function EvalRunnerPanel({
           <div style={{ marginTop: 16 }}>
             <SectionHeader>Cases ({activeSet.cases.length})</SectionHeader>
             {activeSet.cases.length === 0 ? (
-              <div style={{ fontSize: 11, color: '#888', marginBottom: 6 }}>No cases yet.</div>
+              <div style={{ fontSize: 11, color: cv.text4, marginBottom: 6 }}>No cases yet.</div>
             ) : (
               <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'grid', gap: 4, marginBottom: 6 }}>
                 {activeSet.cases.map((c) => (
-                  <li key={c.id} style={{ fontSize: 11, background: '#fff', border: '1px solid #e5e5e5', borderRadius: 4, padding: '4px 8px', display: 'flex', gap: 4, alignItems: 'flex-start' }}>
+                  <li key={c.id} style={{ fontSize: 11, background: cv.bg, border: `1px solid ${cv.border}`, borderRadius: 4, padding: '4px 8px', display: 'flex', gap: 4, alignItems: 'flex-start', color: cv.text1 }}>
                     <span style={{ flex: 1, lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{c.question}</span>
-                    <button onClick={() => void handleRemoveCase(c.id)} style={{ padding: '0 4px', fontSize: 11, cursor: 'pointer', background: 'transparent', color: '#999', border: 'none' }}>×</button>
+                    <button onClick={() => void handleRemoveCase(c.id)} style={{ padding: '0 4px', fontSize: 11, cursor: 'pointer', background: 'transparent', color: cv.text5, border: 'none' }}>×</button>
                   </li>
                 ))}
               </ul>
             )}
-            <button onClick={() => setShowAddCase(true)} style={{ width: '100%', padding: '6px 10px', fontSize: 11, cursor: 'pointer', background: '#fff', border: '1px dashed #d4d4d4', borderRadius: 4 }}>
+            <button onClick={() => setShowAddCase(true)} style={newSetBtn}>
               + Add case
             </button>
           </div>
 
           {activeSet.cases.length > 0 && (
             <div style={{ marginTop: 16 }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: '#444', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: cv.text2, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
                 Run @
-                <input type="number" value={k} min={1} max={20} onChange={(e) => setK(Math.max(1, Math.min(20, parseInt(e.target.value) || 1)))} style={{ width: 36, padding: '2px 4px', fontSize: 11, border: '1px solid #d4d4d4', borderRadius: 3 }} />
+                <input type="number" value={k} min={1} max={20} onChange={(e) => setK(Math.max(1, Math.min(20, parseInt(e.target.value) || 1)))} style={{ width: 36, padding: '2px 4px', fontSize: 11, border: `1px solid ${cv.border2}`, borderRadius: 3, background: cv.bg, color: cv.text1 }} />
               </div>
               {fullyEmbedded.length === 0 ? (
-                <div style={{ fontSize: 11, color: '#888' }}>No fully-embedded strategies.</div>
+                <div style={{ fontSize: 11, color: cv.text4 }}>No fully-embedded strategies.</div>
               ) : (
                 <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'grid', gap: 4 }}>
                   {fullyEmbedded.map((e) => {
                     const last = latestRun(activeSet.id, e.strategyId)
                     const isRunning = running === e.strategyId
                     return (
-                      <li key={e.strategyId} style={{ background: '#fff', border: '1px solid #e5e5e5', borderRadius: 4, padding: '6px 8px', fontSize: 11 }}>
+                      <li key={e.strategyId} style={{ background: cv.bg, border: `1px solid ${cv.border}`, borderRadius: 4, padding: '6px 8px', fontSize: 11 }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6 }}>
-                          <span style={{ fontFamily: 'monospace', fontSize: 11, color: '#444', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={e.strategyId}>{e.strategyId}</span>
-                          <button onClick={() => void handleRun(e.strategyId)} disabled={running !== null} style={{ padding: '3px 8px', fontSize: 11, cursor: running !== null ? 'wait' : 'pointer', background: '#fff', border: '1px solid #d4d4d4', borderRadius: 3 }}>
+                          <span style={{ fontFamily: 'monospace', fontSize: 11, color: cv.text2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={e.strategyId}>{e.strategyId}</span>
+                          <button onClick={() => void handleRun(e.strategyId)} disabled={running !== null} style={{ padding: '3px 8px', fontSize: 11, cursor: running !== null ? 'wait' : 'pointer', background: cv.bg, color: cv.text2, border: `1px solid ${cv.border2}`, borderRadius: 3 }}>
                             {isRunning ? '…' : last ? 'Re-run' : 'Run'}
                           </button>
                         </div>
                         {last && (
                           <>
-                            <div style={{ marginTop: 4, color: '#444', fontSize: 11 }}>
+                            <div style={{ marginTop: 4, color: cv.text2, fontSize: 11 }}>
                               R@{last.k}={last.meanRecallAtK.toFixed(2)} · MRR={last.meanMRR.toFixed(2)}
                               {last.meanCitationPrecision !== undefined && <> · CitP={last.meanCitationPrecision.toFixed(2)} · CitR={last.meanCitationRecall?.toFixed(2)}</>}
                             </div>
-                            <div style={{ marginTop: 2, fontSize: 10, color: '#888' }}>
-                              <button onClick={() => setDetailRunId(last.id)} style={{ padding: 0, fontSize: 10, cursor: 'pointer', background: 'transparent', border: 'none', color: '#2563eb', textDecoration: 'underline' }}>View details</button>
+                            <div style={{ marginTop: 2, fontSize: 10, color: cv.text4 }}>
+                              <button onClick={() => setDetailRunId(last.id)} style={{ padding: 0, fontSize: 10, cursor: 'pointer', background: 'transparent', border: 'none', color: cv.accent, textDecoration: 'underline' }}>View details</button>
                               <span style={{ marginLeft: 6 }}>{new Date(last.ranAt).toLocaleString()}</span>
                             </div>
                           </>
@@ -541,7 +579,7 @@ function EvalRunnerPanel({
                 </ul>
               )}
               {compareRunIds.length >= 2 && (
-                <button onClick={() => setCompareOpen(true)} style={{ width: '100%', marginTop: 8, padding: '6px 10px', fontSize: 11, cursor: 'pointer', background: '#fff', border: '1px solid #d4d4d4', borderRadius: 4 }}>
+                <button onClick={() => setCompareOpen(true)} style={{ width: '100%', marginTop: 8, padding: '6px 10px', fontSize: 11, cursor: 'pointer', background: cv.bg, color: cv.text2, border: `1px solid ${cv.border2}`, borderRadius: 4 }}>
                   Compare {compareRunIds.length} runs
                 </button>
               )}
@@ -551,7 +589,7 @@ function EvalRunnerPanel({
       )}
 
       {error && (
-        <pre style={{ color: '#b00', whiteSpace: 'pre-wrap', marginTop: 12, background: '#fee', padding: 8, border: '1px solid #fbb', borderRadius: 4, fontSize: 10 }}>
+        <pre style={{ color: cv.errorText, whiteSpace: 'pre-wrap', marginTop: 12, background: cv.errorBg, padding: 8, border: `1px solid ${cv.errorBorder}`, borderRadius: 4, fontSize: 10 }}>
           {error}
         </pre>
       )}
@@ -564,15 +602,15 @@ function EvalRunnerPanel({
 function Metric({ label, value }: { label: string; value: string }): React.JSX.Element {
   return (
     <div>
-      <div style={{ fontSize: 10, color: '#888', textTransform: 'uppercase', letterSpacing: 0.3 }}>{label}</div>
-      <div style={{ fontWeight: 600, fontSize: 14, color: '#222' }}>{value}</div>
+      <div style={{ fontSize: 10, color: cv.text4, textTransform: 'uppercase', letterSpacing: 0.3 }}>{label}</div>
+      <div style={{ fontWeight: 600, fontSize: 14, color: cv.text1 }}>{value}</div>
     </div>
   )
 }
 
 function ColHeader({ children }: { children: React.ReactNode }): React.JSX.Element {
   return (
-    <h3 style={{ margin: 0, fontSize: 11, fontWeight: 700, color: '#444', textTransform: 'uppercase', letterSpacing: 0.6 }}>
+    <h3 style={{ margin: 0, fontSize: 11, fontWeight: 700, color: cv.text2, textTransform: 'uppercase', letterSpacing: 0.6 }}>
       {children}
     </h3>
   )
@@ -580,40 +618,10 @@ function ColHeader({ children }: { children: React.ReactNode }): React.JSX.Eleme
 
 function SectionHeader({ children }: { children: React.ReactNode }): React.JSX.Element {
   return (
-    <h3 style={{ margin: '0 0 8px', fontSize: 12, fontWeight: 600, color: '#444', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+    <h3 style={{ margin: '0 0 8px', fontSize: 12, fontWeight: 600, color: cv.text2, textTransform: 'uppercase', letterSpacing: 0.5 }}>
       {children}
     </h3>
   )
-}
-
-const newSetBtn: React.CSSProperties = {
-  width: '100%',
-  padding: '6px 10px',
-  fontSize: 12,
-  cursor: 'pointer',
-  background: '#fff',
-  border: '1px dashed #d4d4d4',
-  borderRadius: 4,
-  marginBottom: 8
-}
-
-const primaryBtn: React.CSSProperties = {
-  padding: '6px 10px',
-  fontSize: 11,
-  cursor: 'pointer',
-  background: '#2563eb',
-  color: '#fff',
-  border: 'none',
-  borderRadius: 4
-}
-
-const ghostBtn: React.CSSProperties = {
-  padding: '6px 10px',
-  fontSize: 11,
-  cursor: 'pointer',
-  background: '#fff',
-  border: '1px solid #ccc',
-  borderRadius: 4
 }
 
 export default EvalRunnerPanel

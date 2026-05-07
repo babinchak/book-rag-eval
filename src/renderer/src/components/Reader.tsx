@@ -10,6 +10,7 @@ import type {
 } from '../../../preload/types'
 import { applyChunkOverlay, buildRangeForChunk, clearChunkOverlay } from '../lib/overlay'
 import { DEFAULT_STRATEGIES, strategyIdOf, strategyLabel } from '../../../shared/strategy'
+import { cv } from '../lib/theme'
 import AssistantPane from './AssistantPane'
 import EvalRunnerPanel from './EvalRunnerPanel'
 
@@ -184,17 +185,17 @@ function Reader({ book, onBack }: ReaderProps): React.JSX.Element {
   const highlightedChunkId = selectedChunk?.chunkId ?? null
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', color: '#222' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', color: cv.text1, background: cv.bg }}>
       <header
         style={{
           display: 'flex',
           alignItems: 'center',
           gap: 12,
           padding: '0 20px',
-          borderBottom: '1px solid #e5e5e5',
+          borderBottom: `1px solid ${cv.border}`,
           height: 48,
           flexShrink: 0,
-          background: '#fff'
+          background: cv.bg
         }}
       >
         <button
@@ -203,8 +204,9 @@ function Reader({ book, onBack }: ReaderProps): React.JSX.Element {
             padding: '5px 10px',
             fontSize: 12,
             cursor: 'pointer',
-            background: '#fff',
-            border: '1px solid #d4d4d4',
+            background: cv.bg,
+            color: cv.text2,
+            border: `1px solid ${cv.border2}`,
             borderRadius: 4,
             flexShrink: 0
           }}
@@ -218,13 +220,14 @@ function Reader({ book, onBack }: ReaderProps): React.JSX.Element {
               fontWeight: 600,
               whiteSpace: 'nowrap',
               overflow: 'hidden',
-              textOverflow: 'ellipsis'
+              textOverflow: 'ellipsis',
+              color: cv.text1
             }}
           >
             {book.title}
           </div>
           {book.author && (
-            <div style={{ fontSize: 11, color: '#888', marginTop: 1 }}>{book.author}</div>
+            <div style={{ fontSize: 11, color: cv.text4, marginTop: 1 }}>{book.author}</div>
           )}
         </div>
         <nav style={{ display: 'flex', gap: 2, flexShrink: 0 }}>
@@ -243,12 +246,12 @@ function Reader({ book, onBack }: ReaderProps): React.JSX.Element {
       {error && (
         <pre
           style={{
-            color: '#b00',
+            color: cv.errorText,
             whiteSpace: 'pre-wrap',
             margin: '0',
-            background: '#fee',
+            background: cv.errorBg,
             padding: '8px 20px',
-            borderBottom: '1px solid #fbb',
+            borderBottom: `1px solid ${cv.errorBorder}`,
             fontSize: 11,
             flexShrink: 0
           }}
@@ -369,8 +372,8 @@ function ReaderPane({
         style={{
           width: leftRailOpen ? 280 : 36,
           flexShrink: 0,
-          background: '#f7f7f8',
-          borderRight: '1px solid #e5e5e5',
+          background: cv.surface,
+          borderRight: `1px solid ${cv.border}`,
           display: 'flex',
           flexDirection: 'column',
           transition: 'width 120ms ease',
@@ -383,19 +386,19 @@ function ReaderPane({
             alignItems: 'center',
             justifyContent: leftRailOpen ? 'space-between' : 'center',
             padding: '8px 8px 8px 12px',
-            borderBottom: '1px solid #e5e5e5',
+            borderBottom: `1px solid ${cv.border}`,
             minHeight: 36,
             flexShrink: 0
           }}
         >
           {leftRailOpen && (
-            <span style={{ fontSize: 10, fontWeight: 600, color: '#666', letterSpacing: 0.5, textTransform: 'uppercase' }}>
+            <span style={{ fontSize: 10, fontWeight: 600, color: cv.text3, letterSpacing: 0.5, textTransform: 'uppercase' }}>
               Tools
             </span>
           )}
           <button
             onClick={() => setLeftRailOpen((v) => !v)}
-            style={{ width: 22, height: 22, padding: 0, border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, color: '#666' }}
+            style={{ width: 22, height: 22, padding: 0, border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, color: cv.text3 }}
           >
             {leftRailOpen ? '⟨' : '⟩'}
           </button>
@@ -425,7 +428,7 @@ function ReaderPane({
         {loaded ? (
           <SpineRenderer items={loaded.spineItems} containerRef={spineContainerRef} />
         ) : (
-          <div style={{ padding: 24, color: '#888', fontSize: 13 }}>Loading…</div>
+          <div style={{ padding: 24, color: cv.text4, fontSize: 13 }}>Loading…</div>
         )}
       </main>
 
@@ -434,8 +437,8 @@ function ReaderPane({
         style={{
           width: rightRailOpen ? 320 : 36,
           flexShrink: 0,
-          background: '#f7f7f8',
-          borderLeft: '1px solid #e5e5e5',
+          background: cv.surface,
+          borderLeft: `1px solid ${cv.border}`,
           display: 'flex',
           flexDirection: 'column',
           transition: 'width 120ms ease',
@@ -448,14 +451,14 @@ function ReaderPane({
             alignItems: 'center',
             gap: 4,
             padding: '6px 8px',
-            borderBottom: '1px solid #e5e5e5',
+            borderBottom: `1px solid ${cv.border}`,
             minHeight: 36,
             flexShrink: 0
           }}
         >
           <button
             onClick={() => setRightRailOpen((v) => !v)}
-            style={{ width: 22, height: 22, padding: 0, border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, color: '#666', flexShrink: 0 }}
+            style={{ width: 22, height: 22, padding: 0, border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, color: cv.text3, flexShrink: 0 }}
           >
             {rightRailOpen ? '⟩' : '⟨'}
           </button>
@@ -529,7 +532,7 @@ function ChunkingSection({
           margin: '0 0 8px',
           fontSize: 12,
           fontWeight: 600,
-          color: '#444',
+          color: cv.text2,
           textTransform: 'uppercase',
           letterSpacing: 0.5
         }}
@@ -552,8 +555,9 @@ function ChunkingSection({
                 fontSize: 12,
                 textAlign: 'left',
                 cursor: anyRunning ? 'wait' : 'pointer',
-                background: '#fff',
-                border: '1px solid #d4d4d4',
+                background: cv.bg,
+                color: cv.text2,
+                border: `1px solid ${cv.border2}`,
                 borderRadius: 4,
                 display: 'flex',
                 justifyContent: 'space-between',
@@ -565,7 +569,7 @@ function ChunkingSection({
                 {isRunning ? 'Running…' : exists ? 'Re-run ' : 'Run '}
                 {strategyLabel(params)}
               </span>
-              {exists && !isRunning && <span style={{ color: '#10b981', fontSize: 11 }}>✓</span>}
+              {exists && !isRunning && <span style={{ color: cv.successStrong, fontSize: 11 }}>✓</span>}
             </button>
           )
         })}
@@ -576,7 +580,7 @@ function ChunkingSection({
           style={{
             fontSize: 11,
             fontWeight: 600,
-            color: '#444',
+            color: cv.text2,
             textTransform: 'uppercase',
             letterSpacing: 0.5,
             marginBottom: 6
@@ -584,7 +588,7 @@ function ChunkingSection({
         >
           Chunk sets
         </div>
-        <div style={{ fontSize: 11, color: '#888', marginBottom: 6 }}>
+        <div style={{ fontSize: 11, color: cv.text4, marginBottom: 6 }}>
           {chunkSets.length === 0 ? 'None generated yet' : `${chunkSets.length} generated`}
         </div>
         <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'grid', gap: 6 }}>
@@ -594,8 +598,8 @@ function ChunkingSection({
               <li
                 key={s.strategyId}
                 style={{
-                  background: active ? '#fff8d8' : '#fff',
-                  border: active ? '1px solid #d4b94d' : '1px solid #e5e5e5',
+                  background: active ? cv.warningBg : cv.bg,
+                  border: `1px solid ${active ? cv.warningBorder : cv.border}`,
                   borderRadius: 4,
                   padding: '6px 8px'
                 }}
@@ -606,7 +610,7 @@ function ChunkingSection({
                       style={{
                         fontFamily: 'monospace',
                         fontSize: 11,
-                        color: '#444',
+                        color: cv.text2,
                         whiteSpace: 'nowrap',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis'
@@ -615,10 +619,10 @@ function ChunkingSection({
                     >
                       {s.strategyId}
                     </div>
-                    <div style={{ color: '#888', fontSize: 11, marginTop: 2 }}>
+                    <div style={{ color: cv.text4, fontSize: 11, marginTop: 2 }}>
                       {s.count} chunk{s.count === 1 ? '' : 's'}
                       {active && overlayApplied !== null && overlayApplied !== s.count && (
-                        <span style={{ color: '#b06400' }}> · {overlayApplied} shown</span>
+                        <span style={{ color: cv.warningText }}> · {overlayApplied} shown</span>
                       )}
                     </div>
                   </div>
@@ -630,9 +634,9 @@ function ChunkingSection({
                       padding: '4px 8px',
                       fontSize: 11,
                       cursor: 'pointer',
-                      background: active ? '#d4b94d' : '#fff',
-                      color: active ? '#fff' : '#444',
-                      border: '1px solid ' + (active ? '#d4b94d' : '#ccc'),
+                      background: active ? cv.warningBorder : cv.bg,
+                      color: active ? cv.accentText : cv.text2,
+                      border: `1px solid ${active ? cv.warningBorder : cv.border3}`,
                       borderRadius: 3
                     }}
                   >
@@ -682,20 +686,20 @@ function EmbeddingRow({
       style={{
         marginTop: 6,
         paddingTop: 6,
-        borderTop: '1px solid #f0f0f0',
+        borderTop: `1px solid ${cv.border}`,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         gap: 6
       }}
     >
-      <div style={{ fontSize: 10, color: '#888', minWidth: 0, flex: 1 }}>
+      <div style={{ fontSize: 10, color: cv.text4, minWidth: 0, flex: 1 }}>
         {isEmbedding ? (
-          <span style={{ color: '#2563eb' }}>Embedding…</span>
+          <span style={{ color: cv.accent }}>Embedding…</span>
         ) : fullyEmbedded ? (
-          <span style={{ color: '#10b981' }}>✓ {embedding.count}/{chunkCount} embedded</span>
+          <span style={{ color: cv.successStrong }}>✓ {embedding.count}/{chunkCount} embedded</span>
         ) : partiallyEmbedded ? (
-          <span style={{ color: '#b06400' }}>{embedding!.count}/{chunkCount} embedded</span>
+          <span style={{ color: cv.warningText }}>{embedding!.count}/{chunkCount} embedded</span>
         ) : (
           <span>Not embedded</span>
         )}
@@ -709,8 +713,9 @@ function EmbeddingRow({
           padding: '3px 7px',
           fontSize: 10,
           cursor: anyEmbedding ? 'wait' : 'pointer',
-          background: '#fff',
-          border: '1px solid #ccc',
+          background: cv.bg,
+          color: cv.text2,
+          border: `1px solid ${cv.border3}`,
           borderRadius: 3
         }}
       >
@@ -726,9 +731,9 @@ function EmbeddingRow({
             padding: '3px 7px',
             fontSize: 10,
             cursor: anyEmbedding ? 'wait' : 'pointer',
-            background: '#fff',
-            color: '#b91c1c',
-            border: '1px solid #fca5a5',
+            background: cv.bg,
+            color: cv.danger,
+            border: `1px solid ${cv.dangerBorder}`,
             borderRadius: 3
           }}
         >
@@ -756,9 +761,9 @@ function RailTab({
         fontSize: 11,
         fontWeight: active ? 600 : 500,
         cursor: 'pointer',
-        background: active ? '#fff' : 'transparent',
-        color: active ? '#222' : '#666',
-        border: '1px solid ' + (active ? '#d4d4d4' : 'transparent'),
+        background: active ? cv.bg : 'transparent',
+        color: active ? cv.text1 : cv.text3,
+        border: `1px solid ${active ? cv.border2 : 'transparent'}`,
         borderRadius: 4,
         letterSpacing: 0.3
       }}
@@ -803,17 +808,10 @@ function StrategiesFullView({
   return (
     <div style={{ overflowY: 'auto', height: '100%', padding: 24 }}>
       <div style={{ maxWidth: 820, margin: '0 auto' }}>
-        <h2
-          style={{
-            margin: '0 0 4px',
-            fontSize: 16,
-            fontWeight: 600,
-            color: '#111'
-          }}
-        >
+        <h2 style={{ margin: '0 0 4px', fontSize: 16, fontWeight: 600, color: cv.text1 }}>
           Chunking strategies
         </h2>
-        <p style={{ margin: '0 0 20px', fontSize: 12, color: '#888' }}>
+        <p style={{ margin: '0 0 20px', fontSize: 12, color: cv.text4 }}>
           Run a strategy to chunk the book, then embed it to enable retrieval and evals.
         </p>
 
@@ -833,8 +831,8 @@ function StrategiesFullView({
               <div
                 key={sid}
                 style={{
-                  background: '#fff',
-                  border: '1px solid #e5e5e5',
+                  background: cv.bg,
+                  border: `1px solid ${cv.border}`,
                   borderRadius: 8,
                   padding: '16px 20px',
                   display: 'flex',
@@ -844,10 +842,10 @@ function StrategiesFullView({
               >
                 {/* Identity */}
                 <div style={{ minWidth: 0, flex: 1 }}>
-                  <div style={{ fontWeight: 600, fontSize: 14, color: '#111' }}>
+                  <div style={{ fontWeight: 600, fontSize: 14, color: cv.text1 }}>
                     {strategyLabel(params)}
                   </div>
-                  <div style={{ fontFamily: 'monospace', fontSize: 11, color: '#999', marginTop: 2 }}>
+                  <div style={{ fontFamily: 'monospace', fontSize: 11, color: cv.text4, marginTop: 2 }}>
                     {sid}
                   </div>
                 </div>
@@ -855,24 +853,24 @@ function StrategiesFullView({
                 {/* Chunk status */}
                 <div style={{ minWidth: 100, fontSize: 12 }}>
                   {isRunning ? (
-                    <span style={{ color: '#2563eb' }}>Chunking…</span>
+                    <span style={{ color: cv.accent }}>Chunking…</span>
                   ) : exists && set ? (
-                    <span style={{ color: '#10b981', fontWeight: 500 }}>{set.count.toLocaleString()} chunks</span>
+                    <span style={{ color: cv.successStrong, fontWeight: 500 }}>{set.count.toLocaleString()} chunks</span>
                   ) : (
-                    <span style={{ color: '#aaa' }}>not run</span>
+                    <span style={{ color: cv.text5 }}>not run</span>
                   )}
                 </div>
 
                 {/* Embedding status */}
                 <div style={{ minWidth: 120, fontSize: 12 }}>
                   {isEmbedding ? (
-                    <span style={{ color: '#2563eb' }}>Embedding…</span>
+                    <span style={{ color: cv.accent }}>Embedding…</span>
                   ) : fullyEmbedded ? (
-                    <span style={{ color: '#10b981', fontWeight: 500 }}>embedded ✓</span>
+                    <span style={{ color: cv.successStrong, fontWeight: 500 }}>embedded ✓</span>
                   ) : partialEmbedded ? (
-                    <span style={{ color: '#b06400' }}>{embedding!.count}/{set!.count} embedded</span>
+                    <span style={{ color: cv.warningText }}>{embedding!.count}/{set!.count} embedded</span>
                   ) : (
-                    <span style={{ color: '#aaa' }}>not embedded</span>
+                    <span style={{ color: cv.text5 }}>not embedded</span>
                   )}
                 </div>
 
@@ -885,9 +883,9 @@ function StrategiesFullView({
                       padding: '6px 14px',
                       fontSize: 12,
                       cursor: anyRunning ? 'wait' : 'pointer',
-                      background: exists ? '#fff' : '#2563eb',
-                      color: exists ? '#444' : '#fff',
-                      border: exists ? '1px solid #d4d4d4' : 'none',
+                      background: exists ? cv.bg : cv.accent,
+                      color: exists ? cv.text2 : cv.accentText,
+                      border: exists ? `1px solid ${cv.border2}` : 'none',
                       borderRadius: 5,
                       fontWeight: exists ? 400 : 500
                     }}
@@ -903,9 +901,9 @@ function StrategiesFullView({
                         padding: '6px 14px',
                         fontSize: 12,
                         cursor: anyEmbedding ? 'wait' : 'pointer',
-                        background: fullyEmbedded ? '#fff' : '#2563eb',
-                        color: fullyEmbedded ? '#444' : '#fff',
-                        border: fullyEmbedded ? '1px solid #d4d4d4' : 'none',
+                        background: fullyEmbedded ? cv.bg : cv.accent,
+                        color: fullyEmbedded ? cv.text2 : cv.accentText,
+                        border: fullyEmbedded ? `1px solid ${cv.border2}` : 'none',
                         borderRadius: 5,
                         fontWeight: fullyEmbedded ? 400 : 500
                       }}
@@ -922,9 +920,9 @@ function StrategiesFullView({
                         padding: '6px 10px',
                         fontSize: 12,
                         cursor: anyEmbedding ? 'wait' : 'pointer',
-                        background: '#fff',
-                        color: '#b91c1c',
-                        border: '1px solid #fca5a5',
+                        background: cv.bg,
+                        color: cv.danger,
+                        border: `1px solid ${cv.dangerBorder}`,
                         borderRadius: 5
                       }}
                       title="Delete embeddings"
@@ -943,9 +941,9 @@ function StrategiesFullView({
                         padding: '6px 12px',
                         fontSize: 12,
                         cursor: 'pointer',
-                        background: isOverlay ? '#fff8d8' : '#fff',
-                        color: isOverlay ? '#92650a' : '#555',
-                        border: isOverlay ? '1px solid #d4b94d' : '1px solid #d4d4d4',
+                        background: isOverlay ? cv.warningBg : cv.bg,
+                        color: isOverlay ? cv.warningText : cv.text2,
+                        border: `1px solid ${isOverlay ? cv.warningBorder : cv.border2}`,
                         borderRadius: 5
                       }}
                       title={isOverlay ? 'Hide chunk overlay in reader' : 'Show chunk overlay in reader'}
@@ -1004,8 +1002,8 @@ function NavTab({
         fontSize: 12,
         fontWeight: active ? 600 : 500,
         cursor: 'pointer',
-        background: active ? '#111' : 'transparent',
-        color: active ? '#fff' : '#666',
+        background: active ? cv.text1 : 'transparent',
+        color: active ? cv.accentText : cv.text3,
         border: active ? 'none' : '1px solid transparent',
         borderRadius: 5,
         letterSpacing: 0.2

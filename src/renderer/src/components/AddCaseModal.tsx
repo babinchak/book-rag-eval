@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { GoldSpan, LocateQuoteHit } from '../../../preload/types'
+import { cv } from '../lib/theme'
 
 interface AddCaseModalProps {
   bookId: string
@@ -21,10 +22,7 @@ function AddCaseModal({ bookId, setId, onClose, onAdded }: AddCaseModalProps): R
     setLocated(null)
     try {
       const r = await window.api.evals.locate(bookId, quote)
-      if (!r.ok) {
-        setError(r.error)
-        return
-      }
+      if (!r.ok) { setError(r.error); return }
       setLocated(r.data)
     } finally {
       setBusy(false)
@@ -38,15 +36,25 @@ function AddCaseModal({ bookId, setId, onClose, onAdded }: AddCaseModalProps): R
     try {
       const goldSpans: GoldSpan[] = [located.goldSpan]
       const r = await window.api.evals.addCase(bookId, setId, question, goldSpans)
-      if (!r.ok) {
-        setError(r.error)
-        return
-      }
+      if (!r.ok) { setError(r.error); return }
       onAdded()
       onClose()
     } finally {
       setBusy(false)
     }
+  }
+
+  const inputStyle: React.CSSProperties = {
+    width: '100%',
+    padding: '8px 10px',
+    fontSize: 13,
+    fontFamily: 'inherit',
+    border: `1px solid ${cv.border2}`,
+    borderRadius: 4,
+    boxSizing: 'border-box',
+    resize: 'vertical',
+    background: cv.bg,
+    color: cv.text1
   }
 
   return (
@@ -55,7 +63,7 @@ function AddCaseModal({ bookId, setId, onClose, onAdded }: AddCaseModalProps): R
       style={{
         position: 'fixed',
         inset: 0,
-        background: 'rgba(0,0,0,0.4)',
+        background: cv.overlay,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -65,38 +73,33 @@ function AddCaseModal({ bookId, setId, onClose, onAdded }: AddCaseModalProps): R
       <div
         onClick={(e) => e.stopPropagation()}
         style={{
-          background: '#fff',
+          background: cv.bg,
           borderRadius: 8,
           padding: 24,
           width: 560,
           maxWidth: '92vw',
           maxHeight: '88vh',
           overflowY: 'auto',
-          boxShadow: '0 10px 40px rgba(0,0,0,0.2)'
+          boxShadow: '0 10px 40px rgba(0,0,0,0.3)',
+          border: `1px solid ${cv.border}`
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-          <h2 style={{ margin: 0, fontSize: 18 }}>Add eval case</h2>
+          <h2 style={{ margin: 0, fontSize: 18, color: cv.text1 }}>Add eval case</h2>
           <button
             onClick={onClose}
-            style={{
-              border: 'none',
-              background: 'transparent',
-              fontSize: 18,
-              cursor: 'pointer',
-              color: '#666'
-            }}
+            style={{ border: 'none', background: 'transparent', fontSize: 18, cursor: 'pointer', color: cv.text3 }}
           >
             ×
           </button>
         </div>
 
-        <p style={{ margin: '6px 0 16px', fontSize: 12, color: '#666', lineHeight: 1.5 }}>
+        <p style={{ margin: '6px 0 16px', fontSize: 12, color: cv.text3, lineHeight: 1.5 }}>
           A case is a question + the gold passage that contains its answer. Paste a quote
           from the book; the app will locate it and capture its position.
         </p>
 
-        <label style={{ display: 'block', fontSize: 11, color: '#666', marginBottom: 4 }}>
+        <label style={{ display: 'block', fontSize: 11, color: cv.text3, marginBottom: 4 }}>
           Question
         </label>
         <textarea
@@ -104,40 +107,19 @@ function AddCaseModal({ bookId, setId, onClose, onAdded }: AddCaseModalProps): R
           onChange={(e) => setQuestion(e.target.value)}
           rows={2}
           placeholder="What is the relationship between Jekyll and Hyde?"
-          style={{
-            width: '100%',
-            padding: '8px 10px',
-            fontSize: 13,
-            fontFamily: 'inherit',
-            border: '1px solid #d4d4d4',
-            borderRadius: 4,
-            boxSizing: 'border-box',
-            resize: 'vertical'
-          }}
+          style={inputStyle}
           disabled={busy}
         />
 
-        <label style={{ display: 'block', fontSize: 11, color: '#666', marginTop: 14, marginBottom: 4 }}>
+        <label style={{ display: 'block', fontSize: 11, color: cv.text3, marginTop: 14, marginBottom: 4 }}>
           Gold passage (paste a quote)
         </label>
         <textarea
           value={quote}
-          onChange={(e) => {
-            setQuote(e.target.value)
-            setLocated(null)
-          }}
+          onChange={(e) => { setQuote(e.target.value); setLocated(null) }}
           rows={4}
           placeholder='"That is the very fellow." said Mr. Utterson...'
-          style={{
-            width: '100%',
-            padding: '8px 10px',
-            fontSize: 13,
-            fontFamily: 'inherit',
-            border: '1px solid #d4d4d4',
-            borderRadius: 4,
-            boxSizing: 'border-box',
-            resize: 'vertical'
-          }}
+          style={inputStyle}
           disabled={busy}
         />
 
@@ -149,8 +131,9 @@ function AddCaseModal({ bookId, setId, onClose, onAdded }: AddCaseModalProps): R
               padding: '6px 12px',
               fontSize: 12,
               cursor: busy ? 'wait' : 'pointer',
-              background: '#fff',
-              border: '1px solid #d4d4d4',
+              background: cv.surface,
+              color: cv.text2,
+              border: `1px solid ${cv.border2}`,
               borderRadius: 4
             }}
           >
@@ -164,8 +147,8 @@ function AddCaseModal({ bookId, setId, onClose, onAdded }: AddCaseModalProps): R
                 padding: '6px 12px',
                 fontSize: 12,
                 cursor: 'pointer',
-                background: '#2563eb',
-                color: '#fff',
+                background: cv.accent,
+                color: cv.accentText,
                 border: 'none',
                 borderRadius: 4
               }}
@@ -179,19 +162,19 @@ function AddCaseModal({ bookId, setId, onClose, onAdded }: AddCaseModalProps): R
           <div
             style={{
               marginTop: 12,
-              background: '#ecfdf5',
-              border: '1px solid #6ee7b7',
+              background: cv.successBg,
+              border: `1px solid ${cv.successBorder}`,
               borderRadius: 4,
               padding: 10,
               fontSize: 12,
-              color: '#065f46'
+              color: cv.successText
             }}
           >
             <div style={{ fontWeight: 600, marginBottom: 4 }}>
               Located in {located.goldSpan.spineHref}
             </div>
-            <div style={{ color: '#444', fontStyle: 'italic' }}>"{located.preview}"</div>
-            <div style={{ color: '#666', marginTop: 4, fontSize: 11 }}>
+            <div style={{ color: cv.text2, fontStyle: 'italic' }}>"{located.preview}"</div>
+            <div style={{ color: cv.text3, marginTop: 4, fontSize: 11 }}>
               span: {located.goldSpan.textStart}–{located.goldSpan.textEnd}
             </div>
           </div>
@@ -200,12 +183,12 @@ function AddCaseModal({ bookId, setId, onClose, onAdded }: AddCaseModalProps): R
         {error && (
           <pre
             style={{
-              color: '#b00',
+              color: cv.errorText,
               whiteSpace: 'pre-wrap',
               marginTop: 12,
-              background: '#fee',
+              background: cv.errorBg,
               padding: 10,
-              border: '1px solid #fbb',
+              border: `1px solid ${cv.errorBorder}`,
               borderRadius: 4,
               fontSize: 11
             }}

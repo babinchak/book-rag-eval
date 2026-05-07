@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import type { BookSummary } from '../../../preload/types'
 import SettingsModal from './SettingsModal'
+import ThemeToggle from './ThemeToggle'
+import { cv, useTheme } from '../lib/theme'
 
 interface LibraryProps {
   onOpen: (book: BookSummary) => void
@@ -11,30 +13,22 @@ function Library({ onOpen }: LibraryProps): React.JSX.Element {
   const [error, setError] = useState<string | null>(null)
   const [importing, setImporting] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const { mode, setMode } = useTheme()
 
   async function refresh(): Promise<void> {
     const result = await window.api.library.list()
-    if (result.ok) {
-      setBooks(result.books)
-      setError(null)
-    } else {
-      setError(result.error)
-    }
+    if (result.ok) { setBooks(result.books); setError(null) }
+    else setError(result.error)
   }
 
-  useEffect(() => {
-    void refresh()
-  }, [])
+  useEffect(() => { void refresh() }, [])
 
   async function handleImport(): Promise<void> {
     setImporting(true)
     setError(null)
     try {
       const result = await window.api.library.import()
-      if (!result.ok) {
-        setError(result.error)
-        return
-      }
+      if (!result.ok) { setError(result.error); return }
       await refresh()
     } finally {
       setImporting(false)
@@ -43,47 +37,47 @@ function Library({ onOpen }: LibraryProps): React.JSX.Element {
 
   async function handleRemove(id: string): Promise<void> {
     const result = await window.api.library.remove(id)
-    if (!result.ok) {
-      setError(result.error)
-      return
-    }
+    if (!result.ok) { setError(result.error); return }
     await refresh()
   }
 
   return (
-    <div style={{ padding: 32, color: '#222' }}>
+    <div style={{ padding: 32, color: cv.text1 }}>
       <header style={{ display: 'flex', alignItems: 'baseline', gap: 16 }}>
         <h1 style={{ margin: 0, fontSize: 24 }}>Library</h1>
-        <span style={{ color: '#888', fontSize: 13 }}>
+        <span style={{ color: cv.text4, fontSize: 13 }}>
           {books ? `${books.length} ${books.length === 1 ? 'book' : 'books'}` : 'loading…'}
         </span>
-        <button
-          onClick={() => setSettingsOpen(true)}
-          title="Settings"
-          style={{
-            marginLeft: 'auto',
-            padding: '6px 12px',
-            fontSize: 13,
-            cursor: 'pointer',
-            background: '#fff',
-            border: '1px solid #ccc',
-            borderRadius: 4
-          }}
-        >
-          ⚙ Settings
-        </button>
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+          <ThemeToggle mode={mode} setMode={setMode} />
+          <button
+            onClick={() => setSettingsOpen(true)}
+            title="Settings"
+            style={{
+              padding: '5px 10px',
+              fontSize: 12,
+              cursor: 'pointer',
+              background: cv.bg,
+              color: cv.text2,
+              border: `1px solid ${cv.border2}`,
+              borderRadius: 4
+            }}
+          >
+            ⚙ Settings
+          </button>
+        </div>
       </header>
       <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
 
       {error && (
         <pre
           style={{
-            color: '#b00',
+            color: cv.errorText,
             whiteSpace: 'pre-wrap',
             marginTop: 16,
-            background: '#fee',
+            background: cv.errorBg,
             padding: 12,
-            border: '1px solid #fbb',
+            border: `1px solid ${cv.errorBorder}`,
             borderRadius: 4
           }}
         >
@@ -104,10 +98,10 @@ function Library({ onOpen }: LibraryProps): React.JSX.Element {
           disabled={importing}
           style={{
             aspectRatio: '2 / 3',
-            border: '2px dashed #bbb',
+            border: `2px dashed ${cv.border3}`,
             borderRadius: 6,
-            background: '#fafafa',
-            color: '#666',
+            background: cv.surface2,
+            color: cv.text3,
             fontSize: 14,
             cursor: importing ? 'wait' : 'pointer',
             display: 'flex',
@@ -148,10 +142,10 @@ function BookCard({ book, onOpen, onRemove }: BookCardProps): React.JSX.Element 
         onClick={() => onOpen(book)}
         style={{
           aspectRatio: '2 / 3',
-          border: '1px solid #ddd',
+          border: `1px solid ${cv.border}`,
           borderRadius: 4,
           padding: 0,
-          background: book.coverDataUrl ? '#000' : '#f0f0f0',
+          background: book.coverDataUrl ? '#000' : cv.surface,
           cursor: 'pointer',
           overflow: 'hidden',
           display: 'flex',
@@ -160,19 +154,15 @@ function BookCard({ book, onOpen, onRemove }: BookCardProps): React.JSX.Element 
         }}
       >
         {book.coverDataUrl ? (
-          <img
-            src={book.coverDataUrl}
-            alt=""
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-          />
+          <img src={book.coverDataUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         ) : (
-          <span style={{ color: '#888', padding: 12, textAlign: 'center', fontSize: 13 }}>
+          <span style={{ color: cv.text4, padding: 12, textAlign: 'center', fontSize: 13 }}>
             {book.title}
           </span>
         )}
       </button>
-      <div style={{ fontSize: 13, fontWeight: 500, lineHeight: 1.3 }}>{book.title}</div>
-      {book.author && <div style={{ fontSize: 12, color: '#666' }}>{book.author}</div>}
+      <div style={{ fontSize: 13, fontWeight: 500, lineHeight: 1.3, color: cv.text1 }}>{book.title}</div>
+      {book.author && <div style={{ fontSize: 12, color: cv.text3 }}>{book.author}</div>}
       {hover && (
         <button
           onClick={(e) => {
