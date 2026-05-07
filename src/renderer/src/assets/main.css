@@ -100,6 +100,22 @@ body {
   color: var(--c-text-1);
 }
 
+/* Find-in-book overlays */
+::highlight(find-match) {
+  background-color: rgba(253, 224, 71, 0.55);
+}
+::highlight(find-current) {
+  background-color: rgba(234, 179, 8, 0.9);
+  color: #111;
+}
+[data-theme='dark'] ::highlight(find-match) {
+  background-color: rgba(161, 98, 7, 0.5);
+}
+[data-theme='dark'] ::highlight(find-current) {
+  background-color: rgba(202, 138, 4, 0.85);
+  color: #fff;
+}
+
 /* Chunk overlays */
 ::highlight(chunk-a) {
   background-color: rgba(250, 204, 21, 0.55);

@@ -340,6 +340,36 @@ interface ReaderPaneProps {
   onClearEmbeddings: (strategyId: string) => void
 }
 
+interface HighlightsHost {
+  highlights?: Map<string, Highlight>
+}
+
+function getHighlights(): Map<string, Highlight> | null {
+  return (CSS as unknown as HighlightsHost).highlights ?? null
+}
+
+function findTextMatches(container: Element, query: string): Range[] {
+  const ranges: Range[] = []
+  const q = query.toLowerCase()
+  const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT)
+  let node: Text | null
+  while ((node = walker.nextNode() as Text | null)) {
+    const tag = node.parentElement?.tagName
+    if (tag === 'SCRIPT' || tag === 'STYLE') continue
+    const text = (node.nodeValue ?? '').toLowerCase()
+    let pos = 0
+    let idx: number
+    while ((idx = text.indexOf(q, pos)) !== -1) {
+      const r = document.createRange()
+      r.setStart(node, idx)
+      r.setEnd(node, idx + q.length)
+      ranges.push(r)
+      pos = idx + q.length
+    }
+  }
+  return ranges
+}
+
 function ReaderPane({
   loaded,
   chunkSets,
@@ -364,6 +394,97 @@ function ReaderPane({
   const [leftRailOpen, setLeftRailOpen] = useState(true)
   const [rightRailOpen, setRightRailOpen] = useState(true)
   const [rightTab, setRightTab] = useState<'ask' | 'eval'>('ask')
+  const [findOpen, setFindOpen] = useState(false)
+  const [findQuery, setFindQuery] = useState('')
+  const [findMatches, setFindMatches] = useState<Range[]>([])
+  const [findIndex, setFindIndex] = useState(0)
+  const [findPositions, setFindPositions] = useState<number[]>([])
+  const findInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent): void {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+        e.preventDefault()
+        setFindOpen(true)
+        setTimeout(() => findInputRef.current?.select(), 0)
+      }
+      if (e.key === 'Escape') setFindOpen((v) => { if (v) { getHighlights()?.delete('find-match'); getHighlights()?.delete('find-current') } return false })
+      if (e.key === 'F3' || (e.key === 'Enter' && (document.activeElement === findInputRef.current))) {
+        e.preventDefault()
+        if (findMatches.length === 0) return
+        setFindIndex((i) => e.shiftKey ? (i - 1 + findMatches.length) % findMatches.length : (i + 1) % findMatches.length)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [findMatches])
+
+  useEffect(() => {
+    const host = getHighlights()
+    const container = spineContainerRef.current
+    if (!host || !container || !findQuery.trim()) {
+      host?.delete('find-match')
+      host?.delete('find-current')
+      setFindMatches([])
+      return
+    }
+    const ranges = findTextMatches(container, findQuery)
+    setFindMatches(ranges)
+    setFindIndex(0)
+    if (ranges.length > 0) {
+      const h = new Highlight(...ranges)
+      h.priority = 5
+      host.set('find-match', h)
+    } else {
+      host.delete('find-match')
+    }
+    host.delete('find-current')
+  }, [findQuery, spineContainerRef, loaded])
+
+  useEffect(() => {
+    const host = getHighlights()
+    if (!host || findMatches.length === 0) { host?.delete('find-current'); return }
+    const current = findMatches[findIndex]
+    const h = new Highlight(current)
+    h.priority = 6
+    host.set('find-current', h)
+    const container = spineContainerRef.current
+    if (!container) return
+    const rect = current.getBoundingClientRect()
+    if (rect.width === 0 && rect.height === 0) return
+    const containerRect = container.getBoundingClientRect()
+    const matchAbsTop = rect.top - containerRect.top + container.scrollTop
+    const targetTop = matchAbsTop - container.clientHeight / 2 + rect.height / 2
+    container.scrollTo({
+      top: Math.max(0, Math.min(targetTop, container.scrollHeight - container.clientHeight)),
+      behavior: 'smooth'
+    })
+  }, [findIndex, findMatches, spineContainerRef])
+
+  useEffect(() => {
+    if (!findOpen) {
+      setFindQuery('')
+      setFindMatches([])
+      const host = getHighlights()
+      host?.delete('find-match')
+      host?.delete('find-current')
+    }
+  }, [findOpen])
+
+  useEffect(() => () => { getHighlights()?.delete('find-match'); getHighlights()?.delete('find-current') }, [])
+
+  useEffect(() => {
+    if (findMatches.length === 0) { setFindPositions([]); return }
+    const container = spineContainerRef.current
+    if (!container) return
+    const { top: containerTop } = container.getBoundingClientRect()
+    const { scrollHeight, scrollTop } = container
+    if (scrollHeight === 0) return
+    setFindPositions(findMatches.map((range) => {
+      const { top } = range.getBoundingClientRect()
+      return Math.max(0, Math.min(1, (top - containerTop + scrollTop) / scrollHeight))
+    }))
+  }, [findMatches, spineContainerRef, loaded])
 
   return (
     <div style={{ display: 'flex', height: '100%' }}>
@@ -425,11 +546,32 @@ function ReaderPane({
 
       {/* Book */}
       <main style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        {loaded ? (
-          <SpineRenderer items={loaded.spineItems} containerRef={spineContainerRef} />
-        ) : (
-          <div style={{ padding: 24, color: cv.text4, fontSize: 13 }}>Loading…</div>
+        {findOpen && (
+          <FindBar
+            inputRef={findInputRef}
+            query={findQuery}
+            matchCount={findMatches.length}
+            matchIndex={findIndex}
+            onQueryChange={(q) => setFindQuery(q)}
+            onNext={() => setFindIndex((i) => (i + 1) % Math.max(findMatches.length, 1))}
+            onPrev={() => setFindIndex((i) => (i - 1 + Math.max(findMatches.length, 1)) % Math.max(findMatches.length, 1))}
+            onClose={() => setFindOpen(false)}
+          />
         )}
+        <div style={{ flex: 1, minHeight: 0, position: 'relative', display: 'flex', flexDirection: 'column' }}>
+          {loaded ? (
+            <SpineRenderer items={loaded.spineItems} containerRef={spineContainerRef} />
+          ) : (
+            <div style={{ padding: 24, color: cv.text4, fontSize: 13 }}>Loading…</div>
+          )}
+          {findOpen && findPositions.length > 0 && (
+            <FindScrollMap
+              positions={findPositions}
+              currentIndex={findIndex}
+              onJump={setFindIndex}
+            />
+          )}
+        </div>
       </main>
 
       {/* Right rail: Ask / Eval tabs */}
@@ -984,6 +1126,92 @@ const SpineRenderer = memo(function SpineRenderer({
     </div>
   )
 })
+
+interface FindBarProps {
+  inputRef: React.RefObject<HTMLInputElement | null>
+  query: string
+  matchCount: number
+  matchIndex: number
+  onQueryChange: (q: string) => void
+  onNext: () => void
+  onPrev: () => void
+  onClose: () => void
+}
+
+function FindBar({ inputRef, query, matchCount, matchIndex, onQueryChange, onNext, onPrev, onClose }: FindBarProps): React.JSX.Element {
+  const noMatch = query.trim().length > 0 && matchCount === 0
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 6,
+        padding: '6px 12px',
+        background: cv.surface,
+        borderBottom: `1px solid ${cv.border}`,
+        flexShrink: 0
+      }}
+    >
+      <input
+        ref={inputRef}
+        type="text"
+        placeholder="Find in book…"
+        value={query}
+        onChange={(e) => onQueryChange(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') { e.preventDefault(); e.shiftKey ? onPrev() : onNext() }
+          if (e.key === 'Escape') onClose()
+        }}
+        style={{
+          width: 220,
+          padding: '4px 8px',
+          fontSize: 12,
+          border: `1px solid ${noMatch ? cv.dangerBorder : cv.border2}`,
+          borderRadius: 4,
+          background: noMatch ? cv.errorBg : cv.bg,
+          color: noMatch ? cv.errorText : cv.text1,
+          outline: 'none'
+        }}
+      />
+      <span style={{ fontSize: 11, color: cv.text4, minWidth: 60 }}>
+        {query.trim() ? (matchCount === 0 ? 'no matches' : `${matchIndex + 1} / ${matchCount}`) : ''}
+      </span>
+      <button onClick={onPrev} disabled={matchCount === 0} style={{ padding: '3px 8px', fontSize: 12, cursor: 'pointer', background: cv.bg, color: cv.text2, border: `1px solid ${cv.border2}`, borderRadius: 3 }}>↑</button>
+      <button onClick={onNext} disabled={matchCount === 0} style={{ padding: '3px 8px', fontSize: 12, cursor: 'pointer', background: cv.bg, color: cv.text2, border: `1px solid ${cv.border2}`, borderRadius: 3 }}>↓</button>
+      <button onClick={onClose} style={{ marginLeft: 4, padding: '3px 8px', fontSize: 12, cursor: 'pointer', background: 'transparent', color: cv.text3, border: 'none' }}>✕</button>
+    </div>
+  )
+}
+
+function FindScrollMap({ positions, currentIndex, onJump }: {
+  positions: number[]
+  currentIndex: number
+  onJump: (i: number) => void
+}): React.JSX.Element {
+  return (
+    <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: 10, pointerEvents: 'none', zIndex: 5 }}>
+      {positions.map((pos, i) => (
+        <div
+          key={i}
+          onClick={() => onJump(i)}
+          title={`Match ${i + 1} of ${positions.length}`}
+          style={{
+            position: 'absolute',
+            right: 1,
+            top: `calc(${pos * 100}% - 2px)`,
+            width: 8,
+            height: 4,
+            background: i === currentIndex ? 'rgba(234, 88, 12, 0.95)' : 'rgba(234, 179, 8, 0.75)',
+            borderRadius: 1,
+            pointerEvents: 'auto',
+            cursor: 'pointer'
+          }}
+        />
+      ))}
+    </div>
+  )
+}
 
 function NavTab({
   active,
