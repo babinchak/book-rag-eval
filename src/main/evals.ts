@@ -197,6 +197,8 @@ interface ChunkLite {
   textEnd: number
 }
 
+const HIT_OVERLAP_RATIO = 0.3
+
 function computeOverlap(chunk: ChunkLite, goldSpans: GoldSpan[]): number {
   let total = 0
   for (const gold of goldSpans) {
@@ -206,6 +208,18 @@ function computeOverlap(chunk: ChunkLite, goldSpans: GoldSpan[]): number {
     if (overlapEnd > overlapStart) total += overlapEnd - overlapStart
   }
   return total
+}
+
+function isHit(chunk: ChunkLite, goldSpans: GoldSpan[]): boolean {
+  for (const gold of goldSpans) {
+    if (chunk.spineHref !== gold.spineHref) continue
+    const overlapStart = Math.max(chunk.textStart, gold.textStart)
+    const overlapEnd = Math.min(chunk.textEnd, gold.textEnd)
+    const overlap = Math.max(0, overlapEnd - overlapStart)
+    const goldLen = gold.textEnd - gold.textStart
+    if (goldLen > 0 && overlap / goldLen >= HIT_OVERLAP_RATIO) return true
+  }
+  return false
 }
 
 function parseCitations(answer: string): number[] {
@@ -249,7 +263,7 @@ export async function runEval(
     let firstHitRank: number | null = null
     const details: RetrievedDetail[] = retrieved.map((r) => {
       const overlap = computeOverlap(r.chunk, c.goldSpans)
-      const hit = overlap > 0
+      const hit = isHit(r.chunk, c.goldSpans)
       if (hit && firstHitRank === null) firstHitRank = r.rank
       return {
         chunkId: r.chunk.id,
@@ -272,12 +286,8 @@ export async function runEval(
       if (r) citedDetails.push(r)
     }
     const citedChunkIds = citedDetails.map((r) => r.chunk.id)
-    const citedHits = citedDetails.filter(
-      (r) => computeOverlap(r.chunk, c.goldSpans) > 0
-    )
-    const totalGoldOverlapping = retrieved.filter(
-      (r) => computeOverlap(r.chunk, c.goldSpans) > 0
-    ).length
+    const citedHits = citedDetails.filter((r) => isHit(r.chunk, c.goldSpans))
+    const totalGoldOverlapping = retrieved.filter((r) => isHit(r.chunk, c.goldSpans)).length
     const citationPrecision =
       citedDetails.length === 0 ? 0 : citedHits.length / citedDetails.length
     const citationRecall =
