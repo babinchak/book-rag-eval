@@ -225,6 +225,18 @@ function CaseCard({
           {expanded ? '▼' : '▶'}
         </span>
         <span style={{ flex: 1, fontSize: 13, lineHeight: 1.4 }}>{r.question}</span>
+        {r.langsmithRunUrl && (
+          <a
+            href={r.langsmithRunUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            style={{ fontSize: 10, color: '#2563eb', textDecoration: 'underline' }}
+            title="Open LangSmith trace"
+          >
+            trace ↗
+          </a>
+        )}
         <span
           style={{
             fontSize: 11,

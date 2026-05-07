@@ -297,7 +297,8 @@ export async function runEval(
       citationRecall,
       promptTokens: agentResult.promptTokens,
       completionTokens: agentResult.completionTokens,
-      totalTokens: agentResult.totalTokens
+      totalTokens: agentResult.totalTokens,
+      langsmithRunUrl: agentResult.langsmithRunUrl
     })
 
     totalRecall += recallAtK

@@ -236,6 +236,19 @@ function AssistantPane({
               </div>
               <div style={{ fontSize: 10, color: '#888', marginTop: 4 }}>
                 {result.model} · {result.totalTokens} tokens
+                {result.langsmithRunUrl && (
+                  <>
+                    {' · '}
+                    <a
+                      href={result.langsmithRunUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ color: '#2563eb' }}
+                    >
+                      View trace ↗
+                    </a>
+                  </>
+                )}
               </div>
 
               <div

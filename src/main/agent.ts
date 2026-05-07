@@ -1,4 +1,5 @@
 import { tool } from '@langchain/core/tools'
+import { BaseCallbackHandler } from '@langchain/core/callbacks/base'
 import { ChatOpenAI } from '@langchain/openai'
 import { END, START, StateGraph } from '@langchain/langgraph'
 import { ToolNode } from '@langchain/langgraph/prebuilt'
@@ -17,6 +18,43 @@ import {
   getOpenaiKey
 } from './settings'
 import type { AskResultPayload, RetrievedChunkPayload } from '../preload/types'
+
+class RunIdCapture extends BaseCallbackHandler {
+  name = 'run_id_capture'
+  rootRunId?: string
+
+  handleChainStart(
+    _chain: unknown,
+    _inputs: unknown,
+    runId: string,
+    parentRunId?: string
+  ): void {
+    if (!parentRunId && !this.rootRunId) {
+      this.rootRunId = runId
+    }
+  }
+}
+
+let cachedTenantId: string | null = null
+
+async function langsmithRunUrl(
+  runId: string,
+  project: string | undefined
+): Promise<string | null> {
+  try {
+    const { Client } = await import('langsmith')
+    const client = new Client()
+    if (!cachedTenantId) {
+      const run = await client.readRun(runId)
+      cachedTenantId = (run as { tenant_id?: string }).tenant_id ?? null
+    }
+    if (!cachedTenantId) return null
+    const projectSeg = project ? encodeURIComponent(project) : 'default'
+    return `https://smith.langchain.com/o/${cachedTenantId}/projects/p/${projectSeg}/r/${runId}`
+  } catch {
+    return null
+  }
+}
 
 const DEFAULT_MODEL = process.env.OPENAI_MODEL || 'gpt-4o-mini'
 
@@ -127,18 +165,31 @@ export async function runAgent(
     .addEdge('tools', 'agent')
     .compile()
 
-  const finalState = (await graph.invoke({
-    messages: [
-      new SystemMessage(
-        'You are answering questions about a book. ' +
-          'Use the retrieve_chunks tool to find relevant passages before answering. ' +
-          'If the answer is not in the retrieved passages, say so plainly. ' +
-          'Cite passage numbers in brackets like [1] or [1, 3] after relevant claims. ' +
-          'The numbers correspond to the order chunks appear in your tool results.'
-      ),
-      new HumanMessage(question)
-    ]
-  })) as unknown as AgentState
+  const capture = new RunIdCapture()
+  const lsKey = await getLangsmithKey()
+
+  const finalState = (await graph.invoke(
+    {
+      messages: [
+        new SystemMessage(
+          'You are answering questions about a book. ' +
+            'Use the retrieve_chunks tool to find relevant passages before answering. ' +
+            'If the answer is not in the retrieved passages, say so plainly. ' +
+            'Cite passage numbers in brackets like [1] or [1, 3] after relevant claims. ' +
+            'The numbers correspond to the order chunks appear in your tool results.'
+        ),
+        new HumanMessage(question)
+      ]
+    },
+    { callbacks: [capture] }
+  )) as unknown as AgentState
+
+  let traceUrl: string | undefined
+  if (lsKey && capture.rootRunId) {
+    const project = await getLangsmithProject()
+    const url = await langsmithRunUrl(capture.rootRunId, project ?? undefined)
+    if (url) traceUrl = url
+  }
 
   const allHits: ToolHit[] = []
   let promptTokens = 0
@@ -205,6 +256,7 @@ export async function runAgent(
     promptTokens,
     completionTokens,
     totalTokens,
-    model: DEFAULT_MODEL
+    model: DEFAULT_MODEL,
+    langsmithRunUrl: traceUrl
   }
 }

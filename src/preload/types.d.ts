@@ -137,6 +137,7 @@ export interface AskResultPayload {
   completionTokens: number
   totalTokens: number
   model: string
+  langsmithRunUrl?: string
 }
 
 export type AskIpcResult = { ok: true; data: AskResultPayload } | { ok: false; error: string }
@@ -192,6 +193,7 @@ export interface EvalCaseResult {
   promptTokens?: number
   completionTokens?: number
   totalTokens?: number
+  langsmithRunUrl?: string
 }
 
 export interface EvalRunResult {
