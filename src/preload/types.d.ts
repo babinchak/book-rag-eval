@@ -196,6 +196,8 @@ export interface EvalCaseResult {
   langsmithRunUrl?: string
 }
 
+export type EvalMode = 'retrieval' | 'agentic'
+
 export interface EvalRunResult {
   id: string
   bookId: string
@@ -203,6 +205,7 @@ export interface EvalRunResult {
   strategyId: string
   k: number
   ranAt: number
+  mode?: EvalMode
   meanRecallAtK: number
   meanMRR: number
   meanCitationPrecision?: number
@@ -219,6 +222,7 @@ export interface EvalRunSummary {
   strategyId: string
   k: number
   ranAt: number
+  mode?: EvalMode
   meanRecallAtK: number
   meanMRR: number
   meanCitationPrecision?: number

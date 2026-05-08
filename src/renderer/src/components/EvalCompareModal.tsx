@@ -57,6 +57,7 @@ function EvalCompareModal({ bookId, evalSet, runIds, onClose }: EvalCompareModal
                 <thead>
                   <tr style={{ background: cv.surface2, textAlign: 'left' }}>
                     <th style={th(cv)}>Strategy</th>
+                    <th style={th(cv)}>Mode</th>
                     <th style={th(cv)}>k</th>
                     <th style={th(cv)}>R@k</th>
                     <th style={th(cv)}>MRR</th>
@@ -70,6 +71,7 @@ function EvalCompareModal({ bookId, evalSet, runIds, onClose }: EvalCompareModal
                   {runs.map((run) => (
                     <tr key={run.id} style={{ borderTop: `1px solid ${cv.border}` }}>
                       <td style={{ ...tdStyle(cv), fontFamily: 'monospace' }}>{run.strategyId}</td>
+                      <td style={{ ...tdStyle(cv), fontSize: 10, textTransform: 'uppercase', color: cv.text3 }}>{run.mode ?? 'agentic'}</td>
                       <td style={tdStyle(cv)}>{run.k}</td>
                       <td style={tdStyle(cv)}>{run.meanRecallAtK.toFixed(2)}</td>
                       <td style={tdStyle(cv)}>{run.meanMRR.toFixed(2)}</td>

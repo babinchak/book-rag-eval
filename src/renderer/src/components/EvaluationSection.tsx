@@ -121,7 +121,7 @@ function EvaluationSection({
     setRunning(strategyId)
     setError(null)
     try {
-      const r = await window.api.evals.run(bookId, selectedId, strategyId, k)
+      const r = await window.api.evals.run(bookId, selectedId, strategyId, k, 'agentic')
       if (!r.ok) {
         setError(r.error)
         return

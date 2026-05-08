@@ -409,10 +409,11 @@ app.whenReady().then(() => {
       setId: string,
       strategyId: string,
       k: number,
+      mode: 'retrieval' | 'agentic',
       caseIds?: string[]
     ): Promise<EvalRunIpcResult> => {
       try {
-        return { ok: true, data: await runEval(bookId, setId, strategyId, k, caseIds) }
+        return { ok: true, data: await runEval(bookId, setId, strategyId, k, mode, caseIds) }
       } catch (err) {
         return { ok: false, error: (err as Error).message }
       }

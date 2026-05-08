@@ -3,6 +3,7 @@ import type {
   ChunkSetSummary,
   EmbeddingSetSummary,
   EvalCase,
+  EvalMode,
   EvalRunSummary,
   EvalSet,
   EvalSetSummary
@@ -42,6 +43,7 @@ function EvalRunnerPanel({
   const [editingCase, setEditingCase] = useState<EvalCase | null>(null)
   const [casePickerForCaseId, setCasePickerForCaseId] = useState<string | null>(null)
   const [runningCase, setRunningCase] = useState<string | null>(null)
+  const [runMode, setRunMode] = useState<EvalMode>('retrieval')
   const [running, setRunning] = useState<string | null>(null)
   const [k, setK] = useState(DEFAULT_K)
   const [error, setError] = useState<string | null>(null)
@@ -122,7 +124,7 @@ function EvalRunnerPanel({
     setRunning(strategyId)
     setError(null)
     try {
-      const r = await window.api.evals.run(bookId, selectedEvalSetId, strategyId, k)
+      const r = await window.api.evals.run(bookId, selectedEvalSetId, strategyId, k, runMode)
       if (!r.ok) { setError(r.error); return }
       await refreshRuns()
     } finally {
@@ -136,7 +138,7 @@ function EvalRunnerPanel({
     setCasePickerForCaseId(null)
     setError(null)
     try {
-      const r = await window.api.evals.run(bookId, selectedEvalSetId, strategyId, k, [caseId])
+      const r = await window.api.evals.run(bookId, selectedEvalSetId, strategyId, k, runMode, [caseId])
       if (!r.ok) { setError(r.error); return }
       await refreshRuns()
       setDetailRunId(r.data.id)
@@ -146,7 +148,12 @@ function EvalRunnerPanel({
   }
 
   function latestRun(setId: string, strategyId: string): EvalRunSummary | undefined {
-    return runs.find((r) => r.evalSetId === setId && r.strategyId === strategyId)
+    return runs.find(
+      (r) =>
+        r.evalSetId === setId &&
+        r.strategyId === strategyId &&
+        (r.mode ?? 'agentic') === runMode
+    )
   }
 
   const compareRunIds = activeSet
@@ -405,6 +412,7 @@ function EvalRunnerPanel({
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <div style={{ padding: '14px 20px 10px', borderBottom: `1px solid ${cv.border}`, display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
             <ColHeader>Results</ColHeader>
+            <ModeTabs mode={runMode} onChange={setRunMode} />
             {activeSet && activeSet.cases.length > 0 && (
               <label style={{ fontSize: 12, color: cv.text3, display: 'flex', alignItems: 'center', gap: 4, marginLeft: 'auto' }}>
                 k =
@@ -599,6 +607,7 @@ function EvalRunnerPanel({
               <div style={{ fontSize: 11, fontWeight: 600, color: cv.text2, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
                 Run @
                 <input type="number" value={k} min={1} max={20} onChange={(e) => setK(Math.max(1, Math.min(20, parseInt(e.target.value) || 1)))} style={{ width: 36, padding: '2px 4px', fontSize: 11, border: `1px solid ${cv.border2}`, borderRadius: 3, background: cv.bg, color: cv.text1 }} />
+                <ModeTabs mode={runMode} onChange={setRunMode} />
               </div>
               {fullyEmbedded.length === 0 ? (
                 <div style={{ fontSize: 11, color: cv.text4 }}>No fully-embedded strategies.</div>
@@ -649,6 +658,33 @@ function EvalRunnerPanel({
       )}
 
       {modals}
+    </div>
+  )
+}
+
+function ModeTabs({ mode, onChange }: { mode: EvalMode; onChange: (m: EvalMode) => void }): React.JSX.Element {
+  return (
+    <div style={{ display: 'inline-flex', background: cv.surface2, border: `1px solid ${cv.border}`, borderRadius: 4, padding: 1 }}>
+      {(['retrieval', 'agentic'] as EvalMode[]).map((m) => (
+        <button
+          key={m}
+          onClick={() => onChange(m)}
+          title={m === 'retrieval' ? 'Retrieval-only: free, fast, deterministic' : 'Full agentic: LLM + retrieve as tool + citations'}
+          style={{
+            padding: '2px 8px',
+            fontSize: 10,
+            cursor: 'pointer',
+            background: mode === m ? cv.bg : 'transparent',
+            color: mode === m ? cv.text1 : cv.text4,
+            border: `1px solid ${mode === m ? cv.border2 : 'transparent'}`,
+            borderRadius: 3,
+            fontWeight: mode === m ? 600 : 500,
+            textTransform: 'capitalize'
+          }}
+        >
+          {m}
+        </button>
+      ))}
     </div>
   )
 }

@@ -24,7 +24,7 @@ function buildTraceMarkdown(
   const out: string[] = []
   out.push(`# Eval trace`)
   out.push('')
-  out.push(`**Strategy**: \`${run.strategyId}\` · k=${run.k}`)
+  out.push(`**Strategy**: \`${run.strategyId}\` · k=${run.k} · mode=${run.mode ?? 'agentic'}`)
   out.push(`**Question**: ${caseResult.question}`)
   const hit = caseResult.recallAtK > 0
   const bits: string[] = [hit ? `HIT @ rank ${caseResult.hitRank}` : 'MISS']
@@ -125,6 +125,23 @@ function EvalRunDetailModal({ bookId, runId, evalSet, onClose, onSelectChunk }: 
           {run && (
             <span style={{ fontSize: 12, color: cv.text3, fontFamily: 'monospace' }}>
               {run.strategyId} · k={run.k} · {new Date(run.ranAt).toLocaleString()}
+            </span>
+          )}
+          {run && (
+            <span
+              style={{
+                fontSize: 10,
+                padding: '2px 7px',
+                borderRadius: 3,
+                background: (run.mode ?? 'agentic') === 'retrieval' ? cv.selectedBg : cv.warningBg,
+                color: (run.mode ?? 'agentic') === 'retrieval' ? cv.selectedBorder : cv.warningText,
+                border: `1px solid ${(run.mode ?? 'agentic') === 'retrieval' ? cv.selectedBorder : cv.warningBorder}`,
+                textTransform: 'uppercase',
+                fontWeight: 600,
+                letterSpacing: 0.5
+              }}
+            >
+              {run.mode ?? 'agentic'}
             </span>
           )}
           <button onClick={onClose} style={{ marginLeft: 'auto', border: 'none', background: 'transparent', fontSize: 18, cursor: 'pointer', color: cv.text3 }}>×</button>

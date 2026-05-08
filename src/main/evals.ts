@@ -3,10 +3,11 @@ import { join } from 'node:path'
 import { randomUUID } from 'node:crypto'
 import { bookDir } from './library'
 import { readSpineRaw } from './epub'
-import { ask } from './retrieval'
+import { ask, retrieve } from './retrieval'
 import type {
   EvalCase,
   EvalCaseResult,
+  EvalMode,
   EvalRunResult,
   EvalRunSummary,
   EvalSet,
@@ -276,6 +277,7 @@ export async function runEval(
   setId: string,
   strategyId: string,
   k: number,
+  mode: EvalMode = 'retrieval',
   caseIds?: string[]
 ): Promise<EvalRunResult> {
   const set = await getEvalSet(bookId, setId)
@@ -299,68 +301,85 @@ export async function runEval(
   let totalTokens = 0
 
   for (const c of casesToRun) {
-    const agentResult = await ask(bookId, strategyId, c.question, k)
-    const retrieved = agentResult.retrieved
+    if (mode === 'retrieval') {
+      const retrieved = await retrieve(bookId, strategyId, c.question, k)
+      let firstHitRank: number | null = null
+      const details: RetrievedDetail[] = retrieved.map((r) => {
+        const overlap = computeOverlap(r.chunk, c.goldSpans)
+        const hit = isHit(r.chunk, c.goldSpans)
+        if (hit && firstHitRank === null) firstHitRank = r.rank
+        return { chunkId: r.chunk.id, distance: r.distance, hit, overlap, rank: r.rank }
+      })
+      const recallAtK = firstHitRank !== null ? 1 : 0
+      const mrr = firstHitRank !== null ? 1 / firstHitRank : 0
 
-    // Retrieval metrics: based on what the agent actually retrieved (deduped across tool calls)
-    let firstHitRank: number | null = null
-    const details: RetrievedDetail[] = retrieved.map((r) => {
-      const overlap = computeOverlap(r.chunk, c.goldSpans)
-      const hit = isHit(r.chunk, c.goldSpans)
-      if (hit && firstHitRank === null) firstHitRank = r.rank
-      return {
-        chunkId: r.chunk.id,
-        distance: r.distance,
-        hit,
-        overlap,
-        rank: r.rank
+      caseResults.push({
+        caseId: c.id,
+        question: c.question,
+        retrieved: details,
+        recallAtK,
+        mrr,
+        hitRank: firstHitRank
+      })
+
+      totalRecall += recallAtK
+      totalMRR += mrr
+    } else {
+      const agentResult = await ask(bookId, strategyId, c.question, k)
+      const retrieved = agentResult.retrieved
+
+      let firstHitRank: number | null = null
+      const details: RetrievedDetail[] = retrieved.map((r) => {
+        const overlap = computeOverlap(r.chunk, c.goldSpans)
+        const hit = isHit(r.chunk, c.goldSpans)
+        if (hit && firstHitRank === null) firstHitRank = r.rank
+        return { chunkId: r.chunk.id, distance: r.distance, hit, overlap, rank: r.rank }
+      })
+      const recallAtK = firstHitRank !== null ? 1 : 0
+      const mrr = firstHitRank !== null ? 1 / firstHitRank : 0
+
+      const citedRanks = parseCitations(agentResult.answer)
+      const byRank = new Map<number, RetrievedChunkPayload>()
+      for (const r of retrieved) byRank.set(r.rank, r)
+      const citedDetails: RetrievedChunkPayload[] = []
+      for (const rank of citedRanks) {
+        const r = byRank.get(rank)
+        if (r) citedDetails.push(r)
       }
-    })
-    const recallAtK = firstHitRank !== null ? 1 : 0
-    const mrr = firstHitRank !== null ? 1 / firstHitRank : 0
+      const citedChunkIds = citedDetails.map((r) => r.chunk.id)
+      const citedHits = citedDetails.filter((r) => isHit(r.chunk, c.goldSpans))
+      const totalGoldOverlapping = retrieved.filter((r) => isHit(r.chunk, c.goldSpans)).length
+      const citationPrecision =
+        citedDetails.length === 0 ? 0 : citedHits.length / citedDetails.length
+      const citationRecall =
+        totalGoldOverlapping === 0 ? 0 : citedHits.length / totalGoldOverlapping
 
-    // Citation metrics: parse [N] from answer, look up retrieved[N-1]
-    const citedRanks = parseCitations(agentResult.answer)
-    const byRank = new Map<number, RetrievedChunkPayload>()
-    for (const r of retrieved) byRank.set(r.rank, r)
-    const citedDetails: RetrievedChunkPayload[] = []
-    for (const rank of citedRanks) {
-      const r = byRank.get(rank)
-      if (r) citedDetails.push(r)
+      caseResults.push({
+        caseId: c.id,
+        question: c.question,
+        retrieved: details,
+        recallAtK,
+        mrr,
+        hitRank: firstHitRank,
+        answer: agentResult.answer,
+        citedRanks,
+        citedChunkIds,
+        citationPrecision,
+        citationRecall,
+        promptTokens: agentResult.promptTokens,
+        completionTokens: agentResult.completionTokens,
+        totalTokens: agentResult.totalTokens,
+        langsmithRunUrl: agentResult.langsmithRunUrl
+      })
+
+      totalRecall += recallAtK
+      totalMRR += mrr
+      totalCitPrec += citationPrecision
+      totalCitRec += citationRecall
+      totalPromptTokens += agentResult.promptTokens
+      totalCompletionTokens += agentResult.completionTokens
+      totalTokens += agentResult.totalTokens
     }
-    const citedChunkIds = citedDetails.map((r) => r.chunk.id)
-    const citedHits = citedDetails.filter((r) => isHit(r.chunk, c.goldSpans))
-    const totalGoldOverlapping = retrieved.filter((r) => isHit(r.chunk, c.goldSpans)).length
-    const citationPrecision =
-      citedDetails.length === 0 ? 0 : citedHits.length / citedDetails.length
-    const citationRecall =
-      totalGoldOverlapping === 0 ? 0 : citedHits.length / totalGoldOverlapping
-
-    caseResults.push({
-      caseId: c.id,
-      question: c.question,
-      retrieved: details,
-      recallAtK,
-      mrr,
-      hitRank: firstHitRank,
-      answer: agentResult.answer,
-      citedRanks,
-      citedChunkIds,
-      citationPrecision,
-      citationRecall,
-      promptTokens: agentResult.promptTokens,
-      completionTokens: agentResult.completionTokens,
-      totalTokens: agentResult.totalTokens,
-      langsmithRunUrl: agentResult.langsmithRunUrl
-    })
-
-    totalRecall += recallAtK
-    totalMRR += mrr
-    totalCitPrec += citationPrecision
-    totalCitRec += citationRecall
-    totalPromptTokens += agentResult.promptTokens
-    totalCompletionTokens += agentResult.completionTokens
-    totalTokens += agentResult.totalTokens
   }
 
   const n = casesToRun.length
@@ -371,14 +390,17 @@ export async function runEval(
     strategyId,
     k,
     ranAt: Date.now(),
+    mode,
     meanRecallAtK: totalRecall / n,
     meanMRR: totalMRR / n,
-    meanCitationPrecision: totalCitPrec / n,
-    meanCitationRecall: totalCitRec / n,
-    totalPromptTokens,
-    totalCompletionTokens,
-    totalTokens,
     cases: caseResults
+  }
+  if (mode === 'agentic') {
+    result.meanCitationPrecision = totalCitPrec / n
+    result.meanCitationRecall = totalCitRec / n
+    result.totalPromptTokens = totalPromptTokens
+    result.totalCompletionTokens = totalCompletionTokens
+    result.totalTokens = totalTokens
   }
   await writeJsonAtomic(evalRunPath(bookId, result.id), result)
   return result
@@ -409,6 +431,7 @@ export async function listEvalRuns(bookId: string): Promise<EvalRunSummary[]> {
         strategyId: run.strategyId,
         k: run.k,
         ranAt: run.ranAt,
+        mode: run.mode ?? 'agentic',
         meanRecallAtK: run.meanRecallAtK,
         meanMRR: run.meanMRR,
         meanCitationPrecision: run.meanCitationPrecision,
