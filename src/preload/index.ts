@@ -111,8 +111,10 @@ const api = {
       bookId: string,
       setId: string,
       strategyId: string,
-      k: number
-    ): Promise<EvalRunIpcResult> => ipcRenderer.invoke('evals:run', bookId, setId, strategyId, k),
+      k: number,
+      caseIds?: string[]
+    ): Promise<EvalRunIpcResult> =>
+      ipcRenderer.invoke('evals:run', bookId, setId, strategyId, k, caseIds),
     listRuns: (bookId: string): Promise<EvalRunsListIpcResult> =>
       ipcRenderer.invoke('evals:listRuns', bookId),
     getRun: (bookId: string, runId: string): Promise<EvalRunGetIpcResult> =>

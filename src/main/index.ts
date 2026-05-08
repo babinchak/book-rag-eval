@@ -408,10 +408,11 @@ app.whenReady().then(() => {
       bookId: string,
       setId: string,
       strategyId: string,
-      k: number
+      k: number,
+      caseIds?: string[]
     ): Promise<EvalRunIpcResult> => {
       try {
-        return { ok: true, data: await runEval(bookId, setId, strategyId, k) }
+        return { ok: true, data: await runEval(bookId, setId, strategyId, k, caseIds) }
       } catch (err) {
         return { ok: false, error: (err as Error).message }
       }

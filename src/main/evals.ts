@@ -275,11 +275,18 @@ export async function runEval(
   bookId: string,
   setId: string,
   strategyId: string,
-  k: number
+  k: number,
+  caseIds?: string[]
 ): Promise<EvalRunResult> {
   const set = await getEvalSet(bookId, setId)
   if (set.cases.length === 0) {
     throw new Error('Eval set has no cases. Add cases before running.')
+  }
+
+  const casesToRun =
+    caseIds && caseIds.length > 0 ? set.cases.filter((c) => caseIds.includes(c.id)) : set.cases
+  if (casesToRun.length === 0) {
+    throw new Error('No matching cases to run.')
   }
 
   const caseResults: EvalCaseResult[] = []
@@ -291,7 +298,7 @@ export async function runEval(
   let totalCompletionTokens = 0
   let totalTokens = 0
 
-  for (const c of set.cases) {
+  for (const c of casesToRun) {
     const agentResult = await ask(bookId, strategyId, c.question, k)
     const retrieved = agentResult.retrieved
 
@@ -356,7 +363,7 @@ export async function runEval(
     totalTokens += agentResult.totalTokens
   }
 
-  const n = set.cases.length
+  const n = casesToRun.length
   const result: EvalRunResult = {
     id: randomUUID(),
     bookId,

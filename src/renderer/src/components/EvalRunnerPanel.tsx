@@ -40,6 +40,8 @@ function EvalRunnerPanel({
   const [newSetId, setNewSetId] = useState('')
   const [showAddCase, setShowAddCase] = useState(false)
   const [editingCase, setEditingCase] = useState<EvalCase | null>(null)
+  const [casePickerForCaseId, setCasePickerForCaseId] = useState<string | null>(null)
+  const [runningCase, setRunningCase] = useState<string | null>(null)
   const [running, setRunning] = useState<string | null>(null)
   const [k, setK] = useState(DEFAULT_K)
   const [error, setError] = useState<string | null>(null)
@@ -125,6 +127,21 @@ function EvalRunnerPanel({
       await refreshRuns()
     } finally {
       setRunning(null)
+    }
+  }
+
+  async function handleRunCase(caseId: string, strategyId: string): Promise<void> {
+    if (!selectedEvalSetId) return
+    setRunningCase(`${caseId}::${strategyId}`)
+    setCasePickerForCaseId(null)
+    setError(null)
+    try {
+      const r = await window.api.evals.run(bookId, selectedEvalSetId, strategyId, k, [caseId])
+      if (!r.ok) { setError(r.error); return }
+      await refreshRuns()
+      setDetailRunId(r.data.id)
+    } finally {
+      setRunningCase(null)
     }
   }
 
@@ -326,12 +343,10 @@ function EvalRunnerPanel({
                       border: `1px solid ${cv.border}`,
                       borderRadius: 4,
                       padding: '6px 8px',
-                      display: 'flex',
-                      gap: 4,
-                      alignItems: 'flex-start',
                       color: cv.text1
                     }}
                   >
+                    <div style={{ display: 'flex', gap: 4, alignItems: 'flex-start' }}>
                     <span
                       style={{
                         flex: 1,
@@ -344,6 +359,13 @@ function EvalRunnerPanel({
                     >
                       {c.question}
                     </span>
+                    <button
+                      onClick={() => setCasePickerForCaseId((p) => p === c.id ? null : c.id)}
+                      title="Run this case"
+                      style={{ padding: '0 5px', fontSize: 11, cursor: 'pointer', background: 'transparent', color: casePickerForCaseId === c.id ? cv.accent : cv.text4, border: 'none', flexShrink: 0 }}
+                    >
+                      ▶
+                    </button>
                     <button
                       onClick={() => setEditingCase(c)}
                       title="Edit case"
@@ -358,6 +380,15 @@ function EvalRunnerPanel({
                     >
                       ×
                     </button>
+                    </div>
+                    {casePickerForCaseId === c.id && (
+                      <CaseRunPicker
+                        caseId={c.id}
+                        fullyEmbedded={fullyEmbedded}
+                        runningCase={runningCase}
+                        onRun={handleRunCase}
+                      />
+                    )}
                   </li>
                 ))}
               </ul>
@@ -539,10 +570,21 @@ function EvalRunnerPanel({
             ) : (
               <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'grid', gap: 4, marginBottom: 6 }}>
                 {activeSet.cases.map((c) => (
-                  <li key={c.id} style={{ fontSize: 11, background: cv.bg, border: `1px solid ${cv.border}`, borderRadius: 4, padding: '4px 8px', display: 'flex', gap: 4, alignItems: 'flex-start', color: cv.text1 }}>
-                    <span style={{ flex: 1, lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{c.question}</span>
-                    <button onClick={() => setEditingCase(c)} title="Edit case" style={{ padding: '0 4px', fontSize: 11, cursor: 'pointer', background: 'transparent', color: cv.text4, border: 'none' }}>✎</button>
-                    <button onClick={() => void handleRemoveCase(c.id)} title="Remove case" style={{ padding: '0 4px', fontSize: 11, cursor: 'pointer', background: 'transparent', color: cv.text5, border: 'none' }}>×</button>
+                  <li key={c.id} style={{ fontSize: 11, background: cv.bg, border: `1px solid ${cv.border}`, borderRadius: 4, padding: '4px 8px', color: cv.text1 }}>
+                    <div style={{ display: 'flex', gap: 4, alignItems: 'flex-start' }}>
+                      <span style={{ flex: 1, lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{c.question}</span>
+                      <button onClick={() => setCasePickerForCaseId((p) => p === c.id ? null : c.id)} title="Run this case" style={{ padding: '0 4px', fontSize: 11, cursor: 'pointer', background: 'transparent', color: casePickerForCaseId === c.id ? cv.accent : cv.text4, border: 'none' }}>▶</button>
+                      <button onClick={() => setEditingCase(c)} title="Edit case" style={{ padding: '0 4px', fontSize: 11, cursor: 'pointer', background: 'transparent', color: cv.text4, border: 'none' }}>✎</button>
+                      <button onClick={() => void handleRemoveCase(c.id)} title="Remove case" style={{ padding: '0 4px', fontSize: 11, cursor: 'pointer', background: 'transparent', color: cv.text5, border: 'none' }}>×</button>
+                    </div>
+                    {casePickerForCaseId === c.id && (
+                      <CaseRunPicker
+                        caseId={c.id}
+                        fullyEmbedded={fullyEmbedded}
+                        runningCase={runningCase}
+                        onRun={handleRunCase}
+                      />
+                    )}
                   </li>
                 ))}
               </ul>
@@ -607,6 +649,52 @@ function EvalRunnerPanel({
       )}
 
       {modals}
+    </div>
+  )
+}
+
+function CaseRunPicker({
+  caseId,
+  fullyEmbedded,
+  runningCase,
+  onRun
+}: {
+  caseId: string
+  fullyEmbedded: EmbeddingSetSummary[]
+  runningCase: string | null
+  onRun: (caseId: string, strategyId: string) => Promise<void>
+}): React.JSX.Element {
+  return (
+    <div style={{ marginTop: 6, paddingTop: 6, borderTop: `1px solid ${cv.border}` }}>
+      <div style={{ fontSize: 10, color: cv.text4, marginBottom: 4 }}>Run case against:</div>
+      {fullyEmbedded.length === 0 ? (
+        <div style={{ fontSize: 10, color: cv.text4 }}>No fully-embedded strategies.</div>
+      ) : (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+          {fullyEmbedded.map((e) => {
+            const isRunning = runningCase === `${caseId}::${e.strategyId}`
+            return (
+              <button
+                key={e.strategyId}
+                onClick={() => void onRun(caseId, e.strategyId)}
+                disabled={runningCase !== null}
+                style={{
+                  padding: '3px 8px',
+                  fontSize: 10,
+                  cursor: runningCase !== null ? 'wait' : 'pointer',
+                  background: cv.bg,
+                  color: cv.text2,
+                  border: `1px solid ${cv.border2}`,
+                  borderRadius: 3,
+                  fontFamily: 'monospace'
+                }}
+              >
+                {isRunning ? '…' : e.strategyId}
+              </button>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }
