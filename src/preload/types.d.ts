@@ -241,6 +241,7 @@ export type EvalSetCreateIpcResult = { ok: true; data: EvalSet } | { ok: false; 
 export type EvalSetDeleteIpcResult = { ok: true } | { ok: false; error: string }
 export type EvalCaseAddIpcResult = { ok: true; data: EvalCase } | { ok: false; error: string }
 export type EvalCaseRemoveIpcResult = { ok: true } | { ok: false; error: string }
+export type EvalCaseUpdateIpcResult = { ok: true; data: EvalCase } | { ok: false; error: string }
 export type EvalLocateIpcResult =
   | { ok: true; data: LocateQuoteHit }
   | { ok: false; error: string }

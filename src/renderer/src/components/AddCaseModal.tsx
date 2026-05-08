@@ -1,16 +1,18 @@
 import { useState } from 'react'
-import type { GoldSpan, LocateQuoteHit } from '../../../preload/types'
+import type { EvalCase, GoldSpan, LocateQuoteHit } from '../../../preload/types'
 import { cv } from '../lib/theme'
 
 interface AddCaseModalProps {
   bookId: string
   setId: string
+  editCase?: EvalCase
   onClose: () => void
-  onAdded: () => void
+  onSaved: () => void
 }
 
-function AddCaseModal({ bookId, setId, onClose, onAdded }: AddCaseModalProps): React.JSX.Element {
-  const [question, setQuestion] = useState('')
+function AddCaseModal({ bookId, setId, editCase, onClose, onSaved }: AddCaseModalProps): React.JSX.Element {
+  const isEdit = editCase !== undefined
+  const [question, setQuestion] = useState(editCase?.question ?? '')
   const [quote, setQuote] = useState('')
   const [located, setLocated] = useState<LocateQuoteHit | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -29,15 +31,29 @@ function AddCaseModal({ bookId, setId, onClose, onAdded }: AddCaseModalProps): R
     }
   }
 
+  const questionChanged = isEdit && question.trim() !== editCase!.question
+  const goldChanged = located !== null
+  const canSave = isEdit
+    ? question.trim().length > 0 && (questionChanged || goldChanged)
+    : question.trim().length > 0 && located !== null
+
   async function handleSave(): Promise<void> {
-    if (!located || !question.trim()) return
+    if (!canSave) return
     setBusy(true)
     setError(null)
     try {
-      const goldSpans: GoldSpan[] = [located.goldSpan]
-      const r = await window.api.evals.addCase(bookId, setId, question, goldSpans)
-      if (!r.ok) { setError(r.error); return }
-      onAdded()
+      if (isEdit) {
+        const updates: { question?: string; goldSpans?: GoldSpan[] } = {}
+        if (questionChanged) updates.question = question
+        if (goldChanged) updates.goldSpans = [located!.goldSpan]
+        const r = await window.api.evals.updateCase(bookId, setId, editCase!.id, updates)
+        if (!r.ok) { setError(r.error); return }
+      } else {
+        const goldSpans: GoldSpan[] = [located!.goldSpan]
+        const r = await window.api.evals.addCase(bookId, setId, question, goldSpans)
+        if (!r.ok) { setError(r.error); return }
+      }
+      onSaved()
       onClose()
     } finally {
       setBusy(false)
@@ -85,7 +101,9 @@ function AddCaseModal({ bookId, setId, onClose, onAdded }: AddCaseModalProps): R
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-          <h2 style={{ margin: 0, fontSize: 18, color: cv.text1 }}>Add eval case</h2>
+          <h2 style={{ margin: 0, fontSize: 18, color: cv.text1 }}>
+            {isEdit ? 'Edit eval case' : 'Add eval case'}
+          </h2>
           <button
             onClick={onClose}
             style={{ border: 'none', background: 'transparent', fontSize: 18, cursor: 'pointer', color: cv.text3 }}
@@ -95,8 +113,9 @@ function AddCaseModal({ bookId, setId, onClose, onAdded }: AddCaseModalProps): R
         </div>
 
         <p style={{ margin: '6px 0 16px', fontSize: 12, color: cv.text3, lineHeight: 1.5 }}>
-          A case is a question + the gold passage that contains its answer. Paste a quote
-          from the book; the app will locate it and capture its position.
+          {isEdit
+            ? 'Edit the question and/or replace the gold passage by pasting a new quote.'
+            : 'A case is a question + the gold passage that contains its answer. Paste a quote from the book; the app will locate it and capture its position.'}
         </p>
 
         <label style={{ display: 'block', fontSize: 11, color: cv.text3, marginBottom: 4 }}>
@@ -111,8 +130,33 @@ function AddCaseModal({ bookId, setId, onClose, onAdded }: AddCaseModalProps): R
           disabled={busy}
         />
 
+        {isEdit && !located && (
+          <div
+            style={{
+              marginTop: 14,
+              background: cv.surface2,
+              border: `1px solid ${cv.border}`,
+              borderRadius: 4,
+              padding: 10,
+              fontSize: 11,
+              color: cv.text3,
+              lineHeight: 1.5
+            }}
+          >
+            <div style={{ fontWeight: 600, color: cv.text2, marginBottom: 4 }}>Current gold span</div>
+            {editCase!.goldSpans.map((g, i) => (
+              <div key={i} style={{ fontFamily: 'monospace' }}>
+                {g.spineHref} : {g.textStart}–{g.textEnd}
+              </div>
+            ))}
+            <div style={{ marginTop: 6, color: cv.text4 }}>
+              Paste a new quote below to replace it, or leave empty to keep as-is.
+            </div>
+          </div>
+        )}
+
         <label style={{ display: 'block', fontSize: 11, color: cv.text3, marginTop: 14, marginBottom: 4 }}>
-          Gold passage (paste a quote)
+          {isEdit ? 'New gold passage (optional)' : 'Gold passage (paste a quote)'}
         </label>
         <textarea
           value={quote}
@@ -139,23 +183,22 @@ function AddCaseModal({ bookId, setId, onClose, onAdded }: AddCaseModalProps): R
           >
             {busy ? 'Locating…' : 'Locate in book'}
           </button>
-          {located && (
-            <button
-              onClick={handleSave}
-              disabled={busy || !question.trim()}
-              style={{
-                padding: '6px 12px',
-                fontSize: 12,
-                cursor: 'pointer',
-                background: cv.accent,
-                color: cv.accentText,
-                border: 'none',
-                borderRadius: 4
-              }}
-            >
-              Save case
-            </button>
-          )}
+          <button
+            onClick={handleSave}
+            disabled={busy || !canSave}
+            style={{
+              padding: '6px 12px',
+              fontSize: 12,
+              cursor: busy || !canSave ? 'not-allowed' : 'pointer',
+              background: canSave ? cv.accent : cv.surface,
+              color: canSave ? cv.accentText : cv.text4,
+              border: 'none',
+              borderRadius: 4,
+              opacity: canSave ? 1 : 0.6
+            }}
+          >
+            {isEdit ? 'Save changes' : 'Save case'}
+          </button>
         </div>
 
         {located && (
@@ -171,7 +214,7 @@ function AddCaseModal({ bookId, setId, onClose, onAdded }: AddCaseModalProps): R
             }}
           >
             <div style={{ fontWeight: 600, marginBottom: 4 }}>
-              Located in {located.goldSpan.spineHref}
+              {isEdit ? 'New span located in ' : 'Located in '}{located.goldSpan.spineHref}
             </div>
             <div style={{ color: cv.text2, fontStyle: 'italic' }}>"{located.preview}"</div>
             <div style={{ color: cv.text3, marginTop: 4, fontSize: 11 }}>

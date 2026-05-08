@@ -161,6 +161,42 @@ export async function removeCase(
   await writeJsonAtomic(evalSetPath(bookId, setId), set)
 }
 
+export async function updateCase(
+  bookId: string,
+  setId: string,
+  caseId: string,
+  updates: { question?: string; goldSpans?: GoldSpan[]; notes?: string }
+): Promise<EvalCase> {
+  const set = await getEvalSet(bookId, setId)
+  const idx = set.cases.findIndex((c) => c.id === caseId)
+  if (idx === -1) throw new Error(`Case ${caseId} not found`)
+  const existing = set.cases[idx]
+
+  let question = existing.question
+  if (updates.question !== undefined) {
+    const trimmed = updates.question.trim()
+    if (!trimmed) throw new Error('Question is required')
+    question = trimmed
+  }
+
+  let goldSpans = existing.goldSpans
+  if (updates.goldSpans !== undefined) {
+    if (updates.goldSpans.length === 0) throw new Error('At least one gold span is required')
+    goldSpans = updates.goldSpans
+  }
+
+  const updated: EvalCase = {
+    ...existing,
+    question,
+    goldSpans,
+    notes: updates.notes !== undefined ? updates.notes : existing.notes
+  }
+  set.cases[idx] = updated
+  set.updatedAt = Date.now()
+  await writeJsonAtomic(evalSetPath(bookId, setId), set)
+  return updated
+}
+
 export async function locateQuote(
   bookId: string,
   quote: string

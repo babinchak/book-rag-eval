@@ -315,7 +315,7 @@ function EvalAuthoringSection({
           bookId={bookId}
           setId={selectedEvalSetId}
           onClose={() => setShowAddCase(false)}
-          onAdded={() => {
+          onSaved={() => {
             void refreshActiveSet(selectedEvalSetId)
             void refreshSets()
             onChange()

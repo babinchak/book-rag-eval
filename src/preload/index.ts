@@ -11,6 +11,7 @@ import type {
   EmbeddingsRemoveIpcResult,
   EvalCaseAddIpcResult,
   EvalCaseRemoveIpcResult,
+  EvalCaseUpdateIpcResult,
   EvalLocateIpcResult,
   EvalRunGetIpcResult,
   EvalRunIpcResult,
@@ -97,6 +98,13 @@ const api = {
       caseId: string
     ): Promise<EvalCaseRemoveIpcResult> =>
       ipcRenderer.invoke('evals:removeCase', bookId, setId, caseId),
+    updateCase: (
+      bookId: string,
+      setId: string,
+      caseId: string,
+      updates: { question?: string; goldSpans?: GoldSpan[]; notes?: string }
+    ): Promise<EvalCaseUpdateIpcResult> =>
+      ipcRenderer.invoke('evals:updateCase', bookId, setId, caseId, updates),
     locate: (bookId: string, quote: string): Promise<EvalLocateIpcResult> =>
       ipcRenderer.invoke('evals:locate', bookId, quote),
     run: (

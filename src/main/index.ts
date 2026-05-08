@@ -26,7 +26,8 @@ import {
   listEvalSets,
   locateQuote,
   removeCase,
-  runEval
+  runEval,
+  updateCase
 } from './evals'
 import type {
   AskIpcResult,
@@ -39,6 +40,7 @@ import type {
   EmbeddingsRemoveIpcResult,
   EvalCaseAddIpcResult,
   EvalCaseRemoveIpcResult,
+  EvalCaseUpdateIpcResult,
   EvalLocateIpcResult,
   EvalRunGetIpcResult,
   EvalRunIpcResult,
@@ -361,6 +363,23 @@ app.whenReady().then(() => {
       try {
         await removeCase(bookId, setId, caseId)
         return { ok: true }
+      } catch (err) {
+        return { ok: false, error: (err as Error).message }
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'evals:updateCase',
+    async (
+      _,
+      bookId: string,
+      setId: string,
+      caseId: string,
+      updates: { question?: string; goldSpans?: GoldSpan[]; notes?: string }
+    ): Promise<EvalCaseUpdateIpcResult> => {
+      try {
+        return { ok: true, data: await updateCase(bookId, setId, caseId, updates) }
       } catch (err) {
         return { ok: false, error: (err as Error).message }
       }

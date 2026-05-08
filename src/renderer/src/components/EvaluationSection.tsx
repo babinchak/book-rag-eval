@@ -525,7 +525,7 @@ function EvaluationSection({
           bookId={bookId}
           setId={selectedId}
           onClose={() => setShowAddCase(false)}
-          onAdded={() => {
+          onSaved={() => {
             void refreshActiveSet(selectedId)
             void refreshSets()
           }}

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import type {
   ChunkSetSummary,
   EmbeddingSetSummary,
+  EvalCase,
   EvalRunSummary,
   EvalSet,
   EvalSetSummary
@@ -38,6 +39,7 @@ function EvalRunnerPanel({
   const [creating, setCreating] = useState(false)
   const [newSetId, setNewSetId] = useState('')
   const [showAddCase, setShowAddCase] = useState(false)
+  const [editingCase, setEditingCase] = useState<EvalCase | null>(null)
   const [running, setRunning] = useState<string | null>(null)
   const [k, setK] = useState(DEFAULT_K)
   const [error, setError] = useState<string | null>(null)
@@ -138,12 +140,13 @@ function EvalRunnerPanel({
 
   const modals = (
     <>
-      {showAddCase && selectedEvalSetId && (
+      {(showAddCase || editingCase) && selectedEvalSetId && (
         <AddCaseModal
           bookId={bookId}
           setId={selectedEvalSetId}
-          onClose={() => setShowAddCase(false)}
-          onAdded={() => {
+          editCase={editingCase ?? undefined}
+          onClose={() => { setShowAddCase(false); setEditingCase(null) }}
+          onSaved={() => {
             void refreshActiveSet(selectedEvalSetId)
             void refreshSets()
           }}
@@ -342,7 +345,15 @@ function EvalRunnerPanel({
                       {c.question}
                     </span>
                     <button
+                      onClick={() => setEditingCase(c)}
+                      title="Edit case"
+                      style={{ padding: '0 5px', fontSize: 11, cursor: 'pointer', background: 'transparent', color: cv.text4, border: 'none', flexShrink: 0 }}
+                    >
+                      ✎
+                    </button>
+                    <button
                       onClick={() => void handleRemoveCase(c.id)}
+                      title="Remove case"
                       style={{ padding: '0 4px', fontSize: 11, cursor: 'pointer', background: 'transparent', color: cv.text5, border: 'none', flexShrink: 0 }}
                     >
                       ×
@@ -530,7 +541,8 @@ function EvalRunnerPanel({
                 {activeSet.cases.map((c) => (
                   <li key={c.id} style={{ fontSize: 11, background: cv.bg, border: `1px solid ${cv.border}`, borderRadius: 4, padding: '4px 8px', display: 'flex', gap: 4, alignItems: 'flex-start', color: cv.text1 }}>
                     <span style={{ flex: 1, lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{c.question}</span>
-                    <button onClick={() => void handleRemoveCase(c.id)} style={{ padding: '0 4px', fontSize: 11, cursor: 'pointer', background: 'transparent', color: cv.text5, border: 'none' }}>×</button>
+                    <button onClick={() => setEditingCase(c)} title="Edit case" style={{ padding: '0 4px', fontSize: 11, cursor: 'pointer', background: 'transparent', color: cv.text4, border: 'none' }}>✎</button>
+                    <button onClick={() => void handleRemoveCase(c.id)} title="Remove case" style={{ padding: '0 4px', fontSize: 11, cursor: 'pointer', background: 'transparent', color: cv.text5, border: 'none' }}>×</button>
                   </li>
                 ))}
               </ul>
