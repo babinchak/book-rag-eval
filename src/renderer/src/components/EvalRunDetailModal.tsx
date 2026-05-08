@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import type { EvalCaseResult, EvalRunResult, EvalSet, GoldSpan } from '../../../preload/types'
+import type { Chunk, EvalCaseResult, EvalRunResult, EvalSet, GoldSpan } from '../../../preload/types'
 import { cv } from '../lib/theme'
 
 interface EvalRunDetailModalProps {
@@ -10,10 +10,82 @@ interface EvalRunDetailModalProps {
   onSelectChunk?: (strategyId: string, chunkId: string) => void
 }
 
+function buildTraceMarkdown(
+  run: EvalRunResult,
+  caseResult: EvalCaseResult,
+  goldSpans: GoldSpan[],
+  chunks: Chunk[]
+): string {
+  const byId = new Map(chunks.map((c) => [c.id, c]))
+  const goldChunks = chunks.filter((c) =>
+    goldSpans.some((g) => c.spineHref === g.spineHref && c.textStart < g.textEnd && c.textEnd > g.textStart)
+  )
+  const cited = new Set(caseResult.citedChunkIds ?? [])
+  const out: string[] = []
+  out.push(`# Eval trace`)
+  out.push('')
+  out.push(`**Strategy**: \`${run.strategyId}\` · k=${run.k}`)
+  out.push(`**Question**: ${caseResult.question}`)
+  const hit = caseResult.recallAtK > 0
+  const bits: string[] = [hit ? `HIT @ rank ${caseResult.hitRank}` : 'MISS']
+  bits.push(`R@${run.k}=${caseResult.recallAtK.toFixed(2)}`)
+  bits.push(`MRR=${caseResult.mrr.toFixed(2)}`)
+  if (caseResult.citationPrecision !== undefined) {
+    bits.push(`Cit P=${caseResult.citationPrecision.toFixed(2)}`)
+    bits.push(`Cit R=${(caseResult.citationRecall ?? 0).toFixed(2)}`)
+  }
+  if (caseResult.totalTokens !== undefined) bits.push(`${caseResult.totalTokens} tokens`)
+  out.push(`**Result**: ${bits.join(' · ')}`)
+  out.push('')
+  out.push(`## Gold span(s)`)
+  for (const g of goldSpans) out.push(`- \`${g.spineHref}\` chars ${g.textStart}–${g.textEnd}`)
+  out.push('')
+  out.push(`## Expected chunks (overlap gold)`)
+  if (goldChunks.length === 0) {
+    out.push(`*None — no chunk in this strategy overlaps the gold span.*`)
+  } else {
+    for (const c of goldChunks) {
+      out.push(`### \`${c.id}\``)
+      out.push('```')
+      out.push(c.text)
+      out.push('```')
+    }
+  }
+  out.push('')
+  if (caseResult.answer) {
+    out.push(`## Generated answer`)
+    out.push(caseResult.answer)
+    if (caseResult.citedRanks && caseResult.citedRanks.length > 0) {
+      out.push('')
+      out.push(`*Cited: [${caseResult.citedRanks.join(', ')}]*`)
+    }
+    out.push('')
+  }
+  out.push(`## Retrieved (${caseResult.retrieved.length})`)
+  for (const r of caseResult.retrieved) {
+    const tags: string[] = []
+    if (r.hit) tags.push(`HIT (${r.overlap}c overlap)`)
+    if (cited.has(r.chunkId)) tags.push('CITED')
+    out.push(`### #${r.rank} · d=${r.distance.toFixed(2)}${tags.length ? ` · ${tags.join(' · ')}` : ''}`)
+    out.push(`\`${r.chunkId}\``)
+    const chunk = byId.get(r.chunkId)
+    if (chunk) {
+      out.push('```')
+      out.push(chunk.text)
+      out.push('```')
+    } else {
+      out.push(`*chunk text unavailable*`)
+    }
+    out.push('')
+  }
+  return out.join('\n').trim()
+}
+
 function EvalRunDetailModal({ bookId, runId, evalSet, onClose, onSelectChunk }: EvalRunDetailModalProps): React.JSX.Element {
   const [run, setRun] = useState<EvalRunResult | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [expandedCaseId, setExpandedCaseId] = useState<string | null>(null)
+  const [copiedCaseId, setCopiedCaseId] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -27,6 +99,16 @@ function EvalRunDetailModal({ bookId, runId, evalSet, onClose, onSelectChunk }: 
 
   function caseGoldSpans(caseId: string): GoldSpan[] {
     return evalSet?.cases.find((x) => x.id === caseId)?.goldSpans ?? []
+  }
+
+  async function handleCopyTrace(caseResult: EvalCaseResult): Promise<void> {
+    if (!run) return
+    const r = await window.api.chunks.get(bookId, run.strategyId)
+    if (!r.ok) { setError(r.error); return }
+    const md = buildTraceMarkdown(run, caseResult, caseGoldSpans(caseResult.caseId), r.data.chunks)
+    await navigator.clipboard.writeText(md)
+    setCopiedCaseId(caseResult.caseId)
+    setTimeout(() => setCopiedCaseId((c) => (c === caseResult.caseId ? null : c)), 1500)
   }
 
   return (
@@ -70,6 +152,8 @@ function EvalRunDetailModal({ bookId, runId, evalSet, onClose, onSelectChunk }: 
                   goldSpans={caseGoldSpans(caseResult.caseId)}
                   strategyId={run.strategyId}
                   onSelectChunk={onSelectChunk ? (chunkId) => { onSelectChunk(run.strategyId, chunkId); onClose() } : undefined}
+                  onCopyTrace={() => handleCopyTrace(caseResult)}
+                  copied={copiedCaseId === caseResult.caseId}
                 />
               ))}
             </div>
@@ -96,9 +180,11 @@ interface CaseCardProps {
   goldSpans: GoldSpan[]
   strategyId: string
   onSelectChunk?: (chunkId: string) => void
+  onCopyTrace: () => void
+  copied: boolean
 }
 
-function CaseCard({ caseResult, expanded, onToggle, goldSpans, onSelectChunk }: CaseCardProps): React.JSX.Element {
+function CaseCard({ caseResult, expanded, onToggle, goldSpans, onSelectChunk, onCopyTrace, copied }: CaseCardProps): React.JSX.Element {
   const r = caseResult
   const recallColor = r.recallAtK ? cv.successStrong : cv.danger
   const citedSet = new Set(r.citedChunkIds ?? [])
@@ -128,6 +214,23 @@ function CaseCard({ caseResult, expanded, onToggle, goldSpans, onSelectChunk }: 
 
       {expanded && (
         <div style={{ padding: '12px 14px', background: cv.bg, borderTop: `1px solid ${cv.border}` }}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 10 }}>
+            <button
+              onClick={(e) => { e.stopPropagation(); void onCopyTrace() }}
+              title="Copy a markdown trace of this case (question, gold, retrieved chunks with text)"
+              style={{
+                padding: '4px 10px',
+                fontSize: 11,
+                cursor: 'pointer',
+                background: copied ? cv.successBg : cv.bg,
+                color: copied ? cv.successText : cv.text2,
+                border: `1px solid ${copied ? cv.successBorder : cv.border2}`,
+                borderRadius: 4
+              }}
+            >
+              {copied ? '✓ Copied' : '⎘ Copy trace'}
+            </button>
+          </div>
           {r.answer && (
             <section style={{ marginBottom: 14 }}>
               <SectionLabel>Answer</SectionLabel>
