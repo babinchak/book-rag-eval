@@ -9,6 +9,7 @@ import type {
   EmbedRunIpcResult,
   EmbeddingsListIpcResult,
   EmbeddingsRemoveIpcResult,
+  EvalAutoGenerateIpcResult,
   EvalCaseAddIpcResult,
   EvalCaseRemoveIpcResult,
   EvalCaseUpdateIpcResult,
@@ -119,7 +120,14 @@ const api = {
     listRuns: (bookId: string): Promise<EvalRunsListIpcResult> =>
       ipcRenderer.invoke('evals:listRuns', bookId),
     getRun: (bookId: string, runId: string): Promise<EvalRunGetIpcResult> =>
-      ipcRenderer.invoke('evals:getRun', bookId, runId)
+      ipcRenderer.invoke('evals:getRun', bookId, runId),
+    autoGenerate: (
+      bookId: string,
+      setId: string,
+      strategyId: string,
+      count: number
+    ): Promise<EvalAutoGenerateIpcResult> =>
+      ipcRenderer.invoke('evals:autoGenerate', bookId, setId, strategyId, count)
   }
 }
 

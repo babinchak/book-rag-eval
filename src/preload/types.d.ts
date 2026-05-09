@@ -253,3 +253,18 @@ export type EvalRunIpcResult = { ok: true; data: EvalRunResult } | { ok: false; 
 export type EvalRunsListIpcResult =
   | { ok: true; runs: EvalRunSummary[] }
   | { ok: false; error: string }
+
+export interface AutoGenerateFailure {
+  chunkId: string
+  error: string
+}
+
+export interface AutoGenerateProgress {
+  generated: number
+  failed: number
+  failures: AutoGenerateFailure[]
+}
+
+export type EvalAutoGenerateIpcResult =
+  | { ok: true; data: AutoGenerateProgress }
+  | { ok: false; error: string }

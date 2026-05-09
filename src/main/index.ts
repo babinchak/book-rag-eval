@@ -18,6 +18,7 @@ import {
 } from './settings'
 import {
   addCase,
+  autoGenerateCases,
   createEvalSet,
   deleteEvalSet,
   getEvalRun,
@@ -38,6 +39,7 @@ import type {
   EmbedRunIpcResult,
   EmbeddingsListIpcResult,
   EmbeddingsRemoveIpcResult,
+  EvalAutoGenerateIpcResult,
   EvalCaseAddIpcResult,
   EvalCaseRemoveIpcResult,
   EvalCaseUpdateIpcResult,
@@ -436,6 +438,26 @@ app.whenReady().then(() => {
     async (_, bookId: string, runId: string): Promise<EvalRunGetIpcResult> => {
       try {
         return { ok: true, data: await getEvalRun(bookId, runId) }
+      } catch (err) {
+        return { ok: false, error: (err as Error).message }
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'evals:autoGenerate',
+    async (
+      _,
+      bookId: string,
+      setId: string,
+      strategyId: string,
+      count: number
+    ): Promise<EvalAutoGenerateIpcResult> => {
+      try {
+        return {
+          ok: true,
+          data: await autoGenerateCases(bookId, setId, strategyId, count)
+        }
       } catch (err) {
         return { ok: false, error: (err as Error).message }
       }

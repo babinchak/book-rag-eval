@@ -49,6 +49,11 @@ function EvalRunnerPanel({
   const [error, setError] = useState<string | null>(null)
   const [detailRunId, setDetailRunId] = useState<string | null>(null)
   const [compareOpen, setCompareOpen] = useState(false)
+  const [autoGenOpen, setAutoGenOpen] = useState(false)
+  const [autoGenStrategy, setAutoGenStrategy] = useState<string>('')
+  const [autoGenCount, setAutoGenCount] = useState(10)
+  const [autoGenRunning, setAutoGenRunning] = useState(false)
+  const [autoGenStatus, setAutoGenStatus] = useState<string | null>(null)
 
   const fullyEmbedded = embeddingSets.filter((e) => {
     const set = chunkSets.find((s) => s.strategyId === e.strategyId)
@@ -92,6 +97,17 @@ function EvalRunnerPanel({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedEvalSetId, bookId])
 
+  useEffect(() => {
+    if (chunkSets.length === 0) {
+      setAutoGenStrategy('')
+      return
+    }
+    if (!chunkSets.find((c) => c.strategyId === autoGenStrategy)) {
+      setAutoGenStrategy(chunkSets[0].strategyId)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chunkSets])
+
   async function handleCreate(): Promise<void> {
     const id = newSetId.trim()
     if (!id) return
@@ -129,6 +145,34 @@ function EvalRunnerPanel({
       await refreshRuns()
     } finally {
       setRunning(null)
+    }
+  }
+
+  async function handleAutoGenerate(): Promise<void> {
+    if (!selectedEvalSetId || !autoGenStrategy) return
+    setAutoGenRunning(true)
+    setAutoGenStatus(null)
+    setError(null)
+    try {
+      const r = await window.api.evals.autoGenerate(
+        bookId,
+        selectedEvalSetId,
+        autoGenStrategy,
+        autoGenCount
+      )
+      if (!r.ok) {
+        setError(r.error)
+        return
+      }
+      const { generated, failed } = r.data
+      setAutoGenStatus(
+        `Generated ${generated} case${generated === 1 ? '' : 's'}` +
+          (failed > 0 ? ` · ${failed} failed` : '')
+      )
+      await refreshActiveSet(selectedEvalSetId)
+      await refreshSets()
+    } finally {
+      setAutoGenRunning(false)
     }
   }
 
@@ -404,6 +448,20 @@ function EvalRunnerPanel({
               <button onClick={() => setShowAddCase(true)} style={newSetBtn}>
                 + Add case
               </button>
+            )}
+            {activeSet && (
+              <AutoGenPanel
+                open={autoGenOpen}
+                onOpenToggle={() => setAutoGenOpen((v) => !v)}
+                chunkSets={chunkSets}
+                strategyId={autoGenStrategy}
+                onStrategyChange={setAutoGenStrategy}
+                count={autoGenCount}
+                onCountChange={setAutoGenCount}
+                running={autoGenRunning}
+                status={autoGenStatus}
+                onGenerate={handleAutoGenerate}
+              />
             )}
           </div>
         </div>

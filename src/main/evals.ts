@@ -1,10 +1,17 @@
 import { promises as fs } from 'node:fs'
 import { join } from 'node:path'
 import { randomUUID } from 'node:crypto'
-import { bookDir } from './library'
+import { ChatOpenAI } from '@langchain/openai'
+import { HumanMessage, SystemMessage } from '@langchain/core/messages'
+import { z } from 'zod'
+import { bookDir, listLibrary } from './library'
 import { readSpineRaw } from './epub'
 import { ask, retrieve } from './retrieval'
+import { getChunkSet } from './chunking'
+import { getOpenaiKey } from './settings'
 import type {
+  AutoGenerateProgress,
+  Chunk,
   EvalCase,
   EvalCaseResult,
   EvalMode,
@@ -409,6 +416,109 @@ export async function runEval(
 export async function getEvalRun(bookId: string, runId: string): Promise<EvalRunResult> {
   const raw = await fs.readFile(evalRunPath(bookId, runId), 'utf8')
   return JSON.parse(raw) as EvalRunResult
+}
+
+const MIN_AUTOGEN_CHUNK_CHARS = 200
+const AUTOGEN_MODEL = process.env.OPENAI_MODEL || 'gpt-4o-mini'
+
+const generatedCaseSchema = z.object({
+  question: z
+    .string()
+    .min(5)
+    .describe('A specific question whose answer is found in the passage.'),
+  answerHint: z
+    .string()
+    .optional()
+    .describe('One short sentence summarizing or quoting where the answer appears in the passage.')
+})
+
+function sampleEvenly<T>(items: T[], count: number): T[] {
+  if (items.length === 0 || count <= 0) return []
+  const n = Math.min(count, items.length)
+  const out: T[] = []
+  for (let i = 0; i < n; i++) {
+    const idx = Math.floor((i * items.length) / n)
+    out.push(items[idx])
+  }
+  return out
+}
+
+export async function autoGenerateCases(
+  bookId: string,
+  setId: string,
+  strategyId: string,
+  count: number
+): Promise<AutoGenerateProgress> {
+  if (!Number.isFinite(count) || count <= 0) throw new Error('Count must be positive.')
+  if (count > 100) throw new Error('Count must be 100 or fewer.')
+
+  const apiKey = await getOpenaiKey()
+  if (!apiKey) throw new Error('OpenAI API key is not set. Add it in Settings.')
+
+  // Validate the eval set exists before spending API calls.
+  await getEvalSet(bookId, setId)
+
+  const chunkSet = await getChunkSet(bookId, strategyId)
+  const eligible: Chunk[] = chunkSet.chunks.filter(
+    (c) => c.text.length >= MIN_AUTOGEN_CHUNK_CHARS
+  )
+  if (eligible.length === 0) {
+    throw new Error(
+      `Strategy "${strategyId}" has no chunks long enough (>= ${MIN_AUTOGEN_CHUNK_CHARS} chars).`
+    )
+  }
+
+  const sampled = sampleEvenly(eligible, count)
+
+  const library = await listLibrary()
+  const book = library.find((b) => b.id === bookId)
+  const bookContext = book
+    ? `Book: "${book.title}"${book.author ? ` by ${book.author}` : ''}`
+    : ''
+
+  const llm = new ChatOpenAI({
+    model: AUTOGEN_MODEL,
+    apiKey,
+    temperature: 0.7
+  }).withStructuredOutput(generatedCaseSchema)
+
+  const systemPrompt =
+    'You are helping create evaluation questions for a book retrieval system. ' +
+    'Given one passage from a book, generate ONE question whose answer is found in this passage. ' +
+    'The question should be specific (referencing concepts, names, or claims actually in the passage), not generic. ' +
+    'Avoid yes/no questions. Avoid trivial definition questions. ' +
+    'The question must be answerable from the passage alone.'
+
+  const progress: AutoGenerateProgress = { generated: 0, failed: 0, failures: [] }
+
+  for (const chunk of sampled) {
+    try {
+      const userMsg =
+        (bookContext ? `${bookContext}\n\n` : '') +
+        `Passage:\n"""\n${chunk.text}\n"""\n\nGenerate one evaluation question.`
+      const result = await llm.invoke([
+        new SystemMessage(systemPrompt),
+        new HumanMessage(userMsg)
+      ])
+      const goldSpan: GoldSpan = {
+        spineHref: chunk.spineHref,
+        textStart: chunk.textStart,
+        textEnd: chunk.textEnd
+      }
+      const noteParts = [`Auto-generated from chunk ${chunk.id}.`]
+      if (result.answerHint) noteParts.push(`Answer hint: ${result.answerHint}`)
+      await addCase(bookId, setId, result.question, [goldSpan], noteParts.join('\n\n'))
+      progress.generated += 1
+    } catch (err) {
+      progress.failed += 1
+      progress.failures.push({
+        chunkId: chunk.id,
+        error: (err as Error).message
+      })
+    }
+  }
+
+  return progress
 }
 
 export async function listEvalRuns(bookId: string): Promise<EvalRunSummary[]> {
