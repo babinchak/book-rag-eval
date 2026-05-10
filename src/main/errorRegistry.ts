@@ -18,6 +18,12 @@ export interface RecordedError {
   url?: string
   langsmithRunUrl?: string
   count: number
+  // When true, the diagnostic bundle omits the stack trace (useful for soft
+  // validation failures whose stack just points at our throw site).
+  suppressStack?: boolean
+  // Free-form context the producer wants to surface in the bundle (chunk text,
+  // rejected LLM output, etc.). Rendered in a "## Context" section.
+  extras?: Record<string, unknown>
 }
 
 const records: RecordedError[] = []
@@ -52,12 +58,18 @@ export interface RecordIpcOpts {
   ipcHandler: string
   ipcArgs: unknown[]
   langsmithRunUrl?: string
+  suppressStack?: boolean
+  extras?: Record<string, unknown>
 }
 
 export function recordIpcError(err: unknown, opts: RecordIpcOpts): RecordedError {
   const ipcError = toIpcError(err)
   const dedup = tryDedupe('ipc', ipcError.message, opts.ipcHandler)
   if (dedup) {
+    // Refresh extras to the most recent occurrence so the bundle reflects the
+    // latest failure context, not the first one we happened to see.
+    if (opts.extras) dedup.extras = opts.extras
+    if (opts.ipcArgs) dedup.ipcArgs = opts.ipcArgs
     notify()
     return dedup
   }
@@ -69,6 +81,8 @@ export function recordIpcError(err: unknown, opts: RecordIpcOpts): RecordedError
     ipcHandler: opts.ipcHandler,
     ipcArgs: opts.ipcArgs,
     langsmithRunUrl: opts.langsmithRunUrl,
+    suppressStack: opts.suppressStack,
+    extras: opts.extras,
     count: 1
   }
   ipcError.errorId = rec.id

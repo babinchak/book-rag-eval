@@ -472,10 +472,19 @@ function sampleEvenly<T>(items: T[], count: number): T[] {
   return out
 }
 
+function isFrontMatter(text: string): boolean {
+  if (/project\s+gutenberg/i.test(text)) return true
+  if (/\*\*\*\s*(?:start|end)\s+of\s+the/i.test(text)) return true
+  // Structured book metadata header (Title : ... Author : ...)
+  if (/\btitle\s*:\s*[^\n]{1,200}\bauthor\s*:/i.test(text)) return true
+  return false
+}
+
 // Skip chunks that are clearly not flowing prose: front matter, table of contents,
 // footnote dumps, indexes. The auto-generator produces nonsense cases on these.
 function isQualityProse(text: string): boolean {
   if (text.length < MIN_AUTOGEN_CHUNK_CHARS) return false
+  if (isFrontMatter(text)) return false
   const letters = (text.match(/[a-zA-Z]/g) ?? []).length
   if (letters / text.length < 0.6) return false
   const sentences = text.split(/[.!?](?:\s|$)/).filter((s) => s.trim().length > 0)
@@ -486,8 +495,29 @@ function isQualityProse(text: string): boolean {
   return true
 }
 
+const STOPWORDS = new Set([
+  'a', 'about', 'above', 'after', 'again', 'against', 'all', 'am', 'an',
+  'and', 'any', 'are', 'as', 'at', 'be', 'been', 'before', 'being', 'below',
+  'between', 'both', 'but', 'by', 'can', 'did', 'do', 'does', 'doing',
+  'down', 'during', 'each', 'few', 'for', 'from', 'further', 'had', 'has',
+  'have', 'having', 'he', 'her', 'here', 'hers', 'herself', 'him', 'himself',
+  'his', 'how', 'i', 'if', 'in', 'into', 'is', 'it', 'its', 'itself', 'just',
+  'me', 'more', 'most', 'my', 'myself', 'no', 'nor', 'not', 'now', 'of',
+  'off', 'on', 'once', 'only', 'or', 'other', 'our', 'ours', 'ourselves',
+  'out', 'over', 'own', 's', 'same', 'she', 'should', 'so', 'some', 'such',
+  't', 'than', 'that', 'the', 'their', 'theirs', 'them', 'themselves',
+  'then', 'there', 'these', 'they', 'this', 'those', 'through', 'to', 'too',
+  'under', 'until', 'up', 'very', 'was', 'we', 'were', 'what', 'when',
+  'where', 'which', 'while', 'who', 'whom', 'why', 'will', 'with', 'would',
+  'you', 'your', 'yours', 'yourself', 'yourselves'
+])
+
 function tokenize(s: string): string[] {
   return (s.toLowerCase().match(/[a-z0-9]+/g) ?? []).filter((t) => t.length >= 2)
+}
+
+function tokenizeWithCase(s: string): string[] {
+  return (s.match(/[A-Za-z0-9]+/g) ?? []).filter((t) => t.length >= 2)
 }
 
 function bigrams(tokens: string[]): string[] {
@@ -496,14 +526,58 @@ function bigrams(tokens: string[]): string[] {
   return out
 }
 
-// Return any 2-word phrase that appears in both the search query and the passage.
-// Surface tokens that appear verbatim in both make embedding retrieval trivial.
+// Build the chunk's "leakable bigrams" — only those that count as real
+// surface-token leakage if they show up in a search query. We exclude:
+//   - pure-stopword bigrams ("of the", "what is") — these are English, not leakage
+//   - pure proper-noun bigrams ("Van Dyck", "Project Gutenberg") — legitimate
+//     subjects a real searcher would type
+function leakableBigrams(chunkText: string): Set<string> {
+  const toks = tokenizeWithCase(chunkText)
+  const out = new Set<string>()
+  for (let i = 0; i < toks.length - 1; i++) {
+    const a = toks[i]
+    const b = toks[i + 1]
+    const aCap = /^[A-Z]/.test(a)
+    const bCap = /^[A-Z]/.test(b)
+    if (aCap && bCap) continue
+    const aLow = a.toLowerCase()
+    const bLow = b.toLowerCase()
+    if (STOPWORDS.has(aLow) && STOPWORDS.has(bLow)) continue
+    out.add(`${aLow} ${bLow}`)
+  }
+  return out
+}
+
+// Return any 2-word phrase from the search query that overlaps the chunk's
+// leakable bigrams. Surface-token overlap makes embedding retrieval trivial.
 function findLeakingBigrams(searchQuery: string, chunkText: string): string[] {
   const queryGrams = bigrams(tokenize(searchQuery))
-  const chunkGrams = new Set(bigrams(tokenize(chunkText)))
+  const leakable = leakableBigrams(chunkText)
   const hits = new Set<string>()
-  for (const g of queryGrams) if (chunkGrams.has(g)) hits.add(g)
+  for (const g of queryGrams) if (leakable.has(g)) hits.add(g)
   return Array.from(hits)
+}
+
+// LLMs often clean up the boundary punctuation when copying a quote (e.g.,
+// replacing a trailing comma with a period for grammatical closure). Locate
+// the span tolerantly: try verbatim first; if that fails, trim leading and
+// trailing punctuation+whitespace and try again. Returns the chunk-local
+// offset and the substring length to use as the gold span, or null if no
+// match can be found.
+function locateAnswerSpan(
+  chunkText: string,
+  answerSpan: string
+): { offset: number; length: number } | null {
+  const direct = chunkText.indexOf(answerSpan)
+  if (direct >= 0) return { offset: direct, length: answerSpan.length }
+  const trimmed = answerSpan.replace(
+    /^[\s.,;:!?'"`\-—–()\[\]{}]+|[\s.,;:!?'"`\-—–()\[\]{}]+$/g,
+    ''
+  )
+  if (trimmed.length < MIN_ANSWER_SPAN_CHARS) return null
+  const fuzzy = chunkText.indexOf(trimmed)
+  if (fuzzy >= 0) return { offset: fuzzy, length: trimmed.length }
+  return null
 }
 
 export async function autoGenerateCases(
@@ -559,6 +633,14 @@ export async function autoGenerateCases(
     let lastError: string | null = null
     let avoidPhrases: string[] = []
     let succeeded = false
+    interface AttemptRecord {
+      attempt: number
+      reason: string
+      question?: string
+      searchQuery?: string
+      answerSpan?: string
+    }
+    const attemptHistory: AttemptRecord[] = []
 
     for (let attempt = 0; attempt < MAX_GENERATION_ATTEMPTS; attempt++) {
       try {
@@ -576,9 +658,16 @@ export async function autoGenerateCases(
           new HumanMessage(userMsg)
         ])
 
-        const answerOffset = chunk.text.indexOf(result.answerSpan)
-        if (answerOffset < 0) {
+        const located = locateAnswerSpan(chunk.text, result.answerSpan)
+        if (!located) {
           lastError = 'Answer span is not a verbatim substring of the passage.'
+          attemptHistory.push({
+            attempt: attempt + 1,
+            reason: lastError,
+            question: result.question,
+            searchQuery: result.searchQuery,
+            answerSpan: result.answerSpan
+          })
           continue
         }
 
@@ -586,18 +675,26 @@ export async function autoGenerateCases(
         if (leaks.length > 0) {
           lastError = `Search query leaks phrases from the passage: ${leaks.map((p) => `"${p}"`).join(', ')}`
           avoidPhrases = leaks
+          attemptHistory.push({
+            attempt: attempt + 1,
+            reason: lastError,
+            question: result.question,
+            searchQuery: result.searchQuery,
+            answerSpan: result.answerSpan
+          })
           continue
         }
 
-        const goldStart = chunk.textStart + answerOffset
+        const goldStart = chunk.textStart + located.offset
         const goldSpan: GoldSpan = {
           spineHref: chunk.spineHref,
           textStart: goldStart,
-          textEnd: goldStart + result.answerSpan.length
+          textEnd: goldStart + located.length
         }
+        const matchedSpan = chunk.text.slice(located.offset, located.offset + located.length)
         const noteParts = [
           `Auto-generated from chunk ${chunk.id}.`,
-          `Answer span: ${JSON.stringify(result.answerSpan)}`
+          `Answer span: ${JSON.stringify(matchedSpan)}`
         ]
         await addCase(
           bookId,
@@ -612,6 +709,7 @@ export async function autoGenerateCases(
         break
       } catch (err) {
         lastError = (err as Error).message
+        attemptHistory.push({ attempt: attempt + 1, reason: lastError })
       }
     }
 
@@ -619,7 +717,15 @@ export async function autoGenerateCases(
       const ipcErr = captureIpcError(
         new Error(lastError ?? 'Unknown failure'),
         'evals:autoGenerate',
-        [bookId, setId, strategyId, { failedChunkId: chunk.id }]
+        [bookId, setId, strategyId, { failedChunkId: chunk.id }],
+        {
+          suppressStack: true,
+          extras: {
+            chunkId: chunk.id,
+            chunkText: chunk.text,
+            attempts: attemptHistory
+          }
+        }
       )
       progress.failed += 1
       progress.failures.push({ id: chunk.id, error: ipcErr })

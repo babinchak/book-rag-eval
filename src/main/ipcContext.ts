@@ -38,11 +38,24 @@ function safeArgs(handlerName: string, args: unknown[]): unknown[] {
  * For handlers whose success shape is not `{ok, data}` (e.g. `{ok, sets}`).
  * Records the error in the registry and returns the IpcError (with errorId
  * attached) so the handler can spread it into its own result.
+ *
+ * `extras` attaches free-form context (chunk text, LLM output, etc.) that
+ * the diagnostic bundle renders in a "## Context" section.
+ *
+ * `suppressStack` omits the stack trace from the bundle — use for soft
+ * validation failures whose stack only points at our throw site.
  */
-export function captureIpcError(err: unknown, handlerName: string, args: unknown[]): IpcError {
+export function captureIpcError(
+  err: unknown,
+  handlerName: string,
+  args: unknown[],
+  opts?: { suppressStack?: boolean; extras?: Record<string, unknown> }
+): IpcError {
   const rec = recordIpcError(err, {
     ipcHandler: handlerName,
-    ipcArgs: safeArgs(handlerName, args)
+    ipcArgs: safeArgs(handlerName, args),
+    suppressStack: opts?.suppressStack,
+    extras: opts?.extras
   })
   log.error('ipc', `${handlerName} failed: ${rec.error.message}`)
   return rec.error

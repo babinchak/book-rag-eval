@@ -1,17 +1,61 @@
 import type { LogEntry } from '../preload/types'
 import { envSnapshot } from './env'
 import { getError, listErrors } from './errorRegistry'
-import { logsBefore } from './logBuffer'
+import { logsBefore, recentLogs } from './logBuffer'
 
 const SECRET_KEY_RE = /key|token|secret|password|authorization/i
 const TRUNCATE_AT = 500
 const TRUNCATE_KEEP = 200
+const EXTRAS_STRING_LIMIT = 4000
 
 function truncate(s: string): string {
   if (s.length <= TRUNCATE_AT) return s
   const head = s.slice(0, TRUNCATE_KEEP)
   const tail = s.slice(s.length - TRUNCATE_KEEP)
   return `${head}… [truncated ${s.length - TRUNCATE_KEEP * 2} chars] …${tail}`
+}
+
+function truncateLong(s: string): string {
+  if (s.length <= EXTRAS_STRING_LIMIT) return s
+  return `${s.slice(0, EXTRAS_STRING_LIMIT)}\n…[truncated ${s.length - EXTRAS_STRING_LIMIT} chars]`
+}
+
+function renderExtras(extras: Record<string, unknown>): string | null {
+  const lines: string[] = ['## Context']
+  let any = false
+  for (const [key, value] of Object.entries(extras)) {
+    if (value === undefined || value === null) continue
+    any = true
+    if (SECRET_KEY_RE.test(key)) {
+      lines.push(`### ${key}`)
+      lines.push('<redacted>')
+      continue
+    }
+    lines.push(`### ${key}`)
+    if (typeof value === 'string') {
+      lines.push('```')
+      lines.push(truncateLong(value))
+      lines.push('```')
+    } else {
+      lines.push('```json')
+      lines.push(truncateLong(JSON.stringify(value, null, 2)))
+      lines.push('```')
+    }
+  }
+  return any ? lines.join('\n') : null
+}
+
+function envSection(): string {
+  const env = envSnapshot()
+  const lines: string[] = [
+    `- App: ${env.appName}@${env.appVersion}` +
+      (env.gitSha
+        ? ` · git ${env.gitSha}${env.gitDirty ? ' (dirty)' : ''}${env.gitBranch ? ` on ${env.gitBranch}` : ''}`
+        : ''),
+    `- Electron ${env.electronVersion} · Node ${env.nodeVersion}`,
+    `- ${env.platform}`
+  ]
+  return `## Env\n${lines.join('\n')}`
 }
 
 function redact(value: unknown, key?: string): unknown {
@@ -40,11 +84,17 @@ function fmtLog(entry: LogEntry): string {
   return `${time} [${entry.source}]${tag} ${truncate(entry.msg)}${data}`
 }
 
-export function buildBundle(errorId: string): string {
+export interface BundleOptions {
+  includeLogs?: boolean
+  includeEnv?: boolean
+}
+
+export function buildBundle(errorId: string, opts: BundleOptions = {}): string {
+  const includeLogs = opts.includeLogs ?? true
+  const includeEnv = opts.includeEnv ?? true
   const rec = getError(errorId)
   if (!rec) return `Error ${errorId} not found in registry.`
 
-  const env = envSnapshot()
   const ts = new Date(rec.ts).toISOString()
   const sections: string[] = []
 
@@ -54,7 +104,7 @@ export function buildBundle(errorId: string): string {
   if (rec.count > 1) sections[0] += ` (×${rec.count})`
 
   const errBlock: string[] = ['```', rec.error.message]
-  if (rec.error.stack) errBlock.push(rec.error.stack)
+  if (!rec.suppressStack && rec.error.stack) errBlock.push(rec.error.stack)
   errBlock.push('```')
   sections.push(errBlock.join('\n'))
   if (rec.error.cause) sections.push(`**Cause:**\n\n\`\`\`\n${rec.error.cause}\n\`\`\``)
@@ -73,27 +123,24 @@ export function buildBundle(errorId: string): string {
     sections.push(`## Source\n${lines.join('\n')}`)
   }
 
-  // Recent logs (last 20 before the error)
-  const logs = logsBefore(rec.ts + 100, 20)
-  if (logs.length > 0) {
-    sections.push(
-      `## Recent logs (${logs.length} entries)\n\`\`\`\n${logs.map(fmtLog).join('\n')}\n\`\`\``
-    )
+  // Free-form context attached by the producer (chunk text, LLM output, etc.)
+  if (rec.extras) {
+    const rendered = renderExtras(rec.extras)
+    if (rendered) sections.push(rendered)
   }
 
-  // LangSmith
+  if (includeLogs) {
+    const logs = logsBefore(rec.ts + 100, 20)
+    if (logs.length > 0) {
+      sections.push(
+        `## Recent logs (${logs.length} entries)\n\`\`\`\n${logs.map(fmtLog).join('\n')}\n\`\`\``
+      )
+    }
+  }
+
   if (rec.langsmithRunUrl) sections.push(`## LangSmith\n${rec.langsmithRunUrl}`)
 
-  // Env
-  const envLines: string[] = [
-    `- App: ${env.appName}@${env.appVersion}` +
-      (env.gitSha
-        ? ` · git ${env.gitSha}${env.gitDirty ? ' (dirty)' : ''}${env.gitBranch ? ` on ${env.gitBranch}` : ''}`
-        : ''),
-    `- Electron ${env.electronVersion} · Node ${env.nodeVersion}`,
-    `- ${env.platform}`
-  ]
-  sections.push(`## Env\n${envLines.join('\n')}`)
+  if (includeEnv) sections.push(envSection())
 
   return sections.join('\n\n') + '\n'
 }
@@ -103,5 +150,18 @@ export function buildBundleAll(): string {
   if (sorted.length === 0) return '_No errors recorded this session._\n'
   const totalCount = sorted.reduce((acc, s) => acc + s.count, 0)
   const header = `# Diagnostic bundle — ${sorted.length} error${sorted.length === 1 ? '' : 's'}${totalCount !== sorted.length ? ` (${totalCount} occurrences)` : ''}`
-  return header + '\n\n' + sorted.map((s) => buildBundle(s.id)).join('\n---\n\n')
+  const errorsBlock = sorted
+    .map((s) => buildBundle(s.id, { includeLogs: false, includeEnv: false }))
+    .join('\n---\n\n')
+
+  const trailing: string[] = []
+  const allLogs = recentLogs(50)
+  if (allLogs.length > 0) {
+    trailing.push(
+      `## Session logs (${allLogs.length} entries)\n\`\`\`\n${allLogs.map(fmtLog).join('\n')}\n\`\`\``
+    )
+  }
+  trailing.push(envSection())
+
+  return header + '\n\n' + errorsBlock + '\n---\n\n' + trailing.join('\n\n') + '\n'
 }
