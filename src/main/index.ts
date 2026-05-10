@@ -31,7 +31,10 @@ import {
   runEval,
   updateCase
 } from './evals'
-import { toIpcError } from './ipcError'
+import { captureIpcError } from './ipcContext'
+import { ingestRendererLog, log } from './log'
+import { listErrors, recordRendererReport, subscribe } from './errorRegistry'
+import { buildBundle } from './diagnosticBundle'
 import type {
   AskIpcResult,
   ChunkParams,
@@ -41,6 +44,9 @@ import type {
   EmbedRunIpcResult,
   EmbeddingsListIpcResult,
   EmbeddingsRemoveIpcResult,
+  ErrorsBundleIpcResult,
+  ErrorsListIpcResult,
+  ErrorsReportIpcResult,
   EvalAutoGenerateIpcResult,
   EvalCaseAddIpcResult,
   EvalCaseRemoveIpcResult,
@@ -58,13 +64,14 @@ import type {
   LibraryListResult,
   LibraryOpenResult,
   LibraryRemoveResult,
+  LogEntry,
+  RendererErrorReport,
   SettingsClearKeyResult,
   SettingsGetStringResult,
   SettingsHasKeyResult,
   SettingsSetKeyResult,
   SettingsSetStringResult
 } from '../preload/types'
-
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -93,6 +100,13 @@ function createWindow(): void {
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
+
+  // Push inbox updates to this window when the registry changes.
+  const unsubscribe = subscribe(() => {
+    if (mainWindow.isDestroyed()) return
+    mainWindow.webContents.send('errors:changed')
+  })
+  mainWindow.on('closed', () => unsubscribe())
 }
 
 app.whenReady().then(() => {
@@ -106,8 +120,7 @@ app.whenReady().then(() => {
     try {
       return { ok: true, books: await listLibrary() }
     } catch (err) {
-      console.error('[ipc]', err)
-      return { ok: false, error: toIpcError(err) }
+      return { ok: false, error: captureIpcError(err, 'library:list', []) }
     }
   })
 
@@ -115,8 +128,7 @@ app.whenReady().then(() => {
     try {
       return { ok: true, data: await importEpubFromDialog() }
     } catch (err) {
-      console.error('[ipc]', err)
-      return { ok: false, error: toIpcError(err) }
+      return { ok: false, error: captureIpcError(err, 'library:import', []) }
     }
   })
 
@@ -124,8 +136,7 @@ app.whenReady().then(() => {
     try {
       return { ok: true, data: await openBook(id) }
     } catch (err) {
-      console.error('[ipc]', err)
-      return { ok: false, error: toIpcError(err) }
+      return { ok: false, error: captureIpcError(err, 'library:open', [id]) }
     }
   })
 
@@ -134,8 +145,7 @@ app.whenReady().then(() => {
       await removeBook(id)
       return { ok: true }
     } catch (err) {
-      console.error('[ipc]', err)
-      return { ok: false, error: toIpcError(err) }
+      return { ok: false, error: captureIpcError(err, 'library:remove', [id]) }
     }
   })
 
@@ -145,8 +155,7 @@ app.whenReady().then(() => {
       try {
         return { ok: true, data: await runChunking(bookId, params) }
       } catch (err) {
-        console.error('[ipc]', err)
-        return { ok: false, error: toIpcError(err) }
+        return { ok: false, error: captureIpcError(err, 'chunks:run', [bookId, params]) }
       }
     }
   )
@@ -155,8 +164,7 @@ app.whenReady().then(() => {
     try {
       return { ok: true, sets: await listChunkSets(bookId) }
     } catch (err) {
-      console.error('[ipc]', err)
-      return { ok: false, error: toIpcError(err) }
+      return { ok: false, error: captureIpcError(err, 'chunks:list', [bookId]) }
     }
   })
 
@@ -166,8 +174,7 @@ app.whenReady().then(() => {
       try {
         return { ok: true, data: await getChunkSet(bookId, strategyId) }
       } catch (err) {
-        console.error('[ipc]', err)
-        return { ok: false, error: toIpcError(err) }
+        return { ok: false, error: captureIpcError(err, 'chunks:get', [bookId, strategyId]) }
       }
     }
   )
@@ -178,23 +185,18 @@ app.whenReady().then(() => {
       try {
         return { ok: true, data: await runEmbedding(bookId, strategyId) }
       } catch (err) {
-        console.error('[ipc]', err)
-        return { ok: false, error: toIpcError(err) }
+        return { ok: false, error: captureIpcError(err, 'embeddings:run', [bookId, strategyId]) }
       }
     }
   )
 
-  ipcMain.handle(
-    'embeddings:list',
-    async (_, bookId: string): Promise<EmbeddingsListIpcResult> => {
-      try {
-        return { ok: true, sets: await listEmbeddingSets(bookId) }
-      } catch (err) {
-        console.error('[ipc]', err)
-        return { ok: false, error: toIpcError(err) }
-      }
+  ipcMain.handle('embeddings:list', async (_, bookId: string): Promise<EmbeddingsListIpcResult> => {
+    try {
+      return { ok: true, sets: await listEmbeddingSets(bookId) }
+    } catch (err) {
+      return { ok: false, error: captureIpcError(err, 'embeddings:list', [bookId]) }
     }
-  )
+  })
 
   ipcMain.handle(
     'embeddings:remove',
@@ -203,8 +205,10 @@ app.whenReady().then(() => {
         await removeEmbeddings(bookId, strategyId)
         return { ok: true }
       } catch (err) {
-        console.error('[ipc]', err)
-        return { ok: false, error: toIpcError(err) }
+        return {
+          ok: false,
+          error: captureIpcError(err, 'embeddings:remove', [bookId, strategyId])
+        }
       }
     }
   )
@@ -213,31 +217,25 @@ app.whenReady().then(() => {
     try {
       return { ok: true, hasKey: await hasOpenaiKey() }
     } catch (err) {
-      console.error('[ipc]', err)
-      return { ok: false, error: toIpcError(err) }
+      return { ok: false, error: captureIpcError(err, 'settings:hasOpenaiKey', []) }
     }
   })
 
-  ipcMain.handle(
-    'settings:setOpenaiKey',
-    async (_, key: string): Promise<SettingsSetKeyResult> => {
-      try {
-        await setOpenaiKey(key)
-        return { ok: true }
-      } catch (err) {
-        console.error('[ipc]', err)
-        return { ok: false, error: toIpcError(err) }
-      }
+  ipcMain.handle('settings:setOpenaiKey', async (_, key: string): Promise<SettingsSetKeyResult> => {
+    try {
+      await setOpenaiKey(key)
+      return { ok: true }
+    } catch (err) {
+      return { ok: false, error: captureIpcError(err, 'settings:setOpenaiKey', [key]) }
     }
-  )
+  })
 
   ipcMain.handle('settings:clearOpenaiKey', async (): Promise<SettingsClearKeyResult> => {
     try {
       await clearOpenaiKey()
       return { ok: true }
     } catch (err) {
-      console.error('[ipc]', err)
-      return { ok: false, error: toIpcError(err) }
+      return { ok: false, error: captureIpcError(err, 'settings:clearOpenaiKey', []) }
     }
   })
 
@@ -245,8 +243,7 @@ app.whenReady().then(() => {
     try {
       return { ok: true, hasKey: await hasLangsmithKey() }
     } catch (err) {
-      console.error('[ipc]', err)
-      return { ok: false, error: toIpcError(err) }
+      return { ok: false, error: captureIpcError(err, 'settings:hasLangsmithKey', []) }
     }
   })
 
@@ -257,8 +254,7 @@ app.whenReady().then(() => {
         await setLangsmithKey(key)
         return { ok: true }
       } catch (err) {
-        console.error('[ipc]', err)
-        return { ok: false, error: toIpcError(err) }
+        return { ok: false, error: captureIpcError(err, 'settings:setLangsmithKey', [key]) }
       }
     }
   )
@@ -268,22 +264,17 @@ app.whenReady().then(() => {
       await clearLangsmithKey()
       return { ok: true }
     } catch (err) {
-      console.error('[ipc]', err)
-      return { ok: false, error: toIpcError(err) }
+      return { ok: false, error: captureIpcError(err, 'settings:clearLangsmithKey', []) }
     }
   })
 
-  ipcMain.handle(
-    'settings:getLangsmithProject',
-    async (): Promise<SettingsGetStringResult> => {
-      try {
-        return { ok: true, value: await getLangsmithProject() }
-      } catch (err) {
-        console.error('[ipc]', err)
-        return { ok: false, error: toIpcError(err) }
-      }
+  ipcMain.handle('settings:getLangsmithProject', async (): Promise<SettingsGetStringResult> => {
+    try {
+      return { ok: true, value: await getLangsmithProject() }
+    } catch (err) {
+      return { ok: false, error: captureIpcError(err, 'settings:getLangsmithProject', []) }
     }
-  )
+  })
 
   ipcMain.handle(
     'settings:setLangsmithProject',
@@ -292,8 +283,10 @@ app.whenReady().then(() => {
         await setLangsmithProject(name)
         return { ok: true }
       } catch (err) {
-        console.error('[ipc]', err)
-        return { ok: false, error: toIpcError(err) }
+        return {
+          ok: false,
+          error: captureIpcError(err, 'settings:setLangsmithProject', [name])
+        }
       }
     }
   )
@@ -310,8 +303,10 @@ app.whenReady().then(() => {
       try {
         return { ok: true, data: await ask(bookId, strategyId, query, k) }
       } catch (err) {
-        console.error('[ipc]', err)
-        return { ok: false, error: toIpcError(err) }
+        return {
+          ok: false,
+          error: captureIpcError(err, 'ask:run', [bookId, strategyId, query, k])
+        }
       }
     }
   )
@@ -320,8 +315,7 @@ app.whenReady().then(() => {
     try {
       return { ok: true, sets: await listEvalSets(bookId) }
     } catch (err) {
-      console.error('[ipc]', err)
-      return { ok: false, error: toIpcError(err) }
+      return { ok: false, error: captureIpcError(err, 'evals:list', [bookId]) }
     }
   })
 
@@ -331,8 +325,7 @@ app.whenReady().then(() => {
       try {
         return { ok: true, data: await getEvalSet(bookId, setId) }
       } catch (err) {
-        console.error('[ipc]', err)
-        return { ok: false, error: toIpcError(err) }
+        return { ok: false, error: captureIpcError(err, 'evals:get', [bookId, setId]) }
       }
     }
   )
@@ -343,8 +336,7 @@ app.whenReady().then(() => {
       try {
         return { ok: true, data: await createEvalSet(bookId, setId) }
       } catch (err) {
-        console.error('[ipc]', err)
-        return { ok: false, error: toIpcError(err) }
+        return { ok: false, error: captureIpcError(err, 'evals:create', [bookId, setId]) }
       }
     }
   )
@@ -356,8 +348,7 @@ app.whenReady().then(() => {
         await deleteEvalSet(bookId, setId)
         return { ok: true }
       } catch (err) {
-        console.error('[ipc]', err)
-        return { ok: false, error: toIpcError(err) }
+        return { ok: false, error: captureIpcError(err, 'evals:delete', [bookId, setId]) }
       }
     }
   )
@@ -379,26 +370,32 @@ app.whenReady().then(() => {
           data: await addCase(bookId, setId, question, searchQuery, goldSpans, notes)
         }
       } catch (err) {
-        console.error('[ipc]', err)
-        return { ok: false, error: toIpcError(err) }
+        return {
+          ok: false,
+          error: captureIpcError(err, 'evals:addCase', [
+            bookId,
+            setId,
+            question,
+            searchQuery,
+            goldSpans,
+            notes
+          ])
+        }
       }
     }
   )
 
   ipcMain.handle(
     'evals:removeCase',
-    async (
-      _,
-      bookId: string,
-      setId: string,
-      caseId: string
-    ): Promise<EvalCaseRemoveIpcResult> => {
+    async (_, bookId: string, setId: string, caseId: string): Promise<EvalCaseRemoveIpcResult> => {
       try {
         await removeCase(bookId, setId, caseId)
         return { ok: true }
       } catch (err) {
-        console.error('[ipc]', err)
-        return { ok: false, error: toIpcError(err) }
+        return {
+          ok: false,
+          error: captureIpcError(err, 'evals:removeCase', [bookId, setId, caseId])
+        }
       }
     }
   )
@@ -415,8 +412,10 @@ app.whenReady().then(() => {
       try {
         return { ok: true, data: await updateCase(bookId, setId, caseId, updates) }
       } catch (err) {
-        console.error('[ipc]', err)
-        return { ok: false, error: toIpcError(err) }
+        return {
+          ok: false,
+          error: captureIpcError(err, 'evals:updateCase', [bookId, setId, caseId, updates])
+        }
       }
     }
   )
@@ -434,8 +433,7 @@ app.whenReady().then(() => {
         }
         return { ok: true, data: result }
       } catch (err) {
-        console.error('[ipc]', err)
-        return { ok: false, error: toIpcError(err) }
+        return { ok: false, error: captureIpcError(err, 'evals:locate', [bookId, quote]) }
       }
     }
   )
@@ -454,23 +452,21 @@ app.whenReady().then(() => {
       try {
         return { ok: true, data: await runEval(bookId, setId, strategyId, k, mode, caseIds) }
       } catch (err) {
-        console.error('[ipc]', err)
-        return { ok: false, error: toIpcError(err) }
+        return {
+          ok: false,
+          error: captureIpcError(err, 'evals:run', [bookId, setId, strategyId, k, mode, caseIds])
+        }
       }
     }
   )
 
-  ipcMain.handle(
-    'evals:listRuns',
-    async (_, bookId: string): Promise<EvalRunsListIpcResult> => {
-      try {
-        return { ok: true, runs: await listEvalRuns(bookId) }
-      } catch (err) {
-        console.error('[ipc]', err)
-        return { ok: false, error: toIpcError(err) }
-      }
+  ipcMain.handle('evals:listRuns', async (_, bookId: string): Promise<EvalRunsListIpcResult> => {
+    try {
+      return { ok: true, runs: await listEvalRuns(bookId) }
+    } catch (err) {
+      return { ok: false, error: captureIpcError(err, 'evals:listRuns', [bookId]) }
     }
-  )
+  })
 
   ipcMain.handle(
     'evals:getRun',
@@ -478,8 +474,7 @@ app.whenReady().then(() => {
       try {
         return { ok: true, data: await getEvalRun(bookId, runId) }
       } catch (err) {
-        console.error('[ipc]', err)
-        return { ok: false, error: toIpcError(err) }
+        return { ok: false, error: captureIpcError(err, 'evals:getRun', [bookId, runId]) }
       }
     }
   )
@@ -499,8 +494,10 @@ app.whenReady().then(() => {
           data: await autoGenerateCases(bookId, setId, strategyId, count)
         }
       } catch (err) {
-        console.error('[ipc]', err)
-        return { ok: false, error: toIpcError(err) }
+        return {
+          ok: false,
+          error: captureIpcError(err, 'evals:autoGenerate', [bookId, setId, strategyId, count])
+        }
       }
     }
   )
@@ -514,11 +511,61 @@ app.whenReady().then(() => {
           data: await backfillSearchQueries(bookId, setId)
         }
       } catch (err) {
-        console.error('[ipc]', err)
-        return { ok: false, error: toIpcError(err) }
+        return {
+          ok: false,
+          error: captureIpcError(err, 'evals:backfillSearchQueries', [bookId, setId])
+        }
       }
     }
   )
+
+  // Error/log infrastructure
+  ipcMain.handle('errors:list', async (): Promise<ErrorsListIpcResult> => {
+    try {
+      return { ok: true, entries: listErrors() }
+    } catch (err) {
+      return { ok: false, error: captureIpcError(err, 'errors:list', []) }
+    }
+  })
+
+  ipcMain.handle('errors:bundle', async (_, errorId: string): Promise<ErrorsBundleIpcResult> => {
+    try {
+      return { ok: true, markdown: buildBundle(errorId) }
+    } catch (err) {
+      return { ok: false, error: captureIpcError(err, 'errors:bundle', [errorId]) }
+    }
+  })
+
+  ipcMain.handle(
+    'errors:report',
+    async (_, report: RendererErrorReport): Promise<ErrorsReportIpcResult> => {
+      try {
+        const rec = recordRendererReport(report)
+        return { ok: true, errorId: rec.id }
+      } catch (err) {
+        return { ok: false, error: captureIpcError(err, 'errors:report', [report]) }
+      }
+    }
+  )
+
+  ipcMain.on('log:forward', (_, entry: LogEntry) => {
+    try {
+      ingestRendererLog(entry)
+    } catch (err) {
+      log.warn('log', `failed to ingest renderer log: ${(err as Error).message}`)
+    }
+  })
+
+  // Main-process unhandled errors
+  process.on('uncaughtException', (err) => {
+    log.error('process', `uncaughtException: ${err.message}`, { stack: err.stack })
+    captureIpcError(err, '<uncaughtException>', [])
+  })
+  process.on('unhandledRejection', (reason) => {
+    const err = reason instanceof Error ? reason : new Error(String(reason))
+    log.error('process', `unhandledRejection: ${err.message}`, { stack: err.stack })
+    captureIpcError(err, '<unhandledRejection>', [])
+  })
 
   createWindow()
 

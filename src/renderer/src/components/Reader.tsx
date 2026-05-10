@@ -15,6 +15,7 @@ import { cv } from '../lib/theme'
 import AssistantPane from './AssistantPane'
 import EvalRunnerPanel from './EvalRunnerPanel'
 import ErrorDisplay from './ErrorDisplay'
+import ErrorInbox from './ErrorInbox'
 
 type BookView = 'strategies' | 'reader' | 'evals'
 
@@ -232,7 +233,7 @@ function Reader({ book, onBack }: ReaderProps): React.JSX.Element {
             <div style={{ fontSize: 11, color: cv.text4, marginTop: 1 }}>{book.author}</div>
           )}
         </div>
-        <nav style={{ display: 'flex', gap: 2, flexShrink: 0 }}>
+        <nav style={{ display: 'flex', gap: 2, flexShrink: 0, alignItems: 'center' }}>
           <NavTab active={view === 'strategies'} onClick={() => setView('strategies')}>
             Strategies
           </NavTab>
@@ -242,6 +243,9 @@ function Reader({ book, onBack }: ReaderProps): React.JSX.Element {
           <NavTab active={view === 'evals'} onClick={() => setView('evals')}>
             Evals
           </NavTab>
+          <div style={{ marginLeft: 8 }}>
+            <ErrorInbox />
+          </div>
         </nav>
       </header>
 

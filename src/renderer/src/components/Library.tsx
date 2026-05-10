@@ -3,6 +3,7 @@ import type { BookSummary, IpcError } from '../../../preload/types'
 import SettingsModal from './SettingsModal'
 import ThemeToggle from './ThemeToggle'
 import ErrorDisplay from './ErrorDisplay'
+import ErrorInbox from './ErrorInbox'
 import { cv, useTheme } from '../lib/theme'
 
 interface LibraryProps {
@@ -49,7 +50,8 @@ function Library({ onOpen }: LibraryProps): React.JSX.Element {
         <span style={{ color: cv.text4, fontSize: 13 }}>
           {books ? `${books.length} ${books.length === 1 ? 'book' : 'books'}` : 'loading…'}
         </span>
-        <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>
+          <ErrorInbox />
           <ThemeToggle mode={mode} setMode={setMode} />
           <button
             onClick={() => setSettingsOpen(true)}

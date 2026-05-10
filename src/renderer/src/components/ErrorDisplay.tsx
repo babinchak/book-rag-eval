@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { IpcError } from '../../../preload/types'
 import { cv } from '../lib/theme'
 
@@ -7,9 +8,20 @@ interface ErrorDisplayProps {
 }
 
 function ErrorDisplay({ error, marginTop }: ErrorDisplayProps): React.JSX.Element | null {
+  const [copied, setCopied] = useState(false)
   if (!error) return null
-  const e = typeof error === 'string' ? { message: error } : error
+  const e: IpcError = typeof error === 'string' ? { message: error } : error
   const hasDetails = Boolean(e.stack || e.cause)
+  const errorId = e.errorId
+  const onCopy = async (): Promise<void> => {
+    if (!errorId) return
+    const res = await window.api.errors.bundle(errorId)
+    if (res.ok) {
+      await navigator.clipboard.writeText(res.markdown)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1200)
+    }
+  }
   return (
     <div
       style={{
@@ -22,8 +34,29 @@ function ErrorDisplay({ error, marginTop }: ErrorDisplayProps): React.JSX.Elemen
         marginTop
       }}
     >
-      <div style={{ fontWeight: 600, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-        {e.message}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'flex-start',
+          justifyContent: 'space-between',
+          gap: 8
+        }}
+      >
+        <div
+          style={{
+            fontWeight: 600,
+            whiteSpace: 'pre-wrap',
+            wordBreak: 'break-word',
+            flex: 1
+          }}
+        >
+          {e.message}
+        </div>
+        {errorId && (
+          <button onClick={() => void onCopy()} style={{ fontSize: 11, flexShrink: 0 }}>
+            {copied ? 'Copied!' : 'Copy diagnostic'}
+          </button>
+        )}
       </div>
       {hasDetails && (
         <details style={{ marginTop: 6 }}>

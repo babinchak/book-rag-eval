@@ -47,11 +47,52 @@ export interface IpcError {
   message: string
   stack?: string
   cause?: string
+  errorId?: string
 }
 
-export type LibraryListResult =
-  | { ok: true; books: BookSummary[] }
+export type LogLevel = 'debug' | 'info' | 'warn' | 'error'
+export type LogSource = 'main' | 'renderer' | 'sidecar'
+
+export interface LogEntry {
+  ts: number
+  level: LogLevel
+  source: LogSource
+  tag: string
+  msg: string
+  data?: unknown
+}
+
+export type ErrorOrigin =
+  | 'ipc'
+  | 'sidecar'
+  | 'renderer-window'
+  | 'renderer-unhandled'
+  | 'renderer-boundary'
+
+export interface ErrorRecordSummary {
+  id: string
+  ts: number
+  origin: ErrorOrigin
+  message: string
+  ipcHandler?: string
+  count: number
+}
+
+export interface RendererErrorReport {
+  origin: 'renderer-window' | 'renderer-unhandled' | 'renderer-boundary'
+  message: string
+  stack?: string
+  componentStack?: string
+  url?: string
+}
+
+export type ErrorsListIpcResult =
+  | { ok: true; entries: ErrorRecordSummary[] }
   | { ok: false; error: IpcError }
+export type ErrorsBundleIpcResult = { ok: true; markdown: string } | { ok: false; error: IpcError }
+export type ErrorsReportIpcResult = { ok: true; errorId: string } | { ok: false; error: IpcError }
+
+export type LibraryListResult = { ok: true; books: BookSummary[] } | { ok: false; error: IpcError }
 
 export type LibraryImportResult =
   | { ok: true; data: ImportOutcome | null }
@@ -88,9 +129,7 @@ export interface ChunkSet extends ChunkSetSummary {
   chunks: Chunk[]
 }
 
-export type ChunksRunResult =
-  | { ok: true; data: ChunkSetSummary }
-  | { ok: false; error: IpcError }
+export type ChunksRunResult = { ok: true; data: ChunkSetSummary } | { ok: false; error: IpcError }
 
 export type ChunksListResult =
   | { ok: true; sets: ChunkSetSummary[] }
@@ -112,9 +151,7 @@ export interface EmbedRunResult {
   model: string
 }
 
-export type EmbedRunIpcResult =
-  | { ok: true; data: EmbedRunResult }
-  | { ok: false; error: IpcError }
+export type EmbedRunIpcResult = { ok: true; data: EmbedRunResult } | { ok: false; error: IpcError }
 
 export type EmbeddingsListIpcResult =
   | { ok: true; sets: EmbeddingSetSummary[] }

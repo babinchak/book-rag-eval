@@ -9,6 +9,9 @@ import type {
   EmbedRunIpcResult,
   EmbeddingsListIpcResult,
   EmbeddingsRemoveIpcResult,
+  ErrorsBundleIpcResult,
+  ErrorsListIpcResult,
+  ErrorsReportIpcResult,
   EvalAutoGenerateIpcResult,
   EvalCaseAddIpcResult,
   EvalCaseRemoveIpcResult,
@@ -26,6 +29,8 @@ import type {
   LibraryListResult,
   LibraryOpenResult,
   LibraryRemoveResult,
+  LogEntry,
+  RendererErrorReport,
   SettingsClearKeyResult,
   SettingsGetStringResult,
   SettingsHasKeyResult,
@@ -93,20 +98,8 @@ const api = {
       goldSpans: GoldSpan[],
       notes?: string
     ): Promise<EvalCaseAddIpcResult> =>
-      ipcRenderer.invoke(
-        'evals:addCase',
-        bookId,
-        setId,
-        question,
-        searchQuery,
-        goldSpans,
-        notes
-      ),
-    removeCase: (
-      bookId: string,
-      setId: string,
-      caseId: string
-    ): Promise<EvalCaseRemoveIpcResult> =>
+      ipcRenderer.invoke('evals:addCase', bookId, setId, question, searchQuery, goldSpans, notes),
+    removeCase: (bookId: string, setId: string, caseId: string): Promise<EvalCaseRemoveIpcResult> =>
       ipcRenderer.invoke('evals:removeCase', bookId, setId, caseId),
     updateCase: (
       bookId: string,
@@ -137,11 +130,24 @@ const api = {
       count: number
     ): Promise<EvalAutoGenerateIpcResult> =>
       ipcRenderer.invoke('evals:autoGenerate', bookId, setId, strategyId, count),
-    backfillSearchQueries: (
-      bookId: string,
-      setId: string
-    ): Promise<EvalAutoGenerateIpcResult> =>
+    backfillSearchQueries: (bookId: string, setId: string): Promise<EvalAutoGenerateIpcResult> =>
       ipcRenderer.invoke('evals:backfillSearchQueries', bookId, setId)
+  },
+  errors: {
+    list: (): Promise<ErrorsListIpcResult> => ipcRenderer.invoke('errors:list'),
+    bundle: (id: string): Promise<ErrorsBundleIpcResult> => ipcRenderer.invoke('errors:bundle', id),
+    report: (report: RendererErrorReport): Promise<ErrorsReportIpcResult> =>
+      ipcRenderer.invoke('errors:report', report),
+    onChanged: (handler: () => void): (() => void) => {
+      const listener = (): void => handler()
+      ipcRenderer.on('errors:changed', listener)
+      return () => ipcRenderer.off('errors:changed', listener)
+    }
+  },
+  log: {
+    forward: (entry: LogEntry): void => {
+      ipcRenderer.send('log:forward', entry)
+    }
   }
 }
 

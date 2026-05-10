@@ -2,6 +2,8 @@ import { spawn, ChildProcess } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { app } from 'electron'
 import { join } from 'node:path'
+import { recordSidecarError } from './errorRegistry'
+import { ingestSidecarLine, log } from './log'
 
 interface PendingRequest {
   resolve: (result: unknown) => void
@@ -78,18 +80,22 @@ class Sidecar {
 
     proc.stdout?.on('data', (chunk: Buffer) => this.handleStdout(chunk))
     proc.stderr?.on('data', (chunk: Buffer) => {
-      // Surface Python tracebacks etc. — useful for debugging.
-      console.error('[sidecar stderr]', chunk.toString())
+      // Python tracebacks etc. — feed each line into the shared log buffer.
+      const text = chunk.toString()
+      for (const line of text.split(/\r?\n/)) ingestSidecarLine(line, 'error')
     })
     proc.on('error', (err) => {
-      console.error('[sidecar spawn error]', err)
+      log.error('sidecar', `spawn error: ${(err as Error).message}`)
+      recordSidecarError(err)
       this.failAllPending(err)
       this.proc = null
       this.currentApiKey = null
     })
     proc.on('exit', (code, signal) => {
-      console.log('[sidecar exit]', { code, signal })
-      this.failAllPending(new Error(`sidecar exited (code=${code}, signal=${signal})`))
+      log.info('sidecar', `exit code=${code} signal=${signal}`)
+      const exitErr = new Error(`sidecar exited (code=${code}, signal=${signal})`)
+      if (code !== 0 && code !== null) recordSidecarError(exitErr)
+      this.failAllPending(exitErr)
       this.proc = null
       this.currentApiKey = null
     })
@@ -139,7 +145,9 @@ class Sidecar {
       try {
         msg = JSON.parse(line) as RpcResponse
       } catch (e) {
-        console.error('[sidecar parse error]', e, 'line:', line.slice(0, 200))
+        log.warn('sidecar', `parse error: ${(e as Error).message}`, {
+          line: line.slice(0, 200)
+        })
         continue
       }
       this.handleMessage(msg)
@@ -149,7 +157,10 @@ class Sidecar {
   private handleMessage(msg: RpcResponse): void {
     if (msg.id === undefined) {
       // Notification or pre-init error
-      if (msg.error) console.error('[sidecar pre-init error]', msg.error.message)
+      if (msg.error) {
+        log.error('sidecar', `pre-init error: ${msg.error.message}`)
+        recordSidecarError(new Error(msg.error.message))
+      }
       return
     }
     const pending = this.pending.get(msg.id)
