@@ -89,10 +89,19 @@ const api = {
       bookId: string,
       setId: string,
       question: string,
+      searchQuery: string,
       goldSpans: GoldSpan[],
       notes?: string
     ): Promise<EvalCaseAddIpcResult> =>
-      ipcRenderer.invoke('evals:addCase', bookId, setId, question, goldSpans, notes),
+      ipcRenderer.invoke(
+        'evals:addCase',
+        bookId,
+        setId,
+        question,
+        searchQuery,
+        goldSpans,
+        notes
+      ),
     removeCase: (
       bookId: string,
       setId: string,
@@ -103,7 +112,7 @@ const api = {
       bookId: string,
       setId: string,
       caseId: string,
-      updates: { question?: string; goldSpans?: GoldSpan[]; notes?: string }
+      updates: { question?: string; searchQuery?: string; goldSpans?: GoldSpan[]; notes?: string }
     ): Promise<EvalCaseUpdateIpcResult> =>
       ipcRenderer.invoke('evals:updateCase', bookId, setId, caseId, updates),
     locate: (bookId: string, quote: string): Promise<EvalLocateIpcResult> =>
@@ -127,7 +136,12 @@ const api = {
       strategyId: string,
       count: number
     ): Promise<EvalAutoGenerateIpcResult> =>
-      ipcRenderer.invoke('evals:autoGenerate', bookId, setId, strategyId, count)
+      ipcRenderer.invoke('evals:autoGenerate', bookId, setId, strategyId, count),
+    backfillSearchQueries: (
+      bookId: string,
+      setId: string
+    ): Promise<EvalAutoGenerateIpcResult> =>
+      ipcRenderer.invoke('evals:backfillSearchQueries', bookId, setId)
   }
 }
 

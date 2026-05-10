@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import type { BookSummary } from '../../../preload/types'
+import type { BookSummary, IpcError } from '../../../preload/types'
 import SettingsModal from './SettingsModal'
 import ThemeToggle from './ThemeToggle'
+import ErrorDisplay from './ErrorDisplay'
 import { cv, useTheme } from '../lib/theme'
 
 interface LibraryProps {
@@ -10,7 +11,7 @@ interface LibraryProps {
 
 function Library({ onOpen }: LibraryProps): React.JSX.Element {
   const [books, setBooks] = useState<BookSummary[] | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<IpcError | null>(null)
   const [importing, setImporting] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const { mode, setMode } = useTheme()
@@ -69,21 +70,7 @@ function Library({ onOpen }: LibraryProps): React.JSX.Element {
       </header>
       <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
 
-      {error && (
-        <pre
-          style={{
-            color: cv.errorText,
-            whiteSpace: 'pre-wrap',
-            marginTop: 16,
-            background: cv.errorBg,
-            padding: 12,
-            border: `1px solid ${cv.errorBorder}`,
-            borderRadius: 4
-          }}
-        >
-          {error}
-        </pre>
-      )}
+      <ErrorDisplay error={error} marginTop={16} />
 
       <div
         style={{

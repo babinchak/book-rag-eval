@@ -4,11 +4,13 @@ import type {
   EmbeddingSetSummary,
   EvalRunSummary,
   EvalSet,
-  EvalSetSummary
+  EvalSetSummary,
+  IpcError
 } from '../../../preload/types'
 import AddCaseModal from './AddCaseModal'
 import EvalRunDetailModal from './EvalRunDetailModal'
 import EvalCompareModal from './EvalCompareModal'
+import ErrorDisplay from './ErrorDisplay'
 
 interface EvaluationSectionProps {
   bookId: string
@@ -34,7 +36,7 @@ function EvaluationSection({
   const [showAddCase, setShowAddCase] = useState(false)
   const [running, setRunning] = useState<string | null>(null)
   const [k, setK] = useState(DEFAULT_K)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<IpcError | null>(null)
   const [detailRunId, setDetailRunId] = useState<string | null>(null)
   const [compareOpen, setCompareOpen] = useState(false)
 
@@ -503,22 +505,7 @@ function EvaluationSection({
         </div>
       )}
 
-      {error && (
-        <pre
-          style={{
-            color: '#b00',
-            whiteSpace: 'pre-wrap',
-            marginTop: 12,
-            background: '#fee',
-            padding: 8,
-            border: '1px solid #fbb',
-            borderRadius: 4,
-            fontSize: 10
-          }}
-        >
-          {error}
-        </pre>
-      )}
+      <ErrorDisplay error={error} marginTop={12} />
 
       {showAddCase && selectedId && (
         <AddCaseModal

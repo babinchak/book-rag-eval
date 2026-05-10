@@ -43,17 +43,23 @@ export interface ImportOutcome {
   alreadyExisted: boolean
 }
 
+export interface IpcError {
+  message: string
+  stack?: string
+  cause?: string
+}
+
 export type LibraryListResult =
   | { ok: true; books: BookSummary[] }
-  | { ok: false; error: string }
+  | { ok: false; error: IpcError }
 
 export type LibraryImportResult =
   | { ok: true; data: ImportOutcome | null }
-  | { ok: false; error: string }
+  | { ok: false; error: IpcError }
 
-export type LibraryOpenResult = { ok: true; data: LoadedEpub } | { ok: false; error: string }
+export type LibraryOpenResult = { ok: true; data: LoadedEpub } | { ok: false; error: IpcError }
 
-export type LibraryRemoveResult = { ok: true } | { ok: false; error: string }
+export type LibraryRemoveResult = { ok: true } | { ok: false; error: IpcError }
 
 export type ChunkParams =
   | { kind: 'fixed'; size: number; overlap: number }
@@ -84,13 +90,13 @@ export interface ChunkSet extends ChunkSetSummary {
 
 export type ChunksRunResult =
   | { ok: true; data: ChunkSetSummary }
-  | { ok: false; error: string }
+  | { ok: false; error: IpcError }
 
 export type ChunksListResult =
   | { ok: true; sets: ChunkSetSummary[] }
-  | { ok: false; error: string }
+  | { ok: false; error: IpcError }
 
-export type ChunksGetResult = { ok: true; data: ChunkSet } | { ok: false; error: string }
+export type ChunksGetResult = { ok: true; data: ChunkSet } | { ok: false; error: IpcError }
 
 export interface EmbeddingSetSummary {
   strategyId: string
@@ -108,21 +114,21 @@ export interface EmbedRunResult {
 
 export type EmbedRunIpcResult =
   | { ok: true; data: EmbedRunResult }
-  | { ok: false; error: string }
+  | { ok: false; error: IpcError }
 
 export type EmbeddingsListIpcResult =
   | { ok: true; sets: EmbeddingSetSummary[] }
-  | { ok: false; error: string }
+  | { ok: false; error: IpcError }
 
-export type EmbeddingsRemoveIpcResult = { ok: true } | { ok: false; error: string }
+export type EmbeddingsRemoveIpcResult = { ok: true } | { ok: false; error: IpcError }
 
-export type SettingsHasKeyResult = { ok: true; hasKey: boolean } | { ok: false; error: string }
-export type SettingsSetKeyResult = { ok: true } | { ok: false; error: string }
-export type SettingsClearKeyResult = { ok: true } | { ok: false; error: string }
+export type SettingsHasKeyResult = { ok: true; hasKey: boolean } | { ok: false; error: IpcError }
+export type SettingsSetKeyResult = { ok: true } | { ok: false; error: IpcError }
+export type SettingsClearKeyResult = { ok: true } | { ok: false; error: IpcError }
 export type SettingsGetStringResult =
   | { ok: true; value: string | null }
-  | { ok: false; error: string }
-export type SettingsSetStringResult = { ok: true } | { ok: false; error: string }
+  | { ok: false; error: IpcError }
+export type SettingsSetStringResult = { ok: true } | { ok: false; error: IpcError }
 
 export interface RetrievedChunkPayload {
   chunk: Chunk
@@ -140,7 +146,7 @@ export interface AskResultPayload {
   langsmithRunUrl?: string
 }
 
-export type AskIpcResult = { ok: true; data: AskResultPayload } | { ok: false; error: string }
+export type AskIpcResult = { ok: true; data: AskResultPayload } | { ok: false; error: IpcError }
 
 export interface GoldSpan {
   spineHref: string
@@ -151,6 +157,7 @@ export interface GoldSpan {
 export interface EvalCase {
   id: string
   question: string
+  searchQuery: string
   goldSpans: GoldSpan[]
   notes?: string
 }
@@ -180,6 +187,7 @@ export interface RetrievedDetail {
 export interface EvalCaseResult {
   caseId: string
   question: string
+  searchQuery?: string
   retrieved: RetrievedDetail[]
   recallAtK: number
   mrr: number
@@ -230,7 +238,7 @@ export interface EvalRunSummary {
   caseCount: number
 }
 
-export type EvalRunGetIpcResult = { ok: true; data: EvalRunResult } | { ok: false; error: string }
+export type EvalRunGetIpcResult = { ok: true; data: EvalRunResult } | { ok: false; error: IpcError }
 
 export interface LocateQuoteHit {
   goldSpan: GoldSpan
@@ -239,24 +247,25 @@ export interface LocateQuoteHit {
 
 export type EvalSetsListIpcResult =
   | { ok: true; sets: EvalSetSummary[] }
-  | { ok: false; error: string }
-export type EvalSetGetIpcResult = { ok: true; data: EvalSet } | { ok: false; error: string }
-export type EvalSetCreateIpcResult = { ok: true; data: EvalSet } | { ok: false; error: string }
-export type EvalSetDeleteIpcResult = { ok: true } | { ok: false; error: string }
-export type EvalCaseAddIpcResult = { ok: true; data: EvalCase } | { ok: false; error: string }
-export type EvalCaseRemoveIpcResult = { ok: true } | { ok: false; error: string }
-export type EvalCaseUpdateIpcResult = { ok: true; data: EvalCase } | { ok: false; error: string }
+  | { ok: false; error: IpcError }
+export type EvalSetGetIpcResult = { ok: true; data: EvalSet } | { ok: false; error: IpcError }
+export type EvalSetCreateIpcResult = { ok: true; data: EvalSet } | { ok: false; error: IpcError }
+export type EvalSetDeleteIpcResult = { ok: true } | { ok: false; error: IpcError }
+export type EvalCaseAddIpcResult = { ok: true; data: EvalCase } | { ok: false; error: IpcError }
+export type EvalCaseRemoveIpcResult = { ok: true } | { ok: false; error: IpcError }
+export type EvalCaseUpdateIpcResult = { ok: true; data: EvalCase } | { ok: false; error: IpcError }
 export type EvalLocateIpcResult =
   | { ok: true; data: LocateQuoteHit }
-  | { ok: false; error: string }
-export type EvalRunIpcResult = { ok: true; data: EvalRunResult } | { ok: false; error: string }
+  | { ok: false; error: IpcError }
+export type EvalRunIpcResult = { ok: true; data: EvalRunResult } | { ok: false; error: IpcError }
 export type EvalRunsListIpcResult =
   | { ok: true; runs: EvalRunSummary[] }
-  | { ok: false; error: string }
+  | { ok: false; error: IpcError }
 
 export interface AutoGenerateFailure {
-  chunkId: string
-  error: string
+  // For auto-generate this is a chunk ID; for backfill it's a case ID.
+  id: string
+  error: IpcError
 }
 
 export interface AutoGenerateProgress {
@@ -267,4 +276,4 @@ export interface AutoGenerateProgress {
 
 export type EvalAutoGenerateIpcResult =
   | { ok: true; data: AutoGenerateProgress }
-  | { ok: false; error: string }
+  | { ok: false; error: IpcError }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import type { EvalRunResult, EvalSet } from '../../../preload/types'
+import type { EvalRunResult, EvalSet, IpcError } from '../../../preload/types'
 import { cv } from '../lib/theme'
+import ErrorDisplay from './ErrorDisplay'
 
 interface EvalCompareModalProps {
   bookId: string
@@ -11,7 +12,7 @@ interface EvalCompareModalProps {
 
 function EvalCompareModal({ bookId, evalSet, runIds, onClose }: EvalCompareModalProps): React.JSX.Element {
   const [runs, setRuns] = useState<EvalRunResult[]>([])
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<IpcError | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -46,7 +47,11 @@ function EvalCompareModal({ bookId, evalSet, runIds, onClose }: EvalCompareModal
           <button onClick={onClose} style={{ marginLeft: 'auto', border: 'none', background: 'transparent', fontSize: 18, cursor: 'pointer', color: cv.text3 }}>×</button>
         </header>
 
-        {error && <pre style={{ color: cv.errorText, padding: 16, fontSize: 12 }}>{error}</pre>}
+        {error && (
+          <div style={{ padding: 16 }}>
+            <ErrorDisplay error={error} />
+          </div>
+        )}
 
         <div style={{ flex: 1, overflow: 'auto', padding: '12px 20px' }}>
           {runs.length === 0 ? (

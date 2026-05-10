@@ -1,6 +1,12 @@
 import { useEffect, useState } from 'react'
-import type { AskResultPayload, ChunkSetSummary, EmbeddingSetSummary } from '../../../preload/types'
+import type {
+  AskResultPayload,
+  ChunkSetSummary,
+  EmbeddingSetSummary,
+  IpcError
+} from '../../../preload/types'
 import { cv } from '../lib/theme'
+import ErrorDisplay from './ErrorDisplay'
 
 interface AssistantPaneProps {
   bookId: string
@@ -29,7 +35,7 @@ function AssistantPane({
   const [k, setK] = useState(DEFAULT_K)
   const [result, setResult] = useState<AskResultPayload | null>(null)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<IpcError | null>(null)
 
   useEffect(() => {
     if (fullyEmbedded.length === 0) { setStrategyId(null); return }
@@ -125,11 +131,7 @@ function AssistantPane({
             </label>
           </div>
 
-          {error && (
-            <pre style={{ color: cv.errorText, whiteSpace: 'pre-wrap', marginTop: 12, background: cv.errorBg, padding: 10, border: `1px solid ${cv.errorBorder}`, borderRadius: 4, fontSize: 11 }}>
-              {error}
-            </pre>
-          )}
+          <ErrorDisplay error={error} marginTop={12} />
 
           {result && (
             <div style={{ marginTop: 16 }}>

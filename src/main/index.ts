@@ -19,6 +19,7 @@ import {
 import {
   addCase,
   autoGenerateCases,
+  backfillSearchQueries,
   createEvalSet,
   deleteEvalSet,
   getEvalRun,
@@ -30,6 +31,7 @@ import {
   runEval,
   updateCase
 } from './evals'
+import { toIpcError } from './ipcError'
 import type {
   AskIpcResult,
   ChunkParams,
@@ -62,6 +64,7 @@ import type {
   SettingsSetKeyResult,
   SettingsSetStringResult
 } from '../preload/types'
+
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -103,7 +106,8 @@ app.whenReady().then(() => {
     try {
       return { ok: true, books: await listLibrary() }
     } catch (err) {
-      return { ok: false, error: (err as Error).message }
+      console.error('[ipc]', err)
+      return { ok: false, error: toIpcError(err) }
     }
   })
 
@@ -111,7 +115,8 @@ app.whenReady().then(() => {
     try {
       return { ok: true, data: await importEpubFromDialog() }
     } catch (err) {
-      return { ok: false, error: (err as Error).message }
+      console.error('[ipc]', err)
+      return { ok: false, error: toIpcError(err) }
     }
   })
 
@@ -119,7 +124,8 @@ app.whenReady().then(() => {
     try {
       return { ok: true, data: await openBook(id) }
     } catch (err) {
-      return { ok: false, error: (err as Error).message }
+      console.error('[ipc]', err)
+      return { ok: false, error: toIpcError(err) }
     }
   })
 
@@ -128,7 +134,8 @@ app.whenReady().then(() => {
       await removeBook(id)
       return { ok: true }
     } catch (err) {
-      return { ok: false, error: (err as Error).message }
+      console.error('[ipc]', err)
+      return { ok: false, error: toIpcError(err) }
     }
   })
 
@@ -138,7 +145,8 @@ app.whenReady().then(() => {
       try {
         return { ok: true, data: await runChunking(bookId, params) }
       } catch (err) {
-        return { ok: false, error: (err as Error).message }
+        console.error('[ipc]', err)
+        return { ok: false, error: toIpcError(err) }
       }
     }
   )
@@ -147,7 +155,8 @@ app.whenReady().then(() => {
     try {
       return { ok: true, sets: await listChunkSets(bookId) }
     } catch (err) {
-      return { ok: false, error: (err as Error).message }
+      console.error('[ipc]', err)
+      return { ok: false, error: toIpcError(err) }
     }
   })
 
@@ -157,7 +166,8 @@ app.whenReady().then(() => {
       try {
         return { ok: true, data: await getChunkSet(bookId, strategyId) }
       } catch (err) {
-        return { ok: false, error: (err as Error).message }
+        console.error('[ipc]', err)
+        return { ok: false, error: toIpcError(err) }
       }
     }
   )
@@ -168,7 +178,8 @@ app.whenReady().then(() => {
       try {
         return { ok: true, data: await runEmbedding(bookId, strategyId) }
       } catch (err) {
-        return { ok: false, error: (err as Error).message }
+        console.error('[ipc]', err)
+        return { ok: false, error: toIpcError(err) }
       }
     }
   )
@@ -179,7 +190,8 @@ app.whenReady().then(() => {
       try {
         return { ok: true, sets: await listEmbeddingSets(bookId) }
       } catch (err) {
-        return { ok: false, error: (err as Error).message }
+        console.error('[ipc]', err)
+        return { ok: false, error: toIpcError(err) }
       }
     }
   )
@@ -191,7 +203,8 @@ app.whenReady().then(() => {
         await removeEmbeddings(bookId, strategyId)
         return { ok: true }
       } catch (err) {
-        return { ok: false, error: (err as Error).message }
+        console.error('[ipc]', err)
+        return { ok: false, error: toIpcError(err) }
       }
     }
   )
@@ -200,7 +213,8 @@ app.whenReady().then(() => {
     try {
       return { ok: true, hasKey: await hasOpenaiKey() }
     } catch (err) {
-      return { ok: false, error: (err as Error).message }
+      console.error('[ipc]', err)
+      return { ok: false, error: toIpcError(err) }
     }
   })
 
@@ -211,7 +225,8 @@ app.whenReady().then(() => {
         await setOpenaiKey(key)
         return { ok: true }
       } catch (err) {
-        return { ok: false, error: (err as Error).message }
+        console.error('[ipc]', err)
+        return { ok: false, error: toIpcError(err) }
       }
     }
   )
@@ -221,7 +236,8 @@ app.whenReady().then(() => {
       await clearOpenaiKey()
       return { ok: true }
     } catch (err) {
-      return { ok: false, error: (err as Error).message }
+      console.error('[ipc]', err)
+      return { ok: false, error: toIpcError(err) }
     }
   })
 
@@ -229,7 +245,8 @@ app.whenReady().then(() => {
     try {
       return { ok: true, hasKey: await hasLangsmithKey() }
     } catch (err) {
-      return { ok: false, error: (err as Error).message }
+      console.error('[ipc]', err)
+      return { ok: false, error: toIpcError(err) }
     }
   })
 
@@ -240,7 +257,8 @@ app.whenReady().then(() => {
         await setLangsmithKey(key)
         return { ok: true }
       } catch (err) {
-        return { ok: false, error: (err as Error).message }
+        console.error('[ipc]', err)
+        return { ok: false, error: toIpcError(err) }
       }
     }
   )
@@ -250,7 +268,8 @@ app.whenReady().then(() => {
       await clearLangsmithKey()
       return { ok: true }
     } catch (err) {
-      return { ok: false, error: (err as Error).message }
+      console.error('[ipc]', err)
+      return { ok: false, error: toIpcError(err) }
     }
   })
 
@@ -260,7 +279,8 @@ app.whenReady().then(() => {
       try {
         return { ok: true, value: await getLangsmithProject() }
       } catch (err) {
-        return { ok: false, error: (err as Error).message }
+        console.error('[ipc]', err)
+        return { ok: false, error: toIpcError(err) }
       }
     }
   )
@@ -272,7 +292,8 @@ app.whenReady().then(() => {
         await setLangsmithProject(name)
         return { ok: true }
       } catch (err) {
-        return { ok: false, error: (err as Error).message }
+        console.error('[ipc]', err)
+        return { ok: false, error: toIpcError(err) }
       }
     }
   )
@@ -289,7 +310,8 @@ app.whenReady().then(() => {
       try {
         return { ok: true, data: await ask(bookId, strategyId, query, k) }
       } catch (err) {
-        return { ok: false, error: (err as Error).message }
+        console.error('[ipc]', err)
+        return { ok: false, error: toIpcError(err) }
       }
     }
   )
@@ -298,7 +320,8 @@ app.whenReady().then(() => {
     try {
       return { ok: true, sets: await listEvalSets(bookId) }
     } catch (err) {
-      return { ok: false, error: (err as Error).message }
+      console.error('[ipc]', err)
+      return { ok: false, error: toIpcError(err) }
     }
   })
 
@@ -308,7 +331,8 @@ app.whenReady().then(() => {
       try {
         return { ok: true, data: await getEvalSet(bookId, setId) }
       } catch (err) {
-        return { ok: false, error: (err as Error).message }
+        console.error('[ipc]', err)
+        return { ok: false, error: toIpcError(err) }
       }
     }
   )
@@ -319,7 +343,8 @@ app.whenReady().then(() => {
       try {
         return { ok: true, data: await createEvalSet(bookId, setId) }
       } catch (err) {
-        return { ok: false, error: (err as Error).message }
+        console.error('[ipc]', err)
+        return { ok: false, error: toIpcError(err) }
       }
     }
   )
@@ -331,7 +356,8 @@ app.whenReady().then(() => {
         await deleteEvalSet(bookId, setId)
         return { ok: true }
       } catch (err) {
-        return { ok: false, error: (err as Error).message }
+        console.error('[ipc]', err)
+        return { ok: false, error: toIpcError(err) }
       }
     }
   )
@@ -343,13 +369,18 @@ app.whenReady().then(() => {
       bookId: string,
       setId: string,
       question: string,
+      searchQuery: string,
       goldSpans: GoldSpan[],
       notes?: string
     ): Promise<EvalCaseAddIpcResult> => {
       try {
-        return { ok: true, data: await addCase(bookId, setId, question, goldSpans, notes) }
+        return {
+          ok: true,
+          data: await addCase(bookId, setId, question, searchQuery, goldSpans, notes)
+        }
       } catch (err) {
-        return { ok: false, error: (err as Error).message }
+        console.error('[ipc]', err)
+        return { ok: false, error: toIpcError(err) }
       }
     }
   )
@@ -366,7 +397,8 @@ app.whenReady().then(() => {
         await removeCase(bookId, setId, caseId)
         return { ok: true }
       } catch (err) {
-        return { ok: false, error: (err as Error).message }
+        console.error('[ipc]', err)
+        return { ok: false, error: toIpcError(err) }
       }
     }
   )
@@ -378,12 +410,13 @@ app.whenReady().then(() => {
       bookId: string,
       setId: string,
       caseId: string,
-      updates: { question?: string; goldSpans?: GoldSpan[]; notes?: string }
+      updates: { question?: string; searchQuery?: string; goldSpans?: GoldSpan[]; notes?: string }
     ): Promise<EvalCaseUpdateIpcResult> => {
       try {
         return { ok: true, data: await updateCase(bookId, setId, caseId, updates) }
       } catch (err) {
-        return { ok: false, error: (err as Error).message }
+        console.error('[ipc]', err)
+        return { ok: false, error: toIpcError(err) }
       }
     }
   )
@@ -394,11 +427,15 @@ app.whenReady().then(() => {
       try {
         const result = await locateQuote(bookId, quote)
         if (!result) {
-          return { ok: false, error: 'Quote not found in any spine item' }
+          return {
+            ok: false,
+            error: { message: 'Quote not found in any spine item' }
+          }
         }
         return { ok: true, data: result }
       } catch (err) {
-        return { ok: false, error: (err as Error).message }
+        console.error('[ipc]', err)
+        return { ok: false, error: toIpcError(err) }
       }
     }
   )
@@ -417,7 +454,8 @@ app.whenReady().then(() => {
       try {
         return { ok: true, data: await runEval(bookId, setId, strategyId, k, mode, caseIds) }
       } catch (err) {
-        return { ok: false, error: (err as Error).message }
+        console.error('[ipc]', err)
+        return { ok: false, error: toIpcError(err) }
       }
     }
   )
@@ -428,7 +466,8 @@ app.whenReady().then(() => {
       try {
         return { ok: true, runs: await listEvalRuns(bookId) }
       } catch (err) {
-        return { ok: false, error: (err as Error).message }
+        console.error('[ipc]', err)
+        return { ok: false, error: toIpcError(err) }
       }
     }
   )
@@ -439,7 +478,8 @@ app.whenReady().then(() => {
       try {
         return { ok: true, data: await getEvalRun(bookId, runId) }
       } catch (err) {
-        return { ok: false, error: (err as Error).message }
+        console.error('[ipc]', err)
+        return { ok: false, error: toIpcError(err) }
       }
     }
   )
@@ -459,7 +499,23 @@ app.whenReady().then(() => {
           data: await autoGenerateCases(bookId, setId, strategyId, count)
         }
       } catch (err) {
-        return { ok: false, error: (err as Error).message }
+        console.error('[ipc]', err)
+        return { ok: false, error: toIpcError(err) }
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'evals:backfillSearchQueries',
+    async (_, bookId: string, setId: string): Promise<EvalAutoGenerateIpcResult> => {
+      try {
+        return {
+          ok: true,
+          data: await backfillSearchQueries(bookId, setId)
+        }
+      } catch (err) {
+        console.error('[ipc]', err)
+        return { ok: false, error: toIpcError(err) }
       }
     }
   )

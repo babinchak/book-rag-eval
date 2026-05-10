@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import type { EvalSet, EvalSetSummary } from '../../../preload/types'
+import type { EvalSet, EvalSetSummary, IpcError } from '../../../preload/types'
 import AddCaseModal from './AddCaseModal'
+import ErrorDisplay from './ErrorDisplay'
 
 interface EvalAuthoringSectionProps {
   bookId: string
@@ -20,7 +21,7 @@ function EvalAuthoringSection({
   const [creating, setCreating] = useState(false)
   const [newSetId, setNewSetId] = useState('')
   const [showAddCase, setShowAddCase] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<IpcError | null>(null)
 
   async function refreshSets(): Promise<void> {
     const r = await window.api.evals.list(bookId)
@@ -293,22 +294,7 @@ function EvalAuthoringSection({
         </div>
       )}
 
-      {error && (
-        <pre
-          style={{
-            color: '#b00',
-            whiteSpace: 'pre-wrap',
-            marginTop: 12,
-            background: '#fee',
-            padding: 8,
-            border: '1px solid #fbb',
-            borderRadius: 4,
-            fontSize: 10
-          }}
-        >
-          {error}
-        </pre>
-      )}
+      <ErrorDisplay error={error} marginTop={12} />
 
       {showAddCase && selectedEvalSetId && (
         <AddCaseModal

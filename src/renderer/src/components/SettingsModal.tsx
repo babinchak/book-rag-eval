@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import type { IpcError } from '../../../preload/types'
+import ErrorDisplay from './ErrorDisplay'
 
 interface SettingsModalProps {
   open: boolean
@@ -13,7 +15,7 @@ function SettingsModal({ open, onClose }: SettingsModalProps): React.JSX.Element
   const [lsInput, setLsInput] = useState('')
   const [lsProject, setLsProject] = useState('')
 
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<IpcError | null>(null)
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
@@ -40,7 +42,7 @@ function SettingsModal({ open, onClose }: SettingsModalProps): React.JSX.Element
 
   async function handleSaveOpenai(): Promise<void> {
     if (!openaiInput.trim()) {
-      setError('Please paste an API key')
+      setError({ message: 'Please paste an API key' })
       return
     }
     setSaving(true)
@@ -242,22 +244,7 @@ function SettingsModal({ open, onClose }: SettingsModalProps): React.JSX.Element
           </div>
         </section>
 
-        {error && (
-          <pre
-            style={{
-              color: '#b00',
-              whiteSpace: 'pre-wrap',
-              marginTop: 16,
-              background: '#fee',
-              padding: 10,
-              border: '1px solid #fbb',
-              borderRadius: 4,
-              fontSize: 12
-            }}
-          >
-            {error}
-          </pre>
-        )}
+        <ErrorDisplay error={error} marginTop={16} />
       </div>
     </div>
   )

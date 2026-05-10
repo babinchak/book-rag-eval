@@ -1,6 +1,14 @@
 import { useEffect, useState } from 'react'
-import type { Chunk, EvalCaseResult, EvalRunResult, EvalSet, GoldSpan } from '../../../preload/types'
+import type {
+  Chunk,
+  EvalCaseResult,
+  EvalRunResult,
+  EvalSet,
+  GoldSpan,
+  IpcError
+} from '../../../preload/types'
 import { cv } from '../lib/theme'
+import ErrorDisplay from './ErrorDisplay'
 
 interface EvalRunDetailModalProps {
   bookId: string
@@ -26,6 +34,9 @@ function buildTraceMarkdown(
   out.push('')
   out.push(`**Strategy**: \`${run.strategyId}\` · k=${run.k} · mode=${run.mode ?? 'agentic'}`)
   out.push(`**Question**: ${caseResult.question}`)
+  if (caseResult.searchQuery && caseResult.searchQuery !== caseResult.question) {
+    out.push(`**Search query**: ${caseResult.searchQuery}`)
+  }
   const hit = caseResult.recallAtK > 0
   const bits: string[] = [hit ? `HIT @ rank ${caseResult.hitRank}` : 'MISS']
   bits.push(`R@${run.k}=${caseResult.recallAtK.toFixed(2)}`)
@@ -83,7 +94,7 @@ function buildTraceMarkdown(
 
 function EvalRunDetailModal({ bookId, runId, evalSet, onClose, onSelectChunk }: EvalRunDetailModalProps): React.JSX.Element {
   const [run, setRun] = useState<EvalRunResult | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<IpcError | null>(null)
   const [expandedCaseId, setExpandedCaseId] = useState<string | null>(null)
   const [copiedCaseId, setCopiedCaseId] = useState<string | null>(null)
 
@@ -147,7 +158,11 @@ function EvalRunDetailModal({ bookId, runId, evalSet, onClose, onSelectChunk }: 
           <button onClick={onClose} style={{ marginLeft: 'auto', border: 'none', background: 'transparent', fontSize: 18, cursor: 'pointer', color: cv.text3 }}>×</button>
         </header>
 
-        {error && <pre style={{ color: cv.errorText, padding: 16, fontSize: 12 }}>{error}</pre>}
+        {error && (
+          <div style={{ padding: 16 }}>
+            <ErrorDisplay error={error} />
+          </div>
+        )}
 
         {run && (
           <>

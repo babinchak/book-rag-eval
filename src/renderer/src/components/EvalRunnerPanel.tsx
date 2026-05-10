@@ -1,17 +1,21 @@
 import { useEffect, useState } from 'react'
 import type {
+  AutoGenerateFailure,
   ChunkSetSummary,
   EmbeddingSetSummary,
   EvalCase,
   EvalMode,
   EvalRunSummary,
   EvalSet,
-  EvalSetSummary
+  EvalSetSummary,
+  IpcError
 } from '../../../preload/types'
 import { cv } from '../lib/theme'
 import AddCaseModal from './AddCaseModal'
 import EvalRunDetailModal from './EvalRunDetailModal'
 import EvalCompareModal from './EvalCompareModal'
+import AutoGenPanel from './AutoGenPanel'
+import ErrorDisplay from './ErrorDisplay'
 
 interface EvalRunnerPanelProps {
   bookId: string
@@ -46,7 +50,7 @@ function EvalRunnerPanel({
   const [runMode, setRunMode] = useState<EvalMode>('retrieval')
   const [running, setRunning] = useState<string | null>(null)
   const [k, setK] = useState(DEFAULT_K)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<IpcError | null>(null)
   const [detailRunId, setDetailRunId] = useState<string | null>(null)
   const [compareOpen, setCompareOpen] = useState(false)
   const [autoGenOpen, setAutoGenOpen] = useState(false)
@@ -54,6 +58,12 @@ function EvalRunnerPanel({
   const [autoGenCount, setAutoGenCount] = useState(10)
   const [autoGenRunning, setAutoGenRunning] = useState(false)
   const [autoGenStatus, setAutoGenStatus] = useState<string | null>(null)
+  const [autoGenFailures, setAutoGenFailures] = useState<AutoGenerateFailure[]>([])
+  const [backfilling, setBackfilling] = useState(false)
+
+  const missingSearchQueryCount = activeSet
+    ? activeSet.cases.filter((c) => !c.searchQuery || !c.searchQuery.trim()).length
+    : 0
 
   const fullyEmbedded = embeddingSets.filter((e) => {
     const set = chunkSets.find((s) => s.strategyId === e.strategyId)
@@ -152,6 +162,7 @@ function EvalRunnerPanel({
     if (!selectedEvalSetId || !autoGenStrategy) return
     setAutoGenRunning(true)
     setAutoGenStatus(null)
+    setAutoGenFailures([])
     setError(null)
     try {
       const r = await window.api.evals.autoGenerate(
@@ -164,15 +175,46 @@ function EvalRunnerPanel({
         setError(r.error)
         return
       }
-      const { generated, failed } = r.data
+      const { generated, failed, failures } = r.data
       setAutoGenStatus(
         `Generated ${generated} case${generated === 1 ? '' : 's'}` +
           (failed > 0 ? ` · ${failed} failed` : '')
       )
+      setAutoGenFailures(failures)
+      if (failures.length > 0) {
+        console.warn('[autoGenerate] failures:', failures)
+      }
       await refreshActiveSet(selectedEvalSetId)
       await refreshSets()
     } finally {
       setAutoGenRunning(false)
+    }
+  }
+
+  async function handleBackfill(): Promise<void> {
+    if (!selectedEvalSetId) return
+    setBackfilling(true)
+    setAutoGenStatus(null)
+    setAutoGenFailures([])
+    setError(null)
+    try {
+      const r = await window.api.evals.backfillSearchQueries(bookId, selectedEvalSetId)
+      if (!r.ok) {
+        setError(r.error)
+        return
+      }
+      const { generated, failed, failures } = r.data
+      setAutoGenStatus(
+        `Backfilled ${generated} search ${generated === 1 ? 'query' : 'queries'}` +
+          (failed > 0 ? ` · ${failed} failed` : '')
+      )
+      setAutoGenFailures(failures)
+      if (failures.length > 0) {
+        console.warn('[backfillSearchQueries] failures:', failures)
+      }
+      await refreshActiveSet(selectedEvalSetId)
+    } finally {
+      setBackfilling(false)
     }
   }
 
@@ -460,7 +502,11 @@ function EvalRunnerPanel({
                 onCountChange={setAutoGenCount}
                 running={autoGenRunning}
                 status={autoGenStatus}
+                failures={autoGenFailures}
                 onGenerate={handleAutoGenerate}
+                missingSearchQueryCount={missingSearchQueryCount}
+                backfilling={backfilling}
+                onBackfill={handleBackfill}
               />
             )}
           </div>
@@ -486,11 +532,7 @@ function EvalRunnerPanel({
             )}
           </div>
           <div style={{ flex: 1, overflowY: 'auto', padding: '10px 20px' }}>
-            {error && (
-              <pre style={{ color: cv.errorText, whiteSpace: 'pre-wrap', background: cv.errorBg, padding: 8, border: `1px solid ${cv.errorBorder}`, borderRadius: 4, fontSize: 10, marginBottom: 12 }}>
-                {error}
-              </pre>
-            )}
+            <ErrorDisplay error={error} marginTop={0} />
 
             {!activeSet ? (
               <div style={{ fontSize: 12, color: cv.text5 }}>Select an eval set to run</div>
@@ -709,11 +751,7 @@ function EvalRunnerPanel({
         </>
       )}
 
-      {error && (
-        <pre style={{ color: cv.errorText, whiteSpace: 'pre-wrap', marginTop: 12, background: cv.errorBg, padding: 8, border: `1px solid ${cv.errorBorder}`, borderRadius: 4, fontSize: 10 }}>
-          {error}
-        </pre>
-      )}
+      <ErrorDisplay error={error} marginTop={12} />
 
       {modals}
     </div>

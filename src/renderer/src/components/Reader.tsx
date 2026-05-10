@@ -5,6 +5,7 @@ import type {
   ChunkParams,
   ChunkSetSummary,
   EmbeddingSetSummary,
+  IpcError,
   LoadedEpub,
   SpineItem
 } from '../../../preload/types'
@@ -13,6 +14,7 @@ import { DEFAULT_STRATEGIES, strategyIdOf, strategyLabel } from '../../../shared
 import { cv } from '../lib/theme'
 import AssistantPane from './AssistantPane'
 import EvalRunnerPanel from './EvalRunnerPanel'
+import ErrorDisplay from './ErrorDisplay'
 
 type BookView = 'strategies' | 'reader' | 'evals'
 
@@ -29,7 +31,7 @@ interface ReaderProps {
 function Reader({ book, onBack }: ReaderProps): React.JSX.Element {
   const [view, setView] = useState<BookView>('strategies')
   const [loaded, setLoaded] = useState<LoadedEpub | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<IpcError | null>(null)
   const [chunkSets, setChunkSets] = useState<ChunkSetSummary[]>([])
   const [embeddingSets, setEmbeddingSets] = useState<EmbeddingSetSummary[]>([])
   const [runningStrategyId, setRunningStrategyId] = useState<string | null>(null)
@@ -244,20 +246,9 @@ function Reader({ book, onBack }: ReaderProps): React.JSX.Element {
       </header>
 
       {error && (
-        <pre
-          style={{
-            color: cv.errorText,
-            whiteSpace: 'pre-wrap',
-            margin: '0',
-            background: cv.errorBg,
-            padding: '8px 20px',
-            borderBottom: `1px solid ${cv.errorBorder}`,
-            fontSize: 11,
-            flexShrink: 0
-          }}
-        >
-          {error}
-        </pre>
+        <div style={{ padding: '8px 20px', flexShrink: 0 }}>
+          <ErrorDisplay error={error} />
+        </div>
       )}
 
       <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>

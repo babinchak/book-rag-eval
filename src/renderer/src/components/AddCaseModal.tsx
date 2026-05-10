@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import type { EvalCase, GoldSpan, LocateQuoteHit } from '../../../preload/types'
+import type { EvalCase, GoldSpan, IpcError, LocateQuoteHit } from '../../../preload/types'
 import { cv } from '../lib/theme'
+import ErrorDisplay from './ErrorDisplay'
 
 interface AddCaseModalProps {
   bookId: string
@@ -13,9 +14,10 @@ interface AddCaseModalProps {
 function AddCaseModal({ bookId, setId, editCase, onClose, onSaved }: AddCaseModalProps): React.JSX.Element {
   const isEdit = editCase !== undefined
   const [question, setQuestion] = useState(editCase?.question ?? '')
+  const [searchQuery, setSearchQuery] = useState(editCase?.searchQuery ?? '')
   const [quote, setQuote] = useState('')
   const [located, setLocated] = useState<LocateQuoteHit | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<IpcError | null>(null)
   const [busy, setBusy] = useState(false)
 
   async function handleLocate(): Promise<void> {
@@ -32,10 +34,13 @@ function AddCaseModal({ bookId, setId, editCase, onClose, onSaved }: AddCaseModa
   }
 
   const questionChanged = isEdit && question.trim() !== editCase!.question
+  const searchQueryChanged = isEdit && searchQuery.trim() !== editCase!.searchQuery
   const goldChanged = located !== null
   const canSave = isEdit
-    ? question.trim().length > 0 && (questionChanged || goldChanged)
-    : question.trim().length > 0 && located !== null
+    ? question.trim().length > 0 &&
+      searchQuery.trim().length > 0 &&
+      (questionChanged || searchQueryChanged || goldChanged)
+    : question.trim().length > 0 && searchQuery.trim().length > 0 && located !== null
 
   async function handleSave(): Promise<void> {
     if (!canSave) return
@@ -43,14 +48,25 @@ function AddCaseModal({ bookId, setId, editCase, onClose, onSaved }: AddCaseModa
     setError(null)
     try {
       if (isEdit) {
-        const updates: { question?: string; goldSpans?: GoldSpan[] } = {}
+        const updates: {
+          question?: string
+          searchQuery?: string
+          goldSpans?: GoldSpan[]
+        } = {}
         if (questionChanged) updates.question = question
+        if (searchQueryChanged) updates.searchQuery = searchQuery
         if (goldChanged) updates.goldSpans = [located!.goldSpan]
         const r = await window.api.evals.updateCase(bookId, setId, editCase!.id, updates)
         if (!r.ok) { setError(r.error); return }
       } else {
         const goldSpans: GoldSpan[] = [located!.goldSpan]
-        const r = await window.api.evals.addCase(bookId, setId, question, goldSpans)
+        const r = await window.api.evals.addCase(
+          bookId,
+          setId,
+          question,
+          searchQuery,
+          goldSpans
+        )
         if (!r.ok) { setError(r.error); return }
       }
       onSaved()
@@ -119,13 +135,33 @@ function AddCaseModal({ bookId, setId, editCase, onClose, onSaved }: AddCaseModa
         </p>
 
         <label style={{ display: 'block', fontSize: 11, color: cv.text3, marginBottom: 4 }}>
-          Question
+          Question (used by agent evals)
         </label>
         <textarea
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
           rows={2}
           placeholder="What is the relationship between Jekyll and Hyde?"
+          style={inputStyle}
+          disabled={busy}
+        />
+
+        <label
+          style={{
+            display: 'block',
+            fontSize: 11,
+            color: cv.text3,
+            marginTop: 14,
+            marginBottom: 4
+          }}
+        >
+          Search query (used by retrieval evals)
+        </label>
+        <textarea
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          rows={1}
+          placeholder="jekyll hyde relationship"
           style={inputStyle}
           disabled={busy}
         />
@@ -223,22 +259,7 @@ function AddCaseModal({ bookId, setId, editCase, onClose, onSaved }: AddCaseModa
           </div>
         )}
 
-        {error && (
-          <pre
-            style={{
-              color: cv.errorText,
-              whiteSpace: 'pre-wrap',
-              marginTop: 12,
-              background: cv.errorBg,
-              padding: 10,
-              border: `1px solid ${cv.errorBorder}`,
-              borderRadius: 4,
-              fontSize: 11
-            }}
-          >
-            {error}
-          </pre>
-        )}
+        <ErrorDisplay error={error} marginTop={12} />
       </div>
     </div>
   )

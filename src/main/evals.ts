@@ -9,6 +9,7 @@ import { readSpineRaw } from './epub'
 import { ask, retrieve } from './retrieval'
 import { getChunkSet } from './chunking'
 import { getOpenaiKey } from './settings'
+import { toIpcError } from './ipcError'
 import type {
   AutoGenerateProgress,
   Chunk,
@@ -139,16 +140,20 @@ export async function addCase(
   bookId: string,
   setId: string,
   question: string,
+  searchQuery: string,
   goldSpans: GoldSpan[],
   notes?: string
 ): Promise<EvalCase> {
-  const trimmed = question.trim()
-  if (!trimmed) throw new Error('Question is required')
+  const trimmedQ = question.trim()
+  if (!trimmedQ) throw new Error('Question is required')
+  const trimmedSQ = searchQuery.trim()
+  if (!trimmedSQ) throw new Error('Search query is required')
   if (goldSpans.length === 0) throw new Error('At least one gold span is required')
   const set = await getEvalSet(bookId, setId)
   const newCase: EvalCase = {
     id: randomUUID(),
-    question: trimmed,
+    question: trimmedQ,
+    searchQuery: trimmedSQ,
     goldSpans,
     notes
   }
@@ -173,7 +178,7 @@ export async function updateCase(
   bookId: string,
   setId: string,
   caseId: string,
-  updates: { question?: string; goldSpans?: GoldSpan[]; notes?: string }
+  updates: { question?: string; searchQuery?: string; goldSpans?: GoldSpan[]; notes?: string }
 ): Promise<EvalCase> {
   const set = await getEvalSet(bookId, setId)
   const idx = set.cases.findIndex((c) => c.id === caseId)
@@ -187,6 +192,13 @@ export async function updateCase(
     question = trimmed
   }
 
+  let searchQuery = existing.searchQuery
+  if (updates.searchQuery !== undefined) {
+    const trimmed = updates.searchQuery.trim()
+    if (!trimmed) throw new Error('Search query is required')
+    searchQuery = trimmed
+  }
+
   let goldSpans = existing.goldSpans
   if (updates.goldSpans !== undefined) {
     if (updates.goldSpans.length === 0) throw new Error('At least one gold span is required')
@@ -196,6 +208,7 @@ export async function updateCase(
   const updated: EvalCase = {
     ...existing,
     question,
+    searchQuery,
     goldSpans,
     notes: updates.notes !== undefined ? updates.notes : existing.notes
   }
@@ -309,7 +322,12 @@ export async function runEval(
 
   for (const c of casesToRun) {
     if (mode === 'retrieval') {
-      const retrieved = await retrieve(bookId, strategyId, c.question, k)
+      if (!c.searchQuery || !c.searchQuery.trim()) {
+        throw new Error(
+          `Case ${c.id} has no searchQuery. Run "Backfill missing search queries" from the AutoGen panel first.`
+        )
+      }
+      const retrieved = await retrieve(bookId, strategyId, c.searchQuery, k)
       let firstHitRank: number | null = null
       const details: RetrievedDetail[] = retrieved.map((r) => {
         const overlap = computeOverlap(r.chunk, c.goldSpans)
@@ -323,6 +341,7 @@ export async function runEval(
       caseResults.push({
         caseId: c.id,
         question: c.question,
+        searchQuery: c.searchQuery,
         retrieved: details,
         recallAtK,
         mrr,
@@ -425,11 +444,18 @@ const generatedCaseSchema = z.object({
   question: z
     .string()
     .min(5)
-    .describe('A specific question whose answer is found in the passage.'),
+    .describe('A specific natural-language question whose answer is found in the passage.'),
+  searchQuery: z
+    .string()
+    .min(1)
+    .describe(
+      'A short, realistic search-style query (3-10 words) someone might type to find this passage. Paraphrase the topic in their own words; do NOT quote distinctive phrases verbatim from the passage. Use natural search-box vocabulary, not jargon lifted from the text.'
+    ),
   answerHint: z
     .string()
-    .optional()
-    .describe('One short sentence summarizing or quoting where the answer appears in the passage.')
+    .describe(
+      'One short sentence summarizing or quoting where the answer appears in the passage. Use an empty string if no useful hint.'
+    )
 })
 
 function sampleEvenly<T>(items: T[], count: number): T[] {
@@ -483,11 +509,13 @@ export async function autoGenerateCases(
   }).withStructuredOutput(generatedCaseSchema)
 
   const systemPrompt =
-    'You are helping create evaluation questions for a book retrieval system. ' +
-    'Given one passage from a book, generate ONE question whose answer is found in this passage. ' +
-    'The question should be specific (referencing concepts, names, or claims actually in the passage), not generic. ' +
-    'Avoid yes/no questions. Avoid trivial definition questions. ' +
-    'The question must be answerable from the passage alone.'
+    'You are helping create evaluation cases for a book retrieval system. ' +
+    'Given one passage from a book, produce THREE outputs: ' +
+    '(1) a specific natural-language QUESTION whose answer is in the passage, ' +
+    '(2) a short realistic SEARCH QUERY a person might type to find this passage (paraphrased, no distinctive phrases lifted from the text), and ' +
+    '(3) a short ANSWER HINT pointing at where the answer appears. ' +
+    'Questions: specific (referencing concepts, names, or claims in the passage), not generic. Avoid yes/no questions and trivial definition questions. The question must be answerable from the passage alone. ' +
+    'Search queries: 3-10 words, the way someone would type into a search box; paraphrase, do NOT quote distinctive phrases verbatim.'
 
   const progress: AutoGenerateProgress = { generated: 0, failed: 0, failures: [] }
 
@@ -495,7 +523,7 @@ export async function autoGenerateCases(
     try {
       const userMsg =
         (bookContext ? `${bookContext}\n\n` : '') +
-        `Passage:\n"""\n${chunk.text}\n"""\n\nGenerate one evaluation question.`
+        `Passage:\n"""\n${chunk.text}\n"""\n\nGenerate question, search query, and answer hint.`
       const result = await llm.invoke([
         new SystemMessage(systemPrompt),
         new HumanMessage(userMsg)
@@ -507,13 +535,107 @@ export async function autoGenerateCases(
       }
       const noteParts = [`Auto-generated from chunk ${chunk.id}.`]
       if (result.answerHint) noteParts.push(`Answer hint: ${result.answerHint}`)
-      await addCase(bookId, setId, result.question, [goldSpan], noteParts.join('\n\n'))
+      await addCase(
+        bookId,
+        setId,
+        result.question,
+        result.searchQuery,
+        [goldSpan],
+        noteParts.join('\n\n')
+      )
       progress.generated += 1
     } catch (err) {
+      const ipcErr = toIpcError(err)
+      console.warn(`[autoGenerate] chunk ${chunk.id} failed: ${ipcErr.message}`)
       progress.failed += 1
       progress.failures.push({
-        chunkId: chunk.id,
-        error: (err as Error).message
+        id: chunk.id,
+        error: ipcErr
+      })
+    }
+  }
+
+  return progress
+}
+
+const backfillSchema = z.object({
+  searchQuery: z
+    .string()
+    .min(1)
+    .describe(
+      'A short, realistic search-style query (3-10 words) someone might type to find this passage. Paraphrase the topic; do NOT quote distinctive phrases verbatim from the passage.'
+    )
+})
+
+export async function backfillSearchQueries(
+  bookId: string,
+  setId: string
+): Promise<AutoGenerateProgress> {
+  const apiKey = await getOpenaiKey()
+  if (!apiKey) throw new Error('OpenAI API key is not set. Add it in Settings.')
+
+  const set = await getEvalSet(bookId, setId)
+  const missing = set.cases.filter((c) => !c.searchQuery || !c.searchQuery.trim())
+
+  const progress: AutoGenerateProgress = { generated: 0, failed: 0, failures: [] }
+  if (missing.length === 0) return progress
+
+  const manifest = await readManifest(bookId)
+  const epubPath = join(bookDir(bookId), 'book.epub')
+  const spine = readSpineRaw(epubPath, manifest)
+  const textByHref = new Map(spine.map((s) => [s.href, htmlToPlainText(s.rawHtml)]))
+
+  const library = await listLibrary()
+  const book = library.find((b) => b.id === bookId)
+  const bookContext = book
+    ? `Book: "${book.title}"${book.author ? ` by ${book.author}` : ''}`
+    : ''
+
+  const llm = new ChatOpenAI({
+    model: AUTOGEN_MODEL,
+    apiKey,
+    temperature: 0.7
+  }).withStructuredOutput(backfillSchema)
+
+  const systemPrompt =
+    'You are generating realistic search queries for a book retrieval eval. ' +
+    'Given a question and the passage that answers it, produce a short SEARCH QUERY (3-10 words) ' +
+    'a person might type into a search box to find this passage. ' +
+    'Paraphrase: do NOT quote distinctive phrases verbatim from the passage. ' +
+    'Use natural search-box vocabulary, not jargon lifted from the text.'
+
+  for (const c of missing) {
+    try {
+      const passages: string[] = []
+      for (const gold of c.goldSpans) {
+        const text = textByHref.get(gold.spineHref)
+        if (!text) continue
+        passages.push(text.slice(gold.textStart, gold.textEnd))
+      }
+      const passage = passages.join('\n\n---\n\n')
+      if (!passage.trim()) {
+        throw new Error('Could not resolve gold span text from spine.')
+      }
+
+      const userMsg =
+        (bookContext ? `${bookContext}\n\n` : '') +
+        `Question:\n"""\n${c.question}\n"""\n\n` +
+        `Passage that answers it:\n"""\n${passage}\n"""\n\n` +
+        `Generate a search query.`
+      const result = await llm.invoke([
+        new SystemMessage(systemPrompt),
+        new HumanMessage(userMsg)
+      ])
+
+      await updateCase(bookId, setId, c.id, { searchQuery: result.searchQuery })
+      progress.generated += 1
+    } catch (err) {
+      const ipcErr = toIpcError(err)
+      console.warn(`[backfillSearchQueries] case ${c.id} failed: ${ipcErr.message}`)
+      progress.failed += 1
+      progress.failures.push({
+        id: c.id,
+        error: ipcErr
       })
     }
   }
