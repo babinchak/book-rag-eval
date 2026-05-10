@@ -1,6 +1,6 @@
 import type { LogEntry } from '../preload/types'
 import { envSnapshot } from './env'
-import { getError } from './errorRegistry'
+import { getError, listErrors } from './errorRegistry'
 import { logsBefore } from './logBuffer'
 
 const SECRET_KEY_RE = /key|token|secret|password|authorization/i
@@ -96,4 +96,12 @@ export function buildBundle(errorId: string): string {
   sections.push(`## Env\n${envLines.join('\n')}`)
 
   return sections.join('\n\n') + '\n'
+}
+
+export function buildBundleAll(): string {
+  const sorted = [...listErrors()].sort((a, b) => b.ts - a.ts)
+  if (sorted.length === 0) return '_No errors recorded this session._\n'
+  const totalCount = sorted.reduce((acc, s) => acc + s.count, 0)
+  const header = `# Diagnostic bundle — ${sorted.length} error${sorted.length === 1 ? '' : 's'}${totalCount !== sorted.length ? ` (${totalCount} occurrences)` : ''}`
+  return header + '\n\n' + sorted.map((s) => buildBundle(s.id)).join('\n---\n\n')
 }

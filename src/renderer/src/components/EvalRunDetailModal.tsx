@@ -22,25 +22,51 @@ function buildTraceMarkdown(
   run: EvalRunResult,
   caseResult: EvalCaseResult,
   goldSpans: GoldSpan[],
-  chunks: Chunk[]
+  chunks: Chunk[],
+  caseNotes?: string
 ): string {
   const byId = new Map(chunks.map((c) => [c.id, c]))
   const goldChunks = chunks.filter((c) =>
     goldSpans.some((g) => c.spineHref === g.spineHref && c.textStart < g.textEnd && c.textEnd > g.textStart)
   )
   const cited = new Set(caseResult.citedChunkIds ?? [])
+  const retrievedByChunkId = new Map(caseResult.retrieved.map((r) => [r.chunkId, r]))
+
+  const sourceChunkId = caseNotes?.match(/Auto-generated from chunk (.+?)\.(?:\s|$)/)?.[1]
+
+  const corpusSize = chunks.length
+  const goldHrefs = new Set(goldSpans.map((g) => g.spineHref))
+  const chunksInGoldDoc = goldHrefs.size === 0
+    ? 0
+    : chunks.filter((c) => goldHrefs.has(c.spineHref)).length
+
+  const r0 = caseResult.retrieved[0]
+  const r1 = caseResult.retrieved[1]
+  const margin = r0 && r1 ? r1.distance - r0.distance : null
+
   const out: string[] = []
   out.push(`# Eval trace`)
   out.push('')
   out.push(`**Strategy**: \`${run.strategyId}\` · k=${run.k} · mode=${run.mode ?? 'agentic'}`)
+  out.push(`**Embedding**: \`text-embedding-3-large\` · L2 distance (cosine-equivalent on unit-norm vectors; lower is better)`)
+  const goldDocSuffix =
+    goldHrefs.size === 1 ? ` (\`${Array.from(goldHrefs)[0]}\`)` : goldHrefs.size > 1 ? ` (across ${goldHrefs.size} files)` : ''
+  out.push(`**Corpus**: ${corpusSize.toLocaleString()} chunks · ${chunksInGoldDoc.toLocaleString()} in gold doc${goldDocSuffix}`)
   out.push(`**Question**: ${caseResult.question}`)
   if (caseResult.searchQuery && caseResult.searchQuery !== caseResult.question) {
     out.push(`**Search query**: ${caseResult.searchQuery}`)
+  }
+  if (sourceChunkId) {
+    const selfRetrieval = caseResult.retrieved[0]?.chunkId === sourceChunkId
+    out.push(
+      `**Source**: auto-generated from chunk \`${sourceChunkId}\`${selfRetrieval ? ' ⚠️ self-retrieval (gold = source chunk)' : ''}`
+    )
   }
   const hit = caseResult.recallAtK > 0
   const bits: string[] = [hit ? `HIT @ rank ${caseResult.hitRank}` : 'MISS']
   bits.push(`R@${run.k}=${caseResult.recallAtK.toFixed(2)}`)
   bits.push(`MRR=${caseResult.mrr.toFixed(2)}`)
+  if (margin !== null) bits.push(`margin=${margin.toFixed(2)}`)
   if (caseResult.citationPrecision !== undefined) {
     bits.push(`Cit P=${caseResult.citationPrecision.toFixed(2)}`)
     bits.push(`Cit R=${(caseResult.citationRecall ?? 0).toFixed(2)}`)
@@ -55,11 +81,24 @@ function buildTraceMarkdown(
   if (goldChunks.length === 0) {
     out.push(`*None — no chunk in this strategy overlaps the gold span.*`)
   } else {
-    for (const c of goldChunks) {
-      out.push(`### \`${c.id}\``)
-      out.push('```')
-      out.push(c.text)
-      out.push('```')
+    const goldInfo = goldChunks.map((c) => ({ chunk: c, retrieved: retrievedByChunkId.get(c.id) ?? null }))
+    const allHit = goldInfo.every((g) => g.retrieved?.hit)
+    if (allHit) {
+      for (const { chunk, retrieved } of goldInfo) {
+        out.push(`- \`${chunk.id}\` → retrieved #${retrieved!.rank} (hit)`)
+      }
+    } else {
+      for (const { chunk, retrieved } of goldInfo) {
+        const status = retrieved
+          ? retrieved.hit
+            ? `retrieved #${retrieved.rank} (hit)`
+            : `retrieved #${retrieved.rank} (overlap below hit threshold)`
+          : 'NOT retrieved'
+        out.push(`### \`${chunk.id}\` — ${status}`)
+        out.push('```')
+        out.push(chunk.text)
+        out.push('```')
+      }
     }
   }
   out.push('')
@@ -74,12 +113,21 @@ function buildTraceMarkdown(
   }
   out.push(`## Retrieved (${caseResult.retrieved.length})`)
   for (const r of caseResult.retrieved) {
-    const tags: string[] = []
-    if (r.hit) tags.push(`HIT (${r.overlap}c overlap)`)
-    if (cited.has(r.chunkId)) tags.push('CITED')
-    out.push(`### #${r.rank} · d=${r.distance.toFixed(2)}${tags.length ? ` · ${tags.join(' · ')}` : ''}`)
-    out.push(`\`${r.chunkId}\``)
     const chunk = byId.get(r.chunkId)
+    const chunkSize = chunk ? chunk.text.length : null
+    const tags: string[] = []
+    if (r.hit) {
+      if (chunkSize && chunkSize > 0) {
+        const pct = Math.round((r.overlap / chunkSize) * 100)
+        tags.push(`HIT (${r.overlap}/${chunkSize}c, ${pct}%)`)
+      } else {
+        tags.push(`HIT (${r.overlap}c overlap)`)
+      }
+    }
+    if (cited.has(r.chunkId)) tags.push('CITED')
+    const sizeTag = chunkSize !== null ? ` · ${chunkSize}c` : ''
+    out.push(`### #${r.rank} · d=${r.distance.toFixed(2)}${sizeTag}${tags.length ? ` · ${tags.join(' · ')}` : ''}`)
+    out.push(`\`${r.chunkId}\``)
     if (chunk) {
       out.push('```')
       out.push(chunk.text)
@@ -112,11 +160,15 @@ function EvalRunDetailModal({ bookId, runId, evalSet, onClose, onSelectChunk }: 
     return evalSet?.cases.find((x) => x.id === caseId)?.goldSpans ?? []
   }
 
+  function caseNotes(caseId: string): string | undefined {
+    return evalSet?.cases.find((x) => x.id === caseId)?.notes
+  }
+
   async function handleCopyTrace(caseResult: EvalCaseResult): Promise<void> {
     if (!run) return
     const r = await window.api.chunks.get(bookId, run.strategyId)
     if (!r.ok) { setError(r.error); return }
-    const md = buildTraceMarkdown(run, caseResult, caseGoldSpans(caseResult.caseId), r.data.chunks)
+    const md = buildTraceMarkdown(run, caseResult, caseGoldSpans(caseResult.caseId), r.data.chunks, caseNotes(caseResult.caseId))
     await navigator.clipboard.writeText(md)
     setCopiedCaseId(caseResult.caseId)
     setTimeout(() => setCopiedCaseId((c) => (c === caseResult.caseId ? null : c)), 1500)

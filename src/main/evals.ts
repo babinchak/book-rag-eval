@@ -9,7 +9,7 @@ import { readSpineRaw } from './epub'
 import { ask, retrieve } from './retrieval'
 import { getChunkSet } from './chunking'
 import { getOpenaiKey } from './settings'
-import { toIpcError } from './ipcError'
+import { captureIpcError } from './ipcContext'
 import type {
   AutoGenerateProgress,
   Chunk,
@@ -438,6 +438,8 @@ export async function getEvalRun(bookId: string, runId: string): Promise<EvalRun
 }
 
 const MIN_AUTOGEN_CHUNK_CHARS = 200
+const MIN_ANSWER_SPAN_CHARS = 30
+const MAX_GENERATION_ATTEMPTS = 2
 const AUTOGEN_MODEL = process.env.OPENAI_MODEL || 'gpt-4o-mini'
 
 const generatedCaseSchema = z.object({
@@ -449,12 +451,13 @@ const generatedCaseSchema = z.object({
     .string()
     .min(1)
     .describe(
-      'A short, realistic search-style query (3-10 words) someone might type to find this passage. Paraphrase the topic in their own words; do NOT quote distinctive phrases verbatim from the passage. Use natural search-box vocabulary, not jargon lifted from the text.'
+      'A short, realistic search-style query (3-10 words) someone might type to find this passage. Paraphrase the topic in their own words; do NOT quote any 2+ word phrase that appears verbatim in the passage, and avoid distinctive proper nouns or rare terms lifted from the text. Use natural search-box vocabulary.'
     ),
-  answerHint: z
+  answerSpan: z
     .string()
+    .min(MIN_ANSWER_SPAN_CHARS)
     .describe(
-      'One short sentence summarizing or quoting where the answer appears in the passage. Use an empty string if no useful hint.'
+      'A VERBATIM contiguous quote copied character-for-character from the passage that fully contains the answer to the question. Pick the smallest contiguous quote that fully contains the answer (typically one to three sentences). Do NOT paraphrase, summarize, splice, or rewrite — the exact string must appear in the passage.'
     )
 })
 
@@ -467,6 +470,40 @@ function sampleEvenly<T>(items: T[], count: number): T[] {
     out.push(items[idx])
   }
   return out
+}
+
+// Skip chunks that are clearly not flowing prose: front matter, table of contents,
+// footnote dumps, indexes. The auto-generator produces nonsense cases on these.
+function isQualityProse(text: string): boolean {
+  if (text.length < MIN_AUTOGEN_CHUNK_CHARS) return false
+  const letters = (text.match(/[a-zA-Z]/g) ?? []).length
+  if (letters / text.length < 0.6) return false
+  const sentences = text.split(/[.!?](?:\s|$)/).filter((s) => s.trim().length > 0)
+  if (sentences.length < 3) return false
+  const words = (text.match(/\b\w+\b/g) ?? []).length
+  if (words / sentences.length < 10) return false
+  if ((text.match(/\[\d+\]/g) ?? []).length >= 4) return false
+  return true
+}
+
+function tokenize(s: string): string[] {
+  return (s.toLowerCase().match(/[a-z0-9]+/g) ?? []).filter((t) => t.length >= 2)
+}
+
+function bigrams(tokens: string[]): string[] {
+  const out: string[] = []
+  for (let i = 0; i < tokens.length - 1; i++) out.push(`${tokens[i]} ${tokens[i + 1]}`)
+  return out
+}
+
+// Return any 2-word phrase that appears in both the search query and the passage.
+// Surface tokens that appear verbatim in both make embedding retrieval trivial.
+function findLeakingBigrams(searchQuery: string, chunkText: string): string[] {
+  const queryGrams = bigrams(tokenize(searchQuery))
+  const chunkGrams = new Set(bigrams(tokenize(chunkText)))
+  const hits = new Set<string>()
+  for (const g of queryGrams) if (chunkGrams.has(g)) hits.add(g)
+  return Array.from(hits)
 }
 
 export async function autoGenerateCases(
@@ -485,12 +522,10 @@ export async function autoGenerateCases(
   await getEvalSet(bookId, setId)
 
   const chunkSet = await getChunkSet(bookId, strategyId)
-  const eligible: Chunk[] = chunkSet.chunks.filter(
-    (c) => c.text.length >= MIN_AUTOGEN_CHUNK_CHARS
-  )
+  const eligible: Chunk[] = chunkSet.chunks.filter((c) => isQualityProse(c.text))
   if (eligible.length === 0) {
     throw new Error(
-      `Strategy "${strategyId}" has no chunks long enough (>= ${MIN_AUTOGEN_CHUNK_CHARS} chars).`
+      `Strategy "${strategyId}" has no prose-quality chunks (need >= ${MIN_AUTOGEN_CHUNK_CHARS} chars, real sentences, low footnote density).`
     )
   }
 
@@ -513,45 +548,81 @@ export async function autoGenerateCases(
     'Given one passage from a book, produce THREE outputs: ' +
     '(1) a specific natural-language QUESTION whose answer is in the passage, ' +
     '(2) a short realistic SEARCH QUERY a person might type to find this passage (paraphrased, no distinctive phrases lifted from the text), and ' +
-    '(3) a short ANSWER HINT pointing at where the answer appears. ' +
+    '(3) a VERBATIM ANSWER SPAN: a contiguous quote copied character-for-character from the passage that fully contains the answer. ' +
     'Questions: specific (referencing concepts, names, or claims in the passage), not generic. Avoid yes/no questions and trivial definition questions. The question must be answerable from the passage alone. ' +
-    'Search queries: 3-10 words, the way someone would type into a search box; paraphrase, do NOT quote distinctive phrases verbatim.'
+    'Search queries: 3-10 words; the way someone would type into a search box; paraphrase the topic. CRITICAL: do NOT use any 2+ word phrase that appears verbatim in the passage, and avoid distinctive proper nouns or rare terms lifted from the text. ' +
+    'Answer span: the smallest contiguous substring of the passage (typically one to three sentences) that fully contains the answer. Copy it EXACTLY — character for character including punctuation, capitalization, and whitespace. Do not paraphrase, splice, or rewrite.'
 
   const progress: AutoGenerateProgress = { generated: 0, failed: 0, failures: [] }
 
   for (const chunk of sampled) {
-    try {
-      const userMsg =
-        (bookContext ? `${bookContext}\n\n` : '') +
-        `Passage:\n"""\n${chunk.text}\n"""\n\nGenerate question, search query, and answer hint.`
-      const result = await llm.invoke([
-        new SystemMessage(systemPrompt),
-        new HumanMessage(userMsg)
-      ])
-      const goldSpan: GoldSpan = {
-        spineHref: chunk.spineHref,
-        textStart: chunk.textStart,
-        textEnd: chunk.textEnd
+    let lastError: string | null = null
+    let avoidPhrases: string[] = []
+    let succeeded = false
+
+    for (let attempt = 0; attempt < MAX_GENERATION_ATTEMPTS; attempt++) {
+      try {
+        const avoidBlock =
+          avoidPhrases.length > 0
+            ? `\n\nIMPORTANT: Your previous attempt used these phrases that appear verbatim in the passage. DO NOT use any of them in the search query:\n${avoidPhrases.map((p) => `- "${p}"`).join('\n')}`
+            : ''
+        const userMsg =
+          (bookContext ? `${bookContext}\n\n` : '') +
+          `Passage:\n"""\n${chunk.text}\n"""` +
+          avoidBlock +
+          `\n\nGenerate question, search query, and answer span.`
+        const result = await llm.invoke([
+          new SystemMessage(systemPrompt),
+          new HumanMessage(userMsg)
+        ])
+
+        const answerOffset = chunk.text.indexOf(result.answerSpan)
+        if (answerOffset < 0) {
+          lastError = 'Answer span is not a verbatim substring of the passage.'
+          continue
+        }
+
+        const leaks = findLeakingBigrams(result.searchQuery, chunk.text)
+        if (leaks.length > 0) {
+          lastError = `Search query leaks phrases from the passage: ${leaks.map((p) => `"${p}"`).join(', ')}`
+          avoidPhrases = leaks
+          continue
+        }
+
+        const goldStart = chunk.textStart + answerOffset
+        const goldSpan: GoldSpan = {
+          spineHref: chunk.spineHref,
+          textStart: goldStart,
+          textEnd: goldStart + result.answerSpan.length
+        }
+        const noteParts = [
+          `Auto-generated from chunk ${chunk.id}.`,
+          `Answer span: ${JSON.stringify(result.answerSpan)}`
+        ]
+        await addCase(
+          bookId,
+          setId,
+          result.question,
+          result.searchQuery,
+          [goldSpan],
+          noteParts.join('\n\n')
+        )
+        progress.generated += 1
+        succeeded = true
+        break
+      } catch (err) {
+        lastError = (err as Error).message
       }
-      const noteParts = [`Auto-generated from chunk ${chunk.id}.`]
-      if (result.answerHint) noteParts.push(`Answer hint: ${result.answerHint}`)
-      await addCase(
-        bookId,
-        setId,
-        result.question,
-        result.searchQuery,
-        [goldSpan],
-        noteParts.join('\n\n')
+    }
+
+    if (!succeeded) {
+      const ipcErr = captureIpcError(
+        new Error(lastError ?? 'Unknown failure'),
+        'evals:autoGenerate',
+        [bookId, setId, strategyId, { failedChunkId: chunk.id }]
       )
-      progress.generated += 1
-    } catch (err) {
-      const ipcErr = toIpcError(err)
-      console.warn(`[autoGenerate] chunk ${chunk.id} failed: ${ipcErr.message}`)
       progress.failed += 1
-      progress.failures.push({
-        id: chunk.id,
-        error: ipcErr
-      })
+      progress.failures.push({ id: chunk.id, error: ipcErr })
     }
   }
 
@@ -630,8 +701,11 @@ export async function backfillSearchQueries(
       await updateCase(bookId, setId, c.id, { searchQuery: result.searchQuery })
       progress.generated += 1
     } catch (err) {
-      const ipcErr = toIpcError(err)
-      console.warn(`[backfillSearchQueries] case ${c.id} failed: ${ipcErr.message}`)
+      const ipcErr = captureIpcError(err, 'evals:backfillSearchQueries', [
+        bookId,
+        setId,
+        { failedCaseId: c.id }
+      ])
       progress.failed += 1
       progress.failures.push({
         id: c.id,

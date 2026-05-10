@@ -136,6 +136,7 @@ const api = {
   errors: {
     list: (): Promise<ErrorsListIpcResult> => ipcRenderer.invoke('errors:list'),
     bundle: (id: string): Promise<ErrorsBundleIpcResult> => ipcRenderer.invoke('errors:bundle', id),
+    bundleAll: (): Promise<ErrorsBundleIpcResult> => ipcRenderer.invoke('errors:bundleAll'),
     report: (report: RendererErrorReport): Promise<ErrorsReportIpcResult> =>
       ipcRenderer.invoke('errors:report', report),
     onChanged: (handler: () => void): (() => void) => {

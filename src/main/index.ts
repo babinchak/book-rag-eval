@@ -34,7 +34,7 @@ import {
 import { captureIpcError } from './ipcContext'
 import { ingestRendererLog, log } from './log'
 import { listErrors, recordRendererReport, subscribe } from './errorRegistry'
-import { buildBundle } from './diagnosticBundle'
+import { buildBundle, buildBundleAll } from './diagnosticBundle'
 import type {
   AskIpcResult,
   ChunkParams,
@@ -533,6 +533,14 @@ app.whenReady().then(() => {
       return { ok: true, markdown: buildBundle(errorId) }
     } catch (err) {
       return { ok: false, error: captureIpcError(err, 'errors:bundle', [errorId]) }
+    }
+  })
+
+  ipcMain.handle('errors:bundleAll', async (): Promise<ErrorsBundleIpcResult> => {
+    try {
+      return { ok: true, markdown: buildBundleAll() }
+    } catch (err) {
+      return { ok: false, error: captureIpcError(err, 'errors:bundleAll', []) }
     }
   })
 

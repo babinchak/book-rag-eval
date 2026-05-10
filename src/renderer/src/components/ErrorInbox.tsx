@@ -14,6 +14,13 @@ async function copyBundle(id: string): Promise<boolean> {
   return true
 }
 
+async function copyBundleAll(): Promise<boolean> {
+  const res = await window.api.errors.bundleAll()
+  if (!res.ok) return false
+  await navigator.clipboard.writeText(res.markdown)
+  return true
+}
+
 function formatTime(ts: number): string {
   return new Date(ts).toLocaleTimeString()
 }
@@ -22,6 +29,7 @@ export default function ErrorInbox(): React.JSX.Element {
   const [entries, setEntries] = useState<ErrorRecordSummary[]>([])
   const [open, setOpen] = useState(false)
   const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [copiedAll, setCopiedAll] = useState(false)
 
   useEffect(() => {
     void loadEntries().then(setEntries)
@@ -77,7 +85,23 @@ export default function ErrorInbox(): React.JSX.Element {
             }}
           >
             <div style={{ fontWeight: 600, color: cv.text1 }}>Error inbox ({total})</div>
-            <button onClick={() => setOpen(false)}>Close</button>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                disabled={sorted.length === 0}
+                onClick={async () => {
+                  const ok = await copyBundleAll()
+                  if (ok) {
+                    setCopiedAll(true)
+                    setTimeout(() => setCopiedAll(false), 1200)
+                  }
+                }}
+                title="Copy a single markdown bundle containing every error in this session"
+                style={{ fontSize: 12 }}
+              >
+                {copiedAll ? 'Copied!' : 'Copy all'}
+              </button>
+              <button onClick={() => setOpen(false)}>Close</button>
+            </div>
           </div>
           <div style={{ overflowY: 'auto', flex: 1, padding: 8 }}>
             {sorted.length === 0 && (
