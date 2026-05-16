@@ -3,6 +3,8 @@ import { join } from 'node:path'
 import { randomUUID } from 'node:crypto'
 import { ChatOpenAI } from '@langchain/openai'
 import { HumanMessage, SystemMessage } from '@langchain/core/messages'
+import { BaseCallbackHandler } from '@langchain/core/callbacks/base'
+import type { LLMResult } from '@langchain/core/outputs'
 import { z } from 'zod'
 import { bookDir, listLibrary } from './library'
 import { readSpineRaw } from './epub'
@@ -395,6 +397,7 @@ export async function runEval(
         promptTokens: agentResult.promptTokens,
         completionTokens: agentResult.completionTokens,
         totalTokens: agentResult.totalTokens,
+        model: agentResult.model,
         langsmithRunUrl: agentResult.langsmithRunUrl
       })
 
@@ -427,6 +430,8 @@ export async function runEval(
     result.totalPromptTokens = totalPromptTokens
     result.totalCompletionTokens = totalCompletionTokens
     result.totalTokens = totalTokens
+    const firstWithModel = caseResults.find((r) => r.model)
+    if (firstWithModel?.model) result.agentModel = firstWithModel.model
   }
   await writeJsonAtomic(evalRunPath(bookId, result.id), result)
   return result
@@ -439,6 +444,23 @@ export async function getEvalRun(bookId: string, runId: string): Promise<EvalRun
 
 const MIN_AUTOGEN_CHUNK_CHARS = 200
 const AUTOGEN_MODEL = process.env.OPENAI_MODEL || 'gpt-4o-mini'
+
+class TokenUsageCapture extends BaseCallbackHandler {
+  name = 'token_usage_capture'
+  promptTokens = 0
+  completionTokens = 0
+  totalTokens = 0
+
+  handleLLMEnd(output: LLMResult): void {
+    const usage = output.llmOutput?.tokenUsage as
+      | { promptTokens?: number; completionTokens?: number; totalTokens?: number }
+      | undefined
+    if (!usage) return
+    this.promptTokens += usage.promptTokens ?? 0
+    this.completionTokens += usage.completionTokens ?? 0
+    this.totalTokens += usage.totalTokens ?? 0
+  }
+}
 
 const generatedCaseSchema = z.object({
   question: z
@@ -518,16 +540,17 @@ export async function autoGenerateCases(
     'Search queries: 3-10 words, the way someone would type into a search box; paraphrase, do NOT quote distinctive phrases verbatim.'
 
   const progress: AutoGenerateProgress = { generated: 0, failed: 0, failures: [] }
+  const usage = new TokenUsageCapture()
 
   for (const chunk of sampled) {
     try {
       const userMsg =
         (bookContext ? `${bookContext}\n\n` : '') +
         `Passage:\n"""\n${chunk.text}\n"""\n\nGenerate question, search query, and answer hint.`
-      const result = await llm.invoke([
-        new SystemMessage(systemPrompt),
-        new HumanMessage(userMsg)
-      ])
+      const result = await llm.invoke(
+        [new SystemMessage(systemPrompt), new HumanMessage(userMsg)],
+        { callbacks: [usage] }
+      )
       const goldSpan: GoldSpan = {
         spineHref: chunk.spineHref,
         textStart: chunk.textStart,
@@ -555,6 +578,10 @@ export async function autoGenerateCases(
     }
   }
 
+  progress.promptTokens = usage.promptTokens
+  progress.completionTokens = usage.completionTokens
+  progress.totalTokens = usage.totalTokens
+  progress.model = AUTOGEN_MODEL
   return progress
 }
 
@@ -604,6 +631,8 @@ export async function backfillSearchQueries(
     'Paraphrase: do NOT quote distinctive phrases verbatim from the passage. ' +
     'Use natural search-box vocabulary, not jargon lifted from the text.'
 
+  const usage = new TokenUsageCapture()
+
   for (const c of missing) {
     try {
       const passages: string[] = []
@@ -622,10 +651,10 @@ export async function backfillSearchQueries(
         `Question:\n"""\n${c.question}\n"""\n\n` +
         `Passage that answers it:\n"""\n${passage}\n"""\n\n` +
         `Generate a search query.`
-      const result = await llm.invoke([
-        new SystemMessage(systemPrompt),
-        new HumanMessage(userMsg)
-      ])
+      const result = await llm.invoke(
+        [new SystemMessage(systemPrompt), new HumanMessage(userMsg)],
+        { callbacks: [usage] }
+      )
 
       await updateCase(bookId, setId, c.id, { searchQuery: result.searchQuery })
       progress.generated += 1
@@ -640,6 +669,10 @@ export async function backfillSearchQueries(
     }
   }
 
+  progress.promptTokens = usage.promptTokens
+  progress.completionTokens = usage.completionTokens
+  progress.totalTokens = usage.totalTokens
+  progress.model = AUTOGEN_MODEL
   return progress
 }
 
@@ -668,6 +701,10 @@ export async function listEvalRuns(bookId: string): Promise<EvalRunSummary[]> {
         meanMRR: run.meanMRR,
         meanCitationPrecision: run.meanCitationPrecision,
         meanCitationRecall: run.meanCitationRecall,
+        totalPromptTokens: run.totalPromptTokens,
+        totalCompletionTokens: run.totalCompletionTokens,
+        totalTokens: run.totalTokens,
+        agentModel: run.agentModel,
         caseCount: run.cases.length
       })
     } catch {

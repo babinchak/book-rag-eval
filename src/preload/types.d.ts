@@ -103,6 +103,9 @@ export interface EmbeddingSetSummary {
   count: number
   model: string
   updatedAt: number
+  // Cumulative tokens spent embedding this set (across all runs). Undefined for
+  // legacy sets that predate cost tracking.
+  totalTokens?: number
 }
 
 export interface EmbedRunResult {
@@ -201,6 +204,7 @@ export interface EvalCaseResult {
   promptTokens?: number
   completionTokens?: number
   totalTokens?: number
+  model?: string
   langsmithRunUrl?: string
 }
 
@@ -221,6 +225,8 @@ export interface EvalRunResult {
   totalPromptTokens?: number
   totalCompletionTokens?: number
   totalTokens?: number
+  // Model used for the chat side of agentic runs. Needed to price tokens in the UI.
+  agentModel?: string
   cases: EvalCaseResult[]
 }
 
@@ -235,6 +241,10 @@ export interface EvalRunSummary {
   meanMRR: number
   meanCitationPrecision?: number
   meanCitationRecall?: number
+  totalPromptTokens?: number
+  totalCompletionTokens?: number
+  totalTokens?: number
+  agentModel?: string
   caseCount: number
 }
 
@@ -272,6 +282,11 @@ export interface AutoGenerateProgress {
   generated: number
   failed: number
   failures: AutoGenerateFailure[]
+  // LLM usage for this autogen / backfill run, when the model is known.
+  promptTokens?: number
+  completionTokens?: number
+  totalTokens?: number
+  model?: string
 }
 
 export type EvalAutoGenerateIpcResult =

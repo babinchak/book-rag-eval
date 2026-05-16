@@ -11,6 +11,7 @@ import type {
 } from '../../../preload/types'
 import { applyChunkOverlay, buildRangeForChunk, clearChunkOverlay } from '../lib/overlay'
 import { DEFAULT_STRATEGIES, strategyIdOf, strategyLabel } from '../../../shared/strategy'
+import { embeddingCostUsd, formatUsd } from '../../../shared/pricing'
 import { cv } from '../lib/theme'
 import AssistantPane from './AssistantPane'
 import EvalRunnerPanel from './EvalRunnerPanel'
@@ -836,6 +837,14 @@ function EmbeddingRow({
         ) : (
           <span>Not embedded</span>
         )}
+        {embedding && embedding.totalTokens !== undefined && (
+          <span
+            style={{ marginLeft: 6, color: cv.text4, fontFamily: 'monospace' }}
+            title={`${embedding.totalTokens.toLocaleString()} tokens @ ${embedding.model}`}
+          >
+            {formatUsd(embeddingCostUsd(embedding.model, embedding.totalTokens))}
+          </span>
+        )}
       </div>
       <button
         onClick={onEmbed}
@@ -872,6 +881,35 @@ function EmbeddingRow({
         >
           ×
         </button>
+      )}
+    </div>
+  )
+}
+
+function SetupCostCell({
+  embedding
+}: {
+  embedding: EmbeddingSetSummary | undefined
+}): React.JSX.Element {
+  const cost =
+    embedding && embedding.totalTokens !== undefined
+      ? embeddingCostUsd(embedding.model, embedding.totalTokens)
+      : null
+  return (
+    <div style={{ minWidth: 100, fontSize: 12, color: cv.text3 }}>
+      {!embedding ? (
+        <span style={{ color: cv.text5 }}>—</span>
+      ) : embedding.totalTokens === undefined ? (
+        <span style={{ color: cv.text5 }} title="Legacy embedding — re-embed to track cost">
+          ?
+        </span>
+      ) : (
+        <span
+          title={`${embedding.totalTokens.toLocaleString()} tokens @ ${embedding.model}`}
+          style={{ fontFamily: 'monospace' }}
+        >
+          {formatUsd(cost)}
+        </span>
       )}
     </div>
   )
@@ -1006,6 +1044,10 @@ function StrategiesFullView({
                     <span style={{ color: cv.text5 }}>not embedded</span>
                   )}
                 </div>
+
+                {/* Setup cost */}
+                <SetupCostCell embedding={embedding} />
+
 
                 {/* Actions */}
                 <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexShrink: 0 }}>
