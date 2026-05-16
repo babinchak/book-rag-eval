@@ -1,4 +1,4 @@
-import { memo, useEffect, useRef, useState } from 'react'
+import { memo, useCallback, useEffect, useRef, useState } from 'react'
 import type {
   Bm25IndexSummary,
   BookSummary,
@@ -10,7 +10,7 @@ import type {
   LoadedEpub,
   SpineItem
 } from '../../../preload/types'
-import { applyChunkOverlay, buildRangeForChunk, clearChunkOverlay } from '../lib/overlay'
+import { applyChunkOverlay, buildOffsetIndex, buildRangeForChunk, clearChunkOverlay } from '../lib/overlay'
 import { DEFAULT_STRATEGIES, strategyIdOf, strategyLabel } from '../../../shared/strategy'
 import { embeddingCostUsd, formatUsd } from '../../../shared/pricing'
 import { cv } from '../lib/theme'
@@ -45,10 +45,24 @@ function Reader({ book, onBack }: ReaderProps): React.JSX.Element {
   const [overlayStrategyId, setOverlayStrategyId] = useState<string | null>(null)
   const [selectedChunk, setSelectedChunk] = useState<SelectedChunkState | null>(null)
   const [overlayApplied, setOverlayApplied] = useState<number | null>(null)
+  const [overlayChunks, setOverlayChunks] = useState<Chunk[]>([])
+  const [selectedChunkData, setSelectedChunkData] = useState<Chunk | null>(null)
+  const [inspectedChunk, setInspectedChunk] = useState<{
+    chunk: Chunk
+    index: number | null
+    total: number | null
+    x: number
+    y: number
+  } | null>(null)
 
   const spineContainerRef = useRef<HTMLDivElement>(null)
   const overlayTokenRef = useRef(0)
   const lastScrolledChunkIdRef = useRef<string | null>(null)
+  const overlayChunksRef = useRef<Chunk[]>([])
+  const selectedChunkDataRef = useRef<Chunk | null>(null)
+
+  useEffect(() => { overlayChunksRef.current = overlayChunks }, [overlayChunks])
+  useEffect(() => { selectedChunkDataRef.current = selectedChunkData }, [selectedChunkData])
 
   useEffect(() => {
     let cancelled = false
@@ -71,6 +85,8 @@ function Reader({ book, onBack }: ReaderProps): React.JSX.Element {
     if (!loaded || (!overlayStrategyId && !selectedChunk)) {
       clearChunkOverlay()
       setOverlayApplied(null)
+      setOverlayChunks([])
+      setSelectedChunkData(null)
       overlayTokenRef.current++
       return
     }
@@ -99,6 +115,9 @@ function Reader({ book, onBack }: ReaderProps): React.JSX.Element {
           if (found) selected = [found]
         }
       }
+
+      setOverlayChunks(allChunks)
+      setSelectedChunkData(selected[0] ?? null)
 
       const rootsByHref = new Map<string, Element>()
       container.querySelectorAll<HTMLElement>('[data-spine-href]').forEach((el) =>
@@ -201,7 +220,93 @@ function Reader({ book, onBack }: ReaderProps): React.JSX.Element {
 
   function toggleOverlay(strategyId: string): void {
     setOverlayStrategyId((prev) => (prev === strategyId ? null : strategyId))
+    setInspectedChunk(null)
   }
+
+  const handleSpineClick = useCallback((e: React.MouseEvent<HTMLDivElement>): void => {
+    const overlay = overlayChunksRef.current
+    const selected = selectedChunkDataRef.current
+    if (overlay.length === 0 && !selected) {
+      setInspectedChunk(null)
+      return
+    }
+
+    const doc = document as Document & {
+      caretRangeFromPoint?: (x: number, y: number) => Range | null
+      caretPositionFromPoint?: (
+        x: number,
+        y: number
+      ) => { offsetNode: Node; offset: number } | null
+    }
+    let textNode: Node | null = null
+    let offsetInNode = 0
+    const r = doc.caretRangeFromPoint?.(e.clientX, e.clientY)
+    if (r) {
+      textNode = r.startContainer
+      offsetInNode = r.startOffset
+    } else {
+      const p = doc.caretPositionFromPoint?.(e.clientX, e.clientY)
+      if (p) {
+        textNode = p.offsetNode
+        offsetInNode = p.offset
+      }
+    }
+    if (!textNode || textNode.nodeType !== Node.TEXT_NODE) {
+      setInspectedChunk(null)
+      return
+    }
+
+    let section: HTMLElement | null = (textNode.parentElement ?? null) as HTMLElement | null
+    while (section && !section.dataset?.spineHref) {
+      section = section.parentElement
+    }
+    if (!section) {
+      setInspectedChunk(null)
+      return
+    }
+    const href = section.dataset.spineHref ?? ''
+
+    const idx = buildOffsetIndex(section)
+    let offset = -1
+    for (let i = 0; i < idx.positions.length; i++) {
+      const pos = idx.positions[i]
+      if (pos.node === textNode && pos.nodeOffset >= offsetInNode) {
+        offset = i
+        break
+      }
+    }
+    if (offset < 0) {
+      setInspectedChunk(null)
+      return
+    }
+
+    let match: Chunk | null = null
+    let index: number | null = null
+    let total: number | null = null
+    for (let i = 0; i < overlay.length; i++) {
+      const c = overlay[i]
+      if (c.spineHref === href && c.textStart <= offset && offset < c.textEnd) {
+        match = c
+        index = i
+        total = overlay.length
+        break
+      }
+    }
+    if (!match && selected) {
+      if (
+        selected.spineHref === href &&
+        selected.textStart <= offset &&
+        offset < selected.textEnd
+      ) {
+        match = selected
+      }
+    }
+    if (!match) {
+      setInspectedChunk(null)
+      return
+    }
+    setInspectedChunk({ chunk: match, index, total, x: e.clientX, y: e.clientY })
+  }, [])
 
   function selectChunk(strategyId: string, chunkId: string): void {
     setSelectedChunk((prev) =>
@@ -342,9 +447,21 @@ function Reader({ book, onBack }: ReaderProps): React.JSX.Element {
             onRun={handleRun}
             onEmbed={handleEmbed}
             onClearEmbeddings={handleClearEmbeddings}
+            onSpineClick={handleSpineClick}
           />
         )}
       </div>
+
+      {inspectedChunk && (
+        <ChunkInspector
+          chunk={inspectedChunk.chunk}
+          index={inspectedChunk.index}
+          total={inspectedChunk.total}
+          x={inspectedChunk.x}
+          y={inspectedChunk.y}
+          onClose={() => setInspectedChunk(null)}
+        />
+      )}
     </div>
   )
 }
@@ -370,6 +487,7 @@ interface ReaderPaneProps {
   onRun: (params: ChunkParams) => void
   onEmbed: (strategyId: string) => void
   onClearEmbeddings: (strategyId: string) => void
+  onSpineClick: (e: React.MouseEvent<HTMLDivElement>) => void
 }
 
 interface HighlightsHost {
@@ -422,7 +540,8 @@ function ReaderPane({
   embeddingByStrategy,
   onRun,
   onEmbed,
-  onClearEmbeddings
+  onClearEmbeddings,
+  onSpineClick
 }: ReaderPaneProps): React.JSX.Element {
   const [leftRailOpen, setLeftRailOpen] = useState(true)
   const [rightRailOpen, setRightRailOpen] = useState(true)
@@ -593,7 +712,11 @@ function ReaderPane({
         )}
         <div style={{ flex: 1, minHeight: 0, position: 'relative', display: 'flex', flexDirection: 'column' }}>
           {loaded ? (
-            <SpineRenderer items={loaded.spineItems} containerRef={spineContainerRef} />
+            <SpineRenderer
+              items={loaded.spineItems}
+              containerRef={spineContainerRef}
+              onClick={onSpineClick}
+            />
           ) : (
             <div style={{ padding: 24, color: cv.text4, fontSize: 13 }}>Loading…</div>
           )}
@@ -1248,14 +1371,20 @@ function StrategiesFullView({
 interface SpineRendererProps {
   items: SpineItem[]
   containerRef: React.RefObject<HTMLDivElement | null>
+  onClick?: (e: React.MouseEvent<HTMLDivElement>) => void
 }
 
 const SpineRenderer = memo(function SpineRenderer({
   items,
-  containerRef
+  containerRef,
+  onClick
 }: SpineRendererProps): React.JSX.Element {
   return (
-    <div ref={containerRef} style={{ flex: 1, padding: 24, overflowY: 'auto', lineHeight: 1.6 }}>
+    <div
+      ref={containerRef}
+      onClick={onClick}
+      style={{ flex: 1, padding: 24, overflowY: 'auto', lineHeight: 1.6 }}
+    >
       {items.map((item, i) => (
         <section
           key={`${item.href}-${i}`}
@@ -1379,6 +1508,149 @@ function NavTab({
     >
       {children}
     </button>
+  )
+}
+
+function countWords(text: string): number {
+  const trimmed = text.trim()
+  if (!trimmed) return 0
+  return trimmed.split(/\s+/).length
+}
+
+function ChunkInspector({
+  chunk,
+  index,
+  total,
+  x,
+  y,
+  onClose
+}: {
+  chunk: Chunk
+  index: number | null
+  total: number | null
+  x: number
+  y: number
+  onClose: () => void
+}): React.JSX.Element {
+  const ref = useRef<HTMLDivElement>(null)
+  const [pos, setPos] = useState<{ left: number; top: number }>({ left: x + 12, top: y + 12 })
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const rect = el.getBoundingClientRect()
+    const margin = 8
+    let left = x + 12
+    let top = y + 12
+    if (left + rect.width + margin > window.innerWidth) {
+      left = Math.max(margin, x - rect.width - 12)
+    }
+    if (top + rect.height + margin > window.innerHeight) {
+      top = Math.max(margin, y - rect.height - 12)
+    }
+    setPos({ left, top })
+  }, [x, y, chunk.id])
+
+  useEffect(() => {
+    function onDocClick(e: MouseEvent): void {
+      const el = ref.current
+      if (!el) return
+      if (e.target instanceof Node && el.contains(e.target)) return
+      onClose()
+    }
+    function onKey(e: KeyboardEvent): void {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('mousedown', onDocClick)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onDocClick)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [onClose])
+
+  const chars = chunk.text.length
+  const words = countWords(chunk.text)
+  const span = chunk.textEnd - chunk.textStart
+
+  return (
+    <div
+      ref={ref}
+      style={{
+        position: 'fixed',
+        left: pos.left,
+        top: pos.top,
+        zIndex: 100,
+        minWidth: 260,
+        maxWidth: 360,
+        background: cv.bg,
+        border: `1px solid ${cv.border2}`,
+        borderRadius: 6,
+        boxShadow: '0 6px 20px rgba(0,0,0,0.18)',
+        padding: 12,
+        fontSize: 12,
+        color: cv.text2
+      }}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 8 }}>
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <div style={{ fontSize: 10, color: cv.text4, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 }}>
+            Chunk {index !== null && total !== null ? `#${index}` : ''}
+            {index !== null && total !== null && (
+              <span style={{ color: cv.text5, textTransform: 'none', letterSpacing: 0, marginLeft: 4 }}>
+                of {total.toLocaleString()}
+              </span>
+            )}
+          </div>
+          <div
+            style={{ fontFamily: 'monospace', fontSize: 11, color: cv.text1, overflowWrap: 'anywhere' }}
+            title={chunk.id}
+          >
+            {chunk.id}
+          </div>
+        </div>
+        <button
+          onClick={onClose}
+          style={{
+            flexShrink: 0,
+            border: 'none',
+            background: 'transparent',
+            color: cv.text3,
+            cursor: 'pointer',
+            fontSize: 14,
+            padding: '0 4px',
+            lineHeight: 1
+          }}
+          title="Close"
+        >
+          ×
+        </button>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', columnGap: 10, rowGap: 4 }}>
+        <span style={{ color: cv.text4 }}>Strategy</span>
+        <span style={{ fontFamily: 'monospace', fontSize: 11, color: cv.text2, overflowWrap: 'anywhere' }}>
+          {chunk.strategyId}
+        </span>
+
+        <span style={{ color: cv.text4 }}>Section</span>
+        <span style={{ fontFamily: 'monospace', fontSize: 11, color: cv.text2, overflowWrap: 'anywhere' }}>
+          {chunk.spineHref}
+        </span>
+
+        <span style={{ color: cv.text4 }}>Characters</span>
+        <span style={{ fontFamily: 'monospace', color: cv.text1 }}>{chars.toLocaleString()}</span>
+
+        <span style={{ color: cv.text4 }}>Words</span>
+        <span style={{ fontFamily: 'monospace', color: cv.text1 }}>{words.toLocaleString()}</span>
+
+        <span style={{ color: cv.text4 }}>Position</span>
+        <span style={{ fontFamily: 'monospace', color: cv.text1 }}>
+          {chunk.textStart.toLocaleString()}–{chunk.textEnd.toLocaleString()}
+          <span style={{ color: cv.text4 }}> ({span.toLocaleString()} chars)</span>
+        </span>
+      </div>
+    </div>
   )
 }
 
