@@ -23,3 +23,18 @@ Cheap, deterministic eval. Embeds `searchQuery`, runs vector search, scores by w
 
 ### Agent eval
 Full eval. Passes `question` to the agent, which does its own query rewrite + retrieval + answer. Scores both retrieval (same as retrieval eval) and citation precision/recall. Costs LLM tokens per case per run.
+
+### Chunking strategy
+How the book is split into chunks. Identified by `chunkingId` (e.g., `paragraph-1200`). Orthogonal to **retriever** — one chunking can be queried by any retriever.
+
+### Retriever
+How a query is matched against the indexed chunks. Three kinds:
+
+- **Vector retriever** — embeds the query and runs cosine search against `vec_chunks`.
+- **BM25 retriever** — lexical scoring via SQLite FTS5's `bm25()` function over a per-chunking FTS index.
+- **Hybrid retriever (RRF)** — runs vector and BM25 in parallel, fuses the two ranked lists with Reciprocal Rank Fusion.
+
+A run is now keyed by (chunking, retriever, mode). The legacy `strategyId` on persisted runs still refers to the chunking.
+
+### Reciprocal Rank Fusion (RRF)
+Score-free fusion: each result gets `1 / (rrf_k + rank)` from each ranked list it appears in, then results are re-sorted by summed score. No score normalization needed across retrievers. Standard `rrf_k = 60`.

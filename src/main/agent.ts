@@ -17,6 +17,7 @@ import {
   getLangsmithProject,
   getOpenaiKey
 } from './settings'
+import { type RetrieverParams } from '../shared/retriever'
 import type { AskResultPayload, RetrievedChunkPayload } from '../preload/types'
 
 class RunIdCapture extends BaseCallbackHandler {
@@ -101,6 +102,7 @@ async function configureLangSmith(): Promise<void> {
 export async function runAgent(
   bookId: string,
   strategyId: string,
+  retriever: RetrieverParams,
   question: string,
   k: number
 ): Promise<AskResultPayload> {
@@ -116,6 +118,7 @@ export async function runAgent(
       const results = await retrieve(
         bookId,
         strategyId,
+        retriever,
         query,
         Math.min(limit ?? k, 20)
       )

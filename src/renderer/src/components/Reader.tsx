@@ -1,5 +1,6 @@
 import { memo, useEffect, useRef, useState } from 'react'
 import type {
+  Bm25IndexSummary,
   BookSummary,
   Chunk,
   ChunkParams,
@@ -35,8 +36,10 @@ function Reader({ book, onBack }: ReaderProps): React.JSX.Element {
   const [error, setError] = useState<IpcError | null>(null)
   const [chunkSets, setChunkSets] = useState<ChunkSetSummary[]>([])
   const [embeddingSets, setEmbeddingSets] = useState<EmbeddingSetSummary[]>([])
+  const [bm25Sets, setBm25Sets] = useState<Bm25IndexSummary[]>([])
   const [runningStrategyId, setRunningStrategyId] = useState<string | null>(null)
   const [embeddingStrategyId, setEmbeddingStrategyId] = useState<string | null>(null)
+  const [bm25StrategyId, setBm25StrategyId] = useState<string | null>(null)
   const [selectedEvalSetId, setSelectedEvalSetId] = useState<string | null>(null)
   const [overlayStrategyId, setOverlayStrategyId] = useState<string | null>(null)
   const [selectedChunk, setSelectedChunk] = useState<SelectedChunkState | null>(null)
@@ -59,6 +62,7 @@ function Reader({ book, onBack }: ReaderProps): React.JSX.Element {
   useEffect(() => {
     void refreshChunkSets()
     void refreshEmbeddingSets()
+    void refreshBm25Sets()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [book.id])
 
@@ -139,6 +143,12 @@ function Reader({ book, onBack }: ReaderProps): React.JSX.Element {
     else setError(result.error)
   }
 
+  async function refreshBm25Sets(): Promise<void> {
+    const result = await window.api.bm25.list(book.id)
+    if (result.ok) setBm25Sets(result.sets)
+    else setError(result.error)
+  }
+
   async function handleEmbed(strategyId: string): Promise<void> {
     setEmbeddingStrategyId(strategyId)
     setError(null)
@@ -155,6 +165,24 @@ function Reader({ book, onBack }: ReaderProps): React.JSX.Element {
     const result = await window.api.embeddings.remove(book.id, strategyId)
     if (!result.ok) { setError(result.error); return }
     await refreshEmbeddingSets()
+  }
+
+  async function handleIndexBm25(strategyId: string): Promise<void> {
+    setBm25StrategyId(strategyId)
+    setError(null)
+    try {
+      const result = await window.api.bm25.run(book.id, strategyId)
+      if (!result.ok) { setError(result.error); return }
+      await refreshBm25Sets()
+    } finally {
+      setBm25StrategyId(null)
+    }
+  }
+
+  async function handleClearBm25(strategyId: string): Promise<void> {
+    const result = await window.api.bm25.remove(book.id, strategyId)
+    if (!result.ok) { setError(result.error); return }
+    await refreshBm25Sets()
   }
 
   async function handleRun(params: ChunkParams): Promise<void> {
@@ -184,6 +212,7 @@ function Reader({ book, onBack }: ReaderProps): React.JSX.Element {
   }
 
   const embeddingByStrategy = new Map(embeddingSets.map((e) => [e.strategyId, e]))
+  const bm25ByStrategy = new Map(bm25Sets.map((b) => [b.strategyId, b]))
   const existingStrategyIds = new Set(chunkSets.map((s) => s.strategyId))
   const highlightedChunkId = selectedChunk?.chunkId ?? null
 
@@ -260,12 +289,16 @@ function Reader({ book, onBack }: ReaderProps): React.JSX.Element {
           <StrategiesFullView
             chunkSets={chunkSets}
             embeddingByStrategy={embeddingByStrategy}
+            bm25ByStrategy={bm25ByStrategy}
             runningStrategyId={runningStrategyId}
             embeddingStrategyId={embeddingStrategyId}
+            bm25StrategyId={bm25StrategyId}
             existingStrategyIds={existingStrategyIds}
             onRun={handleRun}
             onEmbed={handleEmbed}
             onClearEmbeddings={handleClearEmbeddings}
+            onIndexBm25={handleIndexBm25}
+            onClearBm25={handleClearBm25}
             overlayStrategyId={overlayStrategyId}
             overlayApplied={overlayApplied}
             onToggleOverlay={toggleOverlay}
@@ -281,6 +314,7 @@ function Reader({ book, onBack }: ReaderProps): React.JSX.Element {
             onSelectEvalSet={setSelectedEvalSetId}
             chunkSets={chunkSets}
             embeddingSets={embeddingSets}
+            bm25Sets={bm25Sets}
             onSelectChunk={selectChunk}
           />
         )}
@@ -291,6 +325,7 @@ function Reader({ book, onBack }: ReaderProps): React.JSX.Element {
             chunkSets={chunkSets}
             book={book}
             embeddingSets={embeddingSets}
+            bm25Sets={bm25Sets}
             spineContainerRef={spineContainerRef}
             overlayStrategyId={overlayStrategyId}
             overlayApplied={overlayApplied}
@@ -318,6 +353,7 @@ interface ReaderPaneProps {
   chunkSets: ChunkSetSummary[]
   book: BookSummary
   embeddingSets: EmbeddingSetSummary[]
+  bm25Sets: Bm25IndexSummary[]
   spineContainerRef: React.RefObject<HTMLDivElement | null>
   overlayStrategyId: string | null
   overlayApplied: number | null
@@ -370,6 +406,7 @@ function ReaderPane({
   chunkSets,
   book,
   embeddingSets,
+  bm25Sets,
   spineContainerRef,
   overlayStrategyId,
   overlayApplied,
@@ -614,6 +651,7 @@ function ReaderPane({
                 bookId={book.id}
                 chunkSets={chunkSets}
                 embeddingSets={embeddingSets}
+                bm25Sets={bm25Sets}
                 onSelectChunk={onSelectChunk}
                 highlightedChunkId={highlightedChunkId}
               />
@@ -624,6 +662,7 @@ function ReaderPane({
                 onSelectEvalSet={onSelectEvalSet}
                 chunkSets={chunkSets}
                 embeddingSets={embeddingSets}
+                bm25Sets={bm25Sets}
                 onSelectChunk={onSelectChunk}
               />
             )}
@@ -913,12 +952,16 @@ function RailTab({
 interface StrategiesFullViewProps {
   chunkSets: ChunkSetSummary[]
   embeddingByStrategy: Map<string, EmbeddingSetSummary>
+  bm25ByStrategy: Map<string, Bm25IndexSummary>
   runningStrategyId: string | null
   embeddingStrategyId: string | null
+  bm25StrategyId: string | null
   existingStrategyIds: Set<string>
   onRun: (params: ChunkParams) => void
   onEmbed: (strategyId: string) => void
   onClearEmbeddings: (strategyId: string) => void
+  onIndexBm25: (strategyId: string) => void
+  onClearBm25: (strategyId: string) => void
   overlayStrategyId: string | null
   overlayApplied: number | null
   onToggleOverlay: (strategyId: string) => void
@@ -928,12 +971,16 @@ interface StrategiesFullViewProps {
 function StrategiesFullView({
   chunkSets,
   embeddingByStrategy,
+  bm25ByStrategy,
   runningStrategyId,
   embeddingStrategyId,
+  bm25StrategyId,
   existingStrategyIds,
   onRun,
   onEmbed,
   onClearEmbeddings,
+  onIndexBm25,
+  onClearBm25,
   overlayStrategyId,
   overlayApplied,
   onToggleOverlay,
@@ -941,6 +988,7 @@ function StrategiesFullView({
 }: StrategiesFullViewProps): React.JSX.Element {
   const anyRunning = runningStrategyId !== null
   const anyEmbedding = embeddingStrategyId !== null
+  const anyBm25 = bm25StrategyId !== null
 
   return (
     <div style={{ overflowY: 'auto', height: '100%', padding: 24 }}>
@@ -957,11 +1005,14 @@ function StrategiesFullView({
             const sid = strategyIdOf(params)
             const isRunning = runningStrategyId === sid
             const isEmbedding = embeddingStrategyId === sid
+            const isBm25Indexing = bm25StrategyId === sid
             const exists = existingStrategyIds.has(sid)
             const set = chunkSets.find((s) => s.strategyId === sid)
             const embedding = embeddingByStrategy.get(sid)
+            const bm25 = bm25ByStrategy.get(sid)
             const fullyEmbedded = embedding !== undefined && set !== undefined && embedding.count >= set.count
             const partialEmbedded = embedding !== undefined && set !== undefined && embedding.count > 0 && embedding.count < set.count
+            const bm25Current = bm25 !== undefined && set !== undefined && bm25.count === set.count
             const isOverlay = overlayStrategyId === sid
 
             return (
@@ -1008,6 +1059,19 @@ function StrategiesFullView({
                     <span style={{ color: cv.warningText }}>{embedding!.count}/{set!.count} embedded</span>
                   ) : (
                     <span style={{ color: cv.text5 }}>not embedded</span>
+                  )}
+                </div>
+
+                {/* BM25 status */}
+                <div style={{ minWidth: 110, fontSize: 12 }}>
+                  {isBm25Indexing ? (
+                    <span style={{ color: cv.accent }}>Indexing…</span>
+                  ) : bm25Current ? (
+                    <span style={{ color: cv.successStrong, fontWeight: 500 }}>BM25 ✓</span>
+                  ) : bm25 ? (
+                    <span style={{ color: cv.warningText }}>BM25 stale ({bm25.count}/{set?.count ?? '?'})</span>
+                  ) : (
+                    <span style={{ color: cv.text5 }}>no BM25</span>
                   )}
                 </div>
 
@@ -1063,6 +1127,45 @@ function StrategiesFullView({
                         borderRadius: 5
                       }}
                       title="Delete embeddings"
+                    >
+                      Clear
+                    </button>
+                  )}
+
+                  {exists && (
+                    <button
+                      onClick={() => onIndexBm25(sid)}
+                      disabled={anyBm25}
+                      style={{
+                        padding: '6px 14px',
+                        fontSize: 12,
+                        cursor: anyBm25 ? 'wait' : 'pointer',
+                        background: bm25Current ? cv.bg : cv.accent,
+                        color: bm25Current ? cv.text2 : cv.accentText,
+                        border: bm25Current ? `1px solid ${cv.border2}` : 'none',
+                        borderRadius: 5,
+                        fontWeight: bm25Current ? 400 : 500
+                      }}
+                      title="Build BM25 lexical index (free, fast)"
+                    >
+                      {isBm25Indexing ? '…' : bm25Current ? 'Re-index BM25' : 'Index BM25'}
+                    </button>
+                  )}
+
+                  {bm25 && !isBm25Indexing && (
+                    <button
+                      onClick={() => onClearBm25(sid)}
+                      disabled={anyBm25}
+                      style={{
+                        padding: '6px 10px',
+                        fontSize: 12,
+                        cursor: anyBm25 ? 'wait' : 'pointer',
+                        background: cv.bg,
+                        color: cv.danger,
+                        border: `1px solid ${cv.dangerBorder}`,
+                        borderRadius: 5
+                      }}
+                      title="Delete BM25 index"
                     >
                       Clear
                     </button>

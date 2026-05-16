@@ -159,6 +159,28 @@ export type EmbeddingsListIpcResult =
 
 export type EmbeddingsRemoveIpcResult = { ok: true } | { ok: false; error: IpcError }
 
+export interface Bm25IndexSummary {
+  strategyId: string
+  count: number
+  updatedAt: number
+}
+
+export interface Bm25RunResult {
+  indexed: number
+  skipped: number
+}
+
+export type Bm25RunIpcResult = { ok: true; data: Bm25RunResult } | { ok: false; error: IpcError }
+export type Bm25ListIpcResult =
+  | { ok: true; sets: Bm25IndexSummary[] }
+  | { ok: false; error: IpcError }
+export type Bm25RemoveIpcResult = { ok: true } | { ok: false; error: IpcError }
+
+export type RetrieverParams =
+  | { kind: 'vector' }
+  | { kind: 'bm25' }
+  | { kind: 'hybrid-rrf'; rrfK?: number }
+
 export type SettingsHasKeyResult = { ok: true; hasKey: boolean } | { ok: false; error: IpcError }
 export type SettingsSetKeyResult = { ok: true } | { ok: false; error: IpcError }
 export type SettingsClearKeyResult = { ok: true } | { ok: false; error: IpcError }
@@ -248,6 +270,9 @@ export interface EvalRunResult {
   bookId: string
   evalSetId: string
   strategyId: string
+  // Optional for backward compat: older runs predate the retriever axis and
+  // are all vector. Format matches `retrieverIdOf(params)` from shared/retriever.
+  retrieverId?: string
   k: number
   ranAt: number
   mode?: EvalMode
@@ -265,6 +290,7 @@ export interface EvalRunSummary {
   id: string
   evalSetId: string
   strategyId: string
+  retrieverId?: string
   k: number
   ranAt: number
   mode?: EvalMode

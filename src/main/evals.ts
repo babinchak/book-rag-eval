@@ -10,6 +10,7 @@ import { ask, retrieve } from './retrieval'
 import { getChunkSet } from './chunking'
 import { getOpenaiKey } from './settings'
 import { captureIpcError } from './ipcContext'
+import { retrieverIdOf, type RetrieverParams } from '../shared/retriever'
 import type {
   AutoGenerateProgress,
   Chunk,
@@ -296,6 +297,7 @@ export async function runEval(
   bookId: string,
   setId: string,
   strategyId: string,
+  retriever: RetrieverParams,
   k: number,
   mode: EvalMode = 'retrieval',
   caseIds?: string[]
@@ -327,7 +329,7 @@ export async function runEval(
           `Case ${c.id} has no searchQuery. Run "Backfill missing search queries" from the AutoGen panel first.`
         )
       }
-      const retrieved = await retrieve(bookId, strategyId, c.searchQuery, k)
+      const retrieved = await retrieve(bookId, strategyId, retriever, c.searchQuery, k)
       let firstHitRank: number | null = null
       const details: RetrievedDetail[] = retrieved.map((r) => {
         const overlap = computeOverlap(r.chunk, c.goldSpans)
@@ -351,7 +353,7 @@ export async function runEval(
       totalRecall += recallAtK
       totalMRR += mrr
     } else {
-      const agentResult = await ask(bookId, strategyId, c.question, k)
+      const agentResult = await ask(bookId, strategyId, retriever, c.question, k)
       const retrieved = agentResult.retrieved
 
       let firstHitRank: number | null = null
@@ -414,6 +416,7 @@ export async function runEval(
     bookId,
     evalSetId: setId,
     strategyId,
+    retrieverId: retrieverIdOf(retriever),
     k,
     ranAt: Date.now(),
     mode,
@@ -841,6 +844,7 @@ export async function listEvalRuns(bookId: string): Promise<EvalRunSummary[]> {
         id: run.id,
         evalSetId: run.evalSetId,
         strategyId: run.strategyId,
+        retrieverId: run.retrieverId ?? 'vector',
         k: run.k,
         ranAt: run.ranAt,
         mode: run.mode ?? 'agentic',

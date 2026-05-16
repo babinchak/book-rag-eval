@@ -47,8 +47,8 @@ function buildTraceMarkdown(
   const out: string[] = []
   out.push(`# Eval trace`)
   out.push('')
-  out.push(`**Strategy**: \`${run.strategyId}\` · k=${run.k} · mode=${run.mode ?? 'agentic'}`)
-  out.push(`**Embedding**: \`text-embedding-3-large\` · L2 distance (cosine-equivalent on unit-norm vectors; lower is better)`)
+  out.push(`**Strategy**: \`${run.strategyId}\` · retriever=\`${run.retrieverId ?? 'vector'}\` · k=${run.k} · mode=${run.mode ?? 'agentic'}`)
+  out.push(`**Score** (\`d\` column): for vector = L2 distance over text-embedding-3-large (lower better); for bm25 = FTS5 bm25() (more negative better); for hybrid-rrf = negated RRF score (lower better)`)
   const goldDocSuffix =
     goldHrefs.size === 1 ? ` (\`${Array.from(goldHrefs)[0]}\`)` : goldHrefs.size > 1 ? ` (across ${goldHrefs.size} files)` : ''
   out.push(`**Corpus**: ${corpusSize.toLocaleString()} chunks · ${chunksInGoldDoc.toLocaleString()} in gold doc${goldDocSuffix}`)
@@ -187,7 +187,7 @@ function EvalRunDetailModal({ bookId, runId, evalSet, onClose, onSelectChunk }: 
           <h2 style={{ margin: 0, fontSize: 16, color: cv.text1 }}>Run detail</h2>
           {run && (
             <span style={{ fontSize: 12, color: cv.text3, fontFamily: 'monospace' }}>
-              {run.strategyId} · k={run.k} · {new Date(run.ranAt).toLocaleString()}
+              {run.strategyId} · {run.retrieverId ?? 'vector'} · k={run.k} · {new Date(run.ranAt).toLocaleString()}
             </span>
           )}
           {run && (

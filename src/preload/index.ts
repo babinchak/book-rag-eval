@@ -2,6 +2,9 @@ import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 import type {
   AskIpcResult,
+  Bm25ListIpcResult,
+  Bm25RemoveIpcResult,
+  Bm25RunIpcResult,
   ChunkParams,
   ChunksGetResult,
   ChunksListResult,
@@ -31,6 +34,7 @@ import type {
   LibraryRemoveResult,
   LogEntry,
   RendererErrorReport,
+  RetrieverParams,
   SettingsClearKeyResult,
   SettingsGetStringResult,
   SettingsHasKeyResult,
@@ -60,6 +64,14 @@ const api = {
     remove: (bookId: string, strategyId: string): Promise<EmbeddingsRemoveIpcResult> =>
       ipcRenderer.invoke('embeddings:remove', bookId, strategyId)
   },
+  bm25: {
+    run: (bookId: string, strategyId: string): Promise<Bm25RunIpcResult> =>
+      ipcRenderer.invoke('bm25:run', bookId, strategyId),
+    list: (bookId: string): Promise<Bm25ListIpcResult> =>
+      ipcRenderer.invoke('bm25:list', bookId),
+    remove: (bookId: string, strategyId: string): Promise<Bm25RemoveIpcResult> =>
+      ipcRenderer.invoke('bm25:remove', bookId, strategyId)
+  },
   settings: {
     hasOpenaiKey: (): Promise<SettingsHasKeyResult> => ipcRenderer.invoke('settings:hasOpenaiKey'),
     setOpenaiKey: (key: string): Promise<SettingsSetKeyResult> =>
@@ -78,8 +90,14 @@ const api = {
       ipcRenderer.invoke('settings:setLangsmithProject', name)
   },
   ask: {
-    run: (bookId: string, strategyId: string, query: string, k: number): Promise<AskIpcResult> =>
-      ipcRenderer.invoke('ask:run', bookId, strategyId, query, k)
+    run: (
+      bookId: string,
+      strategyId: string,
+      retriever: RetrieverParams,
+      query: string,
+      k: number
+    ): Promise<AskIpcResult> =>
+      ipcRenderer.invoke('ask:run', bookId, strategyId, retriever, query, k)
   },
   evals: {
     list: (bookId: string): Promise<EvalSetsListIpcResult> =>
@@ -114,11 +132,12 @@ const api = {
       bookId: string,
       setId: string,
       strategyId: string,
+      retriever: RetrieverParams,
       k: number,
       mode: 'retrieval' | 'agentic',
       caseIds?: string[]
     ): Promise<EvalRunIpcResult> =>
-      ipcRenderer.invoke('evals:run', bookId, setId, strategyId, k, mode, caseIds),
+      ipcRenderer.invoke('evals:run', bookId, setId, strategyId, retriever, k, mode, caseIds),
     listRuns: (bookId: string): Promise<EvalRunsListIpcResult> =>
       ipcRenderer.invoke('evals:listRuns', bookId),
     getRun: (bookId: string, runId: string): Promise<EvalRunGetIpcResult> =>

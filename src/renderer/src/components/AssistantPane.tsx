@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type {
   AskResultPayload,
+  Bm25IndexSummary,
   ChunkSetSummary,
   EmbeddingSetSummary,
-  IpcError
+  IpcError,
+  RetrieverParams
 } from '../../../preload/types'
 import { cv } from '../lib/theme'
 import ErrorDisplay from './ErrorDisplay'
@@ -12,23 +14,51 @@ interface AssistantPaneProps {
   bookId: string
   chunkSets: ChunkSetSummary[]
   embeddingSets: EmbeddingSetSummary[]
+  bm25Sets: Bm25IndexSummary[]
   onSelectChunk: (strategyId: string, chunkId: string) => void
   highlightedChunkId: string | null
 }
 
 const DEFAULT_K = 5
 
+type RetrieverKind = RetrieverParams['kind']
+
 function AssistantPane({
   bookId,
   chunkSets,
   embeddingSets,
+  bm25Sets,
   onSelectChunk,
   highlightedChunkId
 }: AssistantPaneProps): React.JSX.Element {
-  const fullyEmbedded = embeddingSets.filter((e) => {
-    const set = chunkSets.find((s) => s.strategyId === e.strategyId)
-    return set !== undefined && e.count >= set.count
-  })
+  const fullyEmbedded = useMemo(
+    () =>
+      embeddingSets.filter((e) => {
+        const set = chunkSets.find((s) => s.strategyId === e.strategyId)
+        return set !== undefined && e.count >= set.count
+      }),
+    [embeddingSets, chunkSets]
+  )
+
+  const bm25Indexed = useMemo(
+    () =>
+      bm25Sets.filter((b) => {
+        const set = chunkSets.find((s) => s.strategyId === b.strategyId)
+        return set !== undefined && b.count === set.count
+      }),
+    [bm25Sets, chunkSets]
+  )
+
+  const [retrieverKind, setRetrieverKind] = useState<RetrieverKind>('vector')
+
+  // Strategies runnable under the selected retriever.
+  const runnable = useMemo(() => {
+    const embeddedIds = new Set(fullyEmbedded.map((e) => e.strategyId))
+    const bm25Ids = new Set(bm25Indexed.map((b) => b.strategyId))
+    if (retrieverKind === 'vector') return [...embeddedIds]
+    if (retrieverKind === 'bm25') return [...bm25Ids]
+    return [...embeddedIds].filter((id) => bm25Ids.has(id))
+  }, [fullyEmbedded, bm25Indexed, retrieverKind])
 
   const [strategyId, setStrategyId] = useState<string | null>(null)
   const [query, setQuery] = useState('')
@@ -38,12 +68,12 @@ function AssistantPane({
   const [error, setError] = useState<IpcError | null>(null)
 
   useEffect(() => {
-    if (fullyEmbedded.length === 0) { setStrategyId(null); return }
-    if (!strategyId || !fullyEmbedded.find((e) => e.strategyId === strategyId)) {
-      setStrategyId(fullyEmbedded[0].strategyId)
+    if (runnable.length === 0) { setStrategyId(null); return }
+    if (!strategyId || !runnable.includes(strategyId)) {
+      setStrategyId(runnable[0])
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fullyEmbedded.map((e) => e.strategyId).join(',')])
+  }, [runnable.join(',')])
 
   useEffect(() => {
     setResult(null)
@@ -54,10 +84,12 @@ function AssistantPane({
   async function handleSubmit(): Promise<void> {
     const trimmed = query.trim()
     if (!trimmed || !strategyId) return
+    const retriever: RetrieverParams =
+      retrieverKind === 'hybrid-rrf' ? { kind: 'hybrid-rrf' } : { kind: retrieverKind }
     setLoading(true)
     setError(null)
     try {
-      const r = await window.api.ask.run(bookId, strategyId, trimmed, k)
+      const r = await window.api.ask.run(bookId, strategyId, retriever, trimmed, k)
       if (!r.ok) { setError(r.error); setResult(null); return }
       setResult(r.data)
     } finally {
@@ -78,25 +110,43 @@ function AssistantPane({
         Assistant
       </h3>
 
-      {fullyEmbedded.length === 0 ? (
+      {fullyEmbedded.length === 0 && bm25Indexed.length === 0 ? (
         <div style={{ fontSize: 12, color: cv.text4, background: cv.surface, border: `1px solid ${cv.border}`, borderRadius: 4, padding: 10, lineHeight: 1.5 }}>
-          Embed a chunk set before asking questions.
+          Embed a chunk set (or build a BM25 index) before asking questions.
         </div>
       ) : (
         <>
+          <label style={{ display: 'block', fontSize: 11, color: cv.text3, marginBottom: 4 }}>
+            Retriever
+          </label>
+          <select
+            value={retrieverKind}
+            onChange={(e) => setRetrieverKind(e.target.value as RetrieverKind)}
+            disabled={loading}
+            style={{ width: '100%', padding: '6px 8px', fontSize: 12, border: `1px solid ${cv.border2}`, borderRadius: 4, marginBottom: 10, background: cv.bg, color: cv.text1 }}
+          >
+            <option value="vector">Vector</option>
+            <option value="bm25">BM25 (lexical)</option>
+            <option value="hybrid-rrf">Hybrid (RRF)</option>
+          </select>
+
           <label style={{ display: 'block', fontSize: 11, color: cv.text3, marginBottom: 4 }} htmlFor="strategy-select">
-            Retrieval strategy
+            Chunking
           </label>
           <select
             id="strategy-select"
             value={strategyId ?? ''}
             onChange={(e) => setStrategyId(e.target.value)}
-            disabled={loading}
+            disabled={loading || runnable.length === 0}
             style={{ width: '100%', padding: '6px 8px', fontSize: 12, fontFamily: 'monospace', border: `1px solid ${cv.border2}`, borderRadius: 4, marginBottom: 10, background: cv.bg, color: cv.text1 }}
           >
-            {fullyEmbedded.map((e) => (
-              <option key={e.strategyId} value={e.strategyId}>{e.strategyId} ({e.count})</option>
-            ))}
+            {runnable.length === 0 ? (
+              <option value="">No chunking indexed for this retriever</option>
+            ) : (
+              runnable.map((sid) => (
+                <option key={sid} value={sid}>{sid}</option>
+              ))
+            )}
           </select>
 
           <textarea

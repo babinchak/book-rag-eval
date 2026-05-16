@@ -5,7 +5,9 @@ import icon from '../../resources/icon.png?asset'
 import { importEpubFromDialog, listLibrary, openBook, removeBook } from './library'
 import { getChunkSet, listChunkSets, runChunking } from './chunking'
 import { listEmbeddingSets, removeEmbeddings, runEmbedding } from './embeddings'
+import { listBm25Indexes, removeBm25Index, runBm25Indexing } from './bm25'
 import { ask } from './retrieval'
+import { normalizeRetrieverParams, type RetrieverParams } from '../shared/retriever'
 import {
   clearLangsmithKey,
   clearOpenaiKey,
@@ -37,6 +39,9 @@ import { listErrors, recordRendererReport, subscribe } from './errorRegistry'
 import { buildBundle, buildBundleAll } from './diagnosticBundle'
 import type {
   AskIpcResult,
+  Bm25ListIpcResult,
+  Bm25RemoveIpcResult,
+  Bm25RunIpcResult,
   ChunkParams,
   ChunksGetResult,
   ChunksListResult,
@@ -213,6 +218,37 @@ app.whenReady().then(() => {
     }
   )
 
+  ipcMain.handle(
+    'bm25:run',
+    async (_, bookId: string, strategyId: string): Promise<Bm25RunIpcResult> => {
+      try {
+        return { ok: true, data: await runBm25Indexing(bookId, strategyId) }
+      } catch (err) {
+        return { ok: false, error: captureIpcError(err, 'bm25:run', [bookId, strategyId]) }
+      }
+    }
+  )
+
+  ipcMain.handle('bm25:list', async (_, bookId: string): Promise<Bm25ListIpcResult> => {
+    try {
+      return { ok: true, sets: await listBm25Indexes(bookId) }
+    } catch (err) {
+      return { ok: false, error: captureIpcError(err, 'bm25:list', [bookId]) }
+    }
+  })
+
+  ipcMain.handle(
+    'bm25:remove',
+    async (_, bookId: string, strategyId: string): Promise<Bm25RemoveIpcResult> => {
+      try {
+        await removeBm25Index(bookId, strategyId)
+        return { ok: true }
+      } catch (err) {
+        return { ok: false, error: captureIpcError(err, 'bm25:remove', [bookId, strategyId]) }
+      }
+    }
+  )
+
   ipcMain.handle('settings:hasOpenaiKey', async (): Promise<SettingsHasKeyResult> => {
     try {
       return { ok: true, hasKey: await hasOpenaiKey() }
@@ -297,15 +333,17 @@ app.whenReady().then(() => {
       _,
       bookId: string,
       strategyId: string,
+      retrieverRaw: unknown,
       query: string,
       k: number
     ): Promise<AskIpcResult> => {
+      const retriever: RetrieverParams = normalizeRetrieverParams(retrieverRaw)
       try {
-        return { ok: true, data: await ask(bookId, strategyId, query, k) }
+        return { ok: true, data: await ask(bookId, strategyId, retriever, query, k) }
       } catch (err) {
         return {
           ok: false,
-          error: captureIpcError(err, 'ask:run', [bookId, strategyId, query, k])
+          error: captureIpcError(err, 'ask:run', [bookId, strategyId, retriever, query, k])
         }
       }
     }
@@ -445,16 +483,29 @@ app.whenReady().then(() => {
       bookId: string,
       setId: string,
       strategyId: string,
+      retrieverRaw: unknown,
       k: number,
       mode: 'retrieval' | 'agentic',
       caseIds?: string[]
     ): Promise<EvalRunIpcResult> => {
+      const retriever: RetrieverParams = normalizeRetrieverParams(retrieverRaw)
       try {
-        return { ok: true, data: await runEval(bookId, setId, strategyId, k, mode, caseIds) }
+        return {
+          ok: true,
+          data: await runEval(bookId, setId, strategyId, retriever, k, mode, caseIds)
+        }
       } catch (err) {
         return {
           ok: false,
-          error: captureIpcError(err, 'evals:run', [bookId, setId, strategyId, k, mode, caseIds])
+          error: captureIpcError(err, 'evals:run', [
+            bookId,
+            setId,
+            strategyId,
+            retriever,
+            k,
+            mode,
+            caseIds
+          ])
         }
       }
     }
