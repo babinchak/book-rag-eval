@@ -18,6 +18,7 @@ interface IndexEntry {
   title: string
   author: string | null
   addedAt: number
+  lastOpenedAt?: number | null
   sizeBytes: number
   coverExt: string | null
   collectionId?: string | null
@@ -172,6 +173,7 @@ function entryToSummary(entry: IndexEntry, coverDataUrl: string | null): BookSum
     title: entry.title,
     author: entry.author,
     addedAt: entry.addedAt,
+    lastOpenedAt: entry.lastOpenedAt ?? null,
     sizeBytes: entry.sizeBytes,
     coverDataUrl,
     collectionId: entry.collectionId ?? null
@@ -249,6 +251,12 @@ export async function openBook(id: string): Promise<LoadedEpub> {
   const manifestRaw = await fs.readFile(join(dir, 'manifest.json'), 'utf8')
   const manifest = JSON.parse(manifestRaw) as ReadiumManifest
   const spineItems = extractSpineHtml(epubPath, manifest)
+  const index = await readIndex()
+  const entry = index.books.find((b) => b.id === id)
+  if (entry) {
+    entry.lastOpenedAt = Date.now()
+    await writeIndex(index)
+  }
   return { id, manifest, spineItems }
 }
 

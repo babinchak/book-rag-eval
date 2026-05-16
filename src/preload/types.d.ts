@@ -34,6 +34,7 @@ export interface BookSummary {
   title: string
   author: string | null
   addedAt: number
+  lastOpenedAt: number | null
   sizeBytes: number
   coverDataUrl: string | null
   collectionId: string | null
