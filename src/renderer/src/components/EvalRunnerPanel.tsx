@@ -18,6 +18,7 @@ import EvalRunDetailModal from './EvalRunDetailModal'
 import EvalCompareModal from './EvalCompareModal'
 import AutoGenPanel from './AutoGenPanel'
 import ErrorDisplay from './ErrorDisplay'
+import Leaderboard from './Leaderboard'
 
 interface EvalRunnerPanelProps {
   bookId: string
@@ -83,6 +84,7 @@ function EvalRunnerPanel({
   const [autoGenStatus, setAutoGenStatus] = useState<string | null>(null)
   const [autoGenFailures, setAutoGenFailures] = useState<AutoGenerateFailure[]>([])
   const [backfilling, setBackfilling] = useState(false)
+  const [resultsTab, setResultsTab] = useState<'runs' | 'leaderboard'>('runs')
 
   const missingSearchQueryCount = activeSet
     ? activeSet.cases.filter((c) => !c.searchQuery || !c.searchQuery.trim()).length
@@ -584,27 +586,40 @@ function EvalRunnerPanel({
         {/* Col 3: Run + Results */}
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <div style={{ padding: '14px 20px 10px', borderBottom: `1px solid ${cv.border}`, display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0, flexWrap: 'wrap' }}>
-            <ColHeader>Results</ColHeader>
-            <ModeTabs mode={runMode} onChange={setRunMode} />
-            <RetrieverTabs kind={retrieverKind} onChange={setRetrieverKind} />
-            {activeSet && activeSet.cases.length > 0 && (
-              <label style={{ fontSize: 12, color: cv.text3, display: 'flex', alignItems: 'center', gap: 4, marginLeft: 'auto' }}>
-                k =
-                <input
-                  type="number"
-                  value={k}
-                  min={1}
-                  max={20}
-                  onChange={(e) => setK(Math.max(1, Math.min(20, parseInt(e.target.value) || 1)))}
-                  style={{ width: 40, padding: '3px 5px', fontSize: 12, border: `1px solid ${cv.border2}`, borderRadius: 3, background: cv.bg, color: cv.text1 }}
-                />
-              </label>
+            <ResultsTabs tab={resultsTab} onChange={setResultsTab} />
+            {resultsTab === 'runs' && (
+              <>
+                <ModeTabs mode={runMode} onChange={setRunMode} />
+                <RetrieverTabs kind={retrieverKind} onChange={setRetrieverKind} />
+                {activeSet && activeSet.cases.length > 0 && (
+                  <label style={{ fontSize: 12, color: cv.text3, display: 'flex', alignItems: 'center', gap: 4, marginLeft: 'auto' }}>
+                    k =
+                    <input
+                      type="number"
+                      value={k}
+                      min={1}
+                      max={20}
+                      onChange={(e) => setK(Math.max(1, Math.min(20, parseInt(e.target.value) || 1)))}
+                      style={{ width: 40, padding: '3px 5px', fontSize: 12, border: `1px solid ${cv.border2}`, borderRadius: 3, background: cv.bg, color: cv.text1 }}
+                    />
+                  </label>
+                )}
+              </>
             )}
           </div>
           <div style={{ flex: 1, overflowY: 'auto', padding: '10px 20px' }}>
             <ErrorDisplay error={error} marginTop={0} />
 
-            {!activeSet ? (
+            {resultsTab === 'leaderboard' ? (
+              !activeSet ? (
+                <div style={{ fontSize: 12, color: cv.text5 }}>Select an eval set</div>
+              ) : (
+                <Leaderboard
+                  runs={runs.filter((r) => r.evalSetId === activeSet.id)}
+                  onSelectRun={setDetailRunId}
+                />
+              )
+            ) : !activeSet ? (
               <div style={{ fontSize: 12, color: cv.text5 }}>Select an eval set to run</div>
             ) : activeSet.cases.length === 0 ? (
               <div style={{ fontSize: 12, color: cv.text5 }}>Add cases to run evals</div>
@@ -870,6 +885,43 @@ function RetrieverTabs({
           }}
         >
           {RETRIEVER_TAB_LABELS[k]}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+function ResultsTabs({
+  tab,
+  onChange
+}: {
+  tab: 'runs' | 'leaderboard'
+  onChange: (t: 'runs' | 'leaderboard') => void
+}): React.JSX.Element {
+  const tabs: { id: 'runs' | 'leaderboard'; label: string }[] = [
+    { id: 'runs', label: 'Runs' },
+    { id: 'leaderboard', label: 'Leaderboard' }
+  ]
+  return (
+    <div style={{ display: 'inline-flex', background: cv.surface2, border: `1px solid ${cv.border}`, borderRadius: 4, padding: 1 }}>
+      {tabs.map((t) => (
+        <button
+          key={t.id}
+          onClick={() => onChange(t.id)}
+          style={{
+            padding: '3px 10px',
+            fontSize: 11,
+            cursor: 'pointer',
+            background: tab === t.id ? cv.bg : 'transparent',
+            color: tab === t.id ? cv.text1 : cv.text4,
+            border: `1px solid ${tab === t.id ? cv.border2 : 'transparent'}`,
+            borderRadius: 3,
+            fontWeight: tab === t.id ? 700 : 500,
+            letterSpacing: 0.3,
+            textTransform: 'uppercase'
+          }}
+        >
+          {t.label}
         </button>
       ))}
     </div>

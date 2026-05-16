@@ -316,6 +316,7 @@ export interface EvalRunSummary {
   meanMRR: number
   meanCitationPrecision?: number
   meanCitationRecall?: number
+  totalTokens?: number
   caseCount: number
 }
 

@@ -852,6 +852,7 @@ export async function listEvalRuns(bookId: string): Promise<EvalRunSummary[]> {
         meanMRR: run.meanMRR,
         meanCitationPrecision: run.meanCitationPrecision,
         meanCitationRecall: run.meanCitationRecall,
+        totalTokens: run.totalTokens,
         caseCount: run.cases.length
       })
     } catch {
