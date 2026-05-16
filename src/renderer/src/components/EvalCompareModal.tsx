@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { EvalRunResult, EvalSet, IpcError } from '../../../preload/types'
 import { cv } from '../lib/theme'
+import { chatCostUsd, formatUsd } from '../../../shared/pricing'
 import ErrorDisplay from './ErrorDisplay'
 
 interface EvalCompareModalProps {
@@ -70,6 +71,7 @@ function EvalCompareModal({ bookId, evalSet, runIds, onClose }: EvalCompareModal
                     <th style={th(cv)}>Cit P</th>
                     <th style={th(cv)}>Cit R</th>
                     <th style={th(cv)}>Tokens</th>
+                    <th style={th(cv)}>Cost</th>
                     <th style={th(cv)}>Ran at</th>
                   </tr>
                 </thead>
@@ -85,6 +87,15 @@ function EvalCompareModal({ bookId, evalSet, runIds, onClose }: EvalCompareModal
                       <td style={tdStyle(cv)}>{run.meanCitationPrecision !== undefined ? run.meanCitationPrecision.toFixed(2) : '—'}</td>
                       <td style={tdStyle(cv)}>{run.meanCitationRecall !== undefined ? run.meanCitationRecall.toFixed(2) : '—'}</td>
                       <td style={tdStyle(cv)}>{run.totalTokens !== undefined ? run.totalTokens.toLocaleString() : '—'}</td>
+                      <td style={{ ...tdStyle(cv), fontFamily: 'monospace' }}>
+                        {run.agentModel &&
+                        run.totalPromptTokens !== undefined &&
+                        run.totalCompletionTokens !== undefined
+                          ? formatUsd(
+                              chatCostUsd(run.agentModel, run.totalPromptTokens, run.totalCompletionTokens)
+                            )
+                          : '—'}
+                      </td>
                       <td style={{ ...tdStyle(cv), color: cv.text4, fontSize: 11 }}>{new Date(run.ranAt).toLocaleString()}</td>
                     </tr>
                   ))}

@@ -13,6 +13,7 @@ import type {
   RetrieverParams
 } from '../../../preload/types'
 import { cv } from '../lib/theme'
+import { chatCostUsd, embeddingCostUsd, formatUsd } from '../../../shared/pricing'
 import AddCaseModal from './AddCaseModal'
 import EvalRunDetailModal from './EvalRunDetailModal'
 import EvalCompareModal from './EvalCompareModal'
@@ -235,10 +236,15 @@ function EvalRunnerPanel({
         setError(r.error)
         return
       }
-      const { generated, failed, failures } = r.data
+      const { generated, failed, failures, model, promptTokens, completionTokens } = r.data
+      const costStr =
+        model && promptTokens !== undefined && completionTokens !== undefined
+          ? ` · ${formatUsd(chatCostUsd(model, promptTokens, completionTokens))}`
+          : ''
       setAutoGenStatus(
         `Generated ${generated} case${generated === 1 ? '' : 's'}` +
-          (failed > 0 ? ` · ${failed} failed` : '')
+          (failed > 0 ? ` · ${failed} failed` : '') +
+          costStr
       )
       setAutoGenFailures(failures)
       if (failures.length > 0) {
@@ -263,10 +269,15 @@ function EvalRunnerPanel({
         setError(r.error)
         return
       }
-      const { generated, failed, failures } = r.data
+      const { generated, failed, failures, model, promptTokens, completionTokens } = r.data
+      const costStr =
+        model && promptTokens !== undefined && completionTokens !== undefined
+          ? ` · ${formatUsd(chatCostUsd(model, promptTokens, completionTokens))}`
+          : ''
       setAutoGenStatus(
         `Backfilled ${generated} search ${generated === 1 ? 'query' : 'queries'}` +
-          (failed > 0 ? ` · ${failed} failed` : '')
+          (failed > 0 ? ` · ${failed} failed` : '') +
+          costStr
       )
       setAutoGenFailures(failures)
       if (failures.length > 0) {
@@ -640,9 +651,13 @@ function EvalRunnerPanel({
                         style={{ background: cv.bg, border: `1px solid ${cv.border}`, borderRadius: 6, padding: '12px 14px' }}
                       >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginBottom: last ? 8 : 0 }}>
-                          <span style={{ fontFamily: 'monospace', fontSize: 12, color: cv.text1 }} title={count !== undefined ? `${count} chunks` : undefined}>
-                            {sid}
-                          </span>
+                          <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                            <span style={{ fontFamily: 'monospace', fontSize: 12, color: cv.text1 }} title={count !== undefined ? `${count} chunks` : undefined}>
+                              {sid}
+                            </span>
+                            <SetupCostLabel embedding={fullyEmbedded.find((x) => x.strategyId === sid)} />
+                          </div>
+
                           <button
                             onClick={() => void handleRun(sid)}
                             disabled={running !== null}
@@ -671,6 +686,20 @@ function EvalRunnerPanel({
                                   <Metric label="Cit. R" value={(last.meanCitationRecall ?? 0).toFixed(2)} />
                                 </>
                               )}
+                              {last.agentModel &&
+                                last.totalPromptTokens !== undefined &&
+                                last.totalCompletionTokens !== undefined && (
+                                  <Metric
+                                    label="Cost"
+                                    value={formatUsd(
+                                      chatCostUsd(
+                                        last.agentModel,
+                                        last.totalPromptTokens,
+                                        last.totalCompletionTokens
+                                      )
+                                    )}
+                                  />
+                                )}
                             </div>
                             <div style={{ fontSize: 11, color: cv.text4, display: 'flex', gap: 10, alignItems: 'center' }}>
                               <button
@@ -807,7 +836,10 @@ function EvalRunnerPanel({
                     return (
                       <li key={sid} style={{ background: cv.bg, border: `1px solid ${cv.border}`, borderRadius: 4, padding: '6px 8px', fontSize: 11 }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6 }}>
-                          <span style={{ fontFamily: 'monospace', fontSize: 11, color: cv.text2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={sid}>{sid}</span>
+                          <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1 }}>
+                            <span style={{ fontFamily: 'monospace', fontSize: 11, color: cv.text2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={sid}>{sid}</span>
+                            <SetupCostLabel embedding={fullyEmbedded.find((x) => x.strategyId === sid)} />
+                          </div>
                           <button onClick={() => void handleRun(sid)} disabled={running !== null} style={{ padding: '3px 8px', fontSize: 11, cursor: running !== null ? 'wait' : 'pointer', background: cv.bg, color: cv.text2, border: `1px solid ${cv.border2}`, borderRadius: 3 }}>
                             {isRunning ? '…' : last ? 'Re-run' : 'Run'}
                           </button>
@@ -817,6 +849,9 @@ function EvalRunnerPanel({
                             <div style={{ marginTop: 4, color: cv.text2, fontSize: 11 }}>
                               R@{last.k}={last.meanRecallAtK.toFixed(2)} · MRR={last.meanMRR.toFixed(2)}
                               {last.meanCitationPrecision !== undefined && <> · CitP={last.meanCitationPrecision.toFixed(2)} · CitR={last.meanCitationRecall?.toFixed(2)}</>}
+                              {last.agentModel && last.totalPromptTokens !== undefined && last.totalCompletionTokens !== undefined && (
+                                <> · {formatUsd(chatCostUsd(last.agentModel, last.totalPromptTokens, last.totalCompletionTokens))}</>
+                              )}
                             </div>
                             <div style={{ marginTop: 2, fontSize: 10, color: cv.text4 }}>
                               <button onClick={() => setDetailRunId(last.id)} style={{ padding: 0, fontSize: 10, cursor: 'pointer', background: 'transparent', border: 'none', color: cv.accent, textDecoration: 'underline' }}>View details</button>
@@ -1000,6 +1035,24 @@ function CaseRunPicker({
         </div>
       )}
     </div>
+  )
+}
+
+function SetupCostLabel({
+  embedding
+}: {
+  embedding: EmbeddingSetSummary | undefined
+}): React.JSX.Element | null {
+  if (!embedding || embedding.totalTokens === undefined) return null
+  const cost = embeddingCostUsd(embedding.model, embedding.totalTokens)
+  if (cost === null) return null
+  return (
+    <span
+      style={{ fontSize: 10, color: cv.text4, fontFamily: 'monospace', marginTop: 2 }}
+      title={`Setup: ${embedding.totalTokens.toLocaleString()} embedding tokens @ ${embedding.model}`}
+    >
+      setup {formatUsd(cost)}
+    </span>
   )
 }
 

@@ -41,6 +41,14 @@ function vectorToBuffer(vec: number[]): Buffer {
   return Buffer.from(arr.buffer, arr.byteOffset, arr.byteLength)
 }
 
+function readTokensTotal(db: Database.Database): number {
+  const row = db.prepare("SELECT value FROM meta WHERE key = 'tokens_total'").get() as
+    | { value: string }
+    | undefined
+  const n = row ? parseInt(row.value, 10) : 0
+  return Number.isFinite(n) ? n : 0
+}
+
 export interface EmbedResult {
   embedded: number
   skipped: number
@@ -103,6 +111,12 @@ export async function runEmbedding(bookId: string, strategyId: string): Promise<
       totalTokens += result.tokens
     }
 
+    const priorTokens = readTokensTotal(db)
+    db.prepare('INSERT OR REPLACE INTO meta(key, value) VALUES (?, ?)').run(
+      'tokens_total',
+      String(priorTokens + totalTokens)
+    )
+
     return { embedded: toEmbed.length, skipped, totalTokens, model: EMBEDDING_MODEL }
   } finally {
     db.close()
@@ -128,13 +142,18 @@ export async function listEmbeddingSets(bookId: string): Promise<EmbeddingSetSum
       const modelRow = db.prepare("SELECT value FROM meta WHERE key = 'model'").get() as
         | { value: string }
         | undefined
+      const tokensRow = db.prepare("SELECT value FROM meta WHERE key = 'tokens_total'").get() as
+        | { value: string }
+        | undefined
       const stat = await fs.stat(path)
       db.close()
+      const tokensTotal = tokensRow ? parseInt(tokensRow.value, 10) : NaN
       result.push({
         strategyId: sid,
         count: countRow.c,
         model: modelRow?.value ?? 'unknown',
-        updatedAt: stat.mtimeMs
+        updatedAt: stat.mtimeMs,
+        totalTokens: Number.isFinite(tokensTotal) ? tokensTotal : undefined
       })
     } catch (err) {
       console.error('failed to read embedding db', path, err)

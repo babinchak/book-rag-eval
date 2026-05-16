@@ -8,6 +8,7 @@ import type {
   IpcError
 } from '../../../preload/types'
 import { cv } from '../lib/theme'
+import { chatCostUsd, formatUsd } from '../../../shared/pricing'
 import ErrorDisplay from './ErrorDisplay'
 
 interface EvalRunDetailModalProps {
@@ -72,6 +73,15 @@ function buildTraceMarkdown(
     bits.push(`Cit R=${(caseResult.citationRecall ?? 0).toFixed(2)}`)
   }
   if (caseResult.totalTokens !== undefined) bits.push(`${caseResult.totalTokens} tokens`)
+  if (
+    caseResult.model &&
+    caseResult.promptTokens !== undefined &&
+    caseResult.completionTokens !== undefined
+  ) {
+    bits.push(
+      formatUsd(chatCostUsd(caseResult.model, caseResult.promptTokens, caseResult.completionTokens))
+    )
+  }
   out.push(`**Result**: ${bits.join(' · ')}`)
   out.push('')
   out.push(`## Gold span(s)`)
@@ -224,6 +234,14 @@ function EvalRunDetailModal({ bookId, runId, evalSet, onClose, onSelectChunk }: 
               {run.meanCitationPrecision !== undefined && <Metric label="Cit. precision" value={run.meanCitationPrecision.toFixed(2)} />}
               {run.meanCitationRecall !== undefined && <Metric label="Cit. recall" value={run.meanCitationRecall.toFixed(2)} />}
               {run.totalTokens !== undefined && <Metric label="Tokens" value={run.totalTokens.toLocaleString()} />}
+              {run.agentModel && run.totalPromptTokens !== undefined && run.totalCompletionTokens !== undefined && (
+                <Metric
+                  label="Cost"
+                  value={formatUsd(
+                    chatCostUsd(run.agentModel, run.totalPromptTokens, run.totalCompletionTokens)
+                  )}
+                />
+              )}
             </div>
 
             <div style={{ flex: 1, overflowY: 'auto', padding: '12px 20px' }}>
@@ -292,6 +310,14 @@ function CaseCard({ caseResult, expanded, onToggle, goldSpans, onSelectChunk, on
         {r.citationPrecision !== undefined && (
           <span style={{ fontSize: 11, color: cv.text3, fontFamily: 'monospace' }}>
             cit P/R: {r.citationPrecision.toFixed(2)}/{r.citationRecall?.toFixed(2)}
+          </span>
+        )}
+        {r.model && r.promptTokens !== undefined && r.completionTokens !== undefined && (
+          <span
+            style={{ fontSize: 11, color: cv.text3, fontFamily: 'monospace' }}
+            title={`${r.promptTokens} in / ${r.completionTokens} out @ ${r.model}`}
+          >
+            {formatUsd(chatCostUsd(r.model, r.promptTokens, r.completionTokens))}
           </span>
         )}
       </div>
