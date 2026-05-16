@@ -13,6 +13,35 @@ interface LibraryProps {
 const UNCATEGORIZED_ID = '__uncategorized__'
 const UNCATEGORIZED_NAME = 'Uncategorized'
 
+type ViewMode = 'collections' | 'books'
+type SortKey = 'lastOpened' | 'lastAdded' | 'title'
+
+const VIEW_MODE_STORAGE_KEY = 'library:viewMode'
+const SORT_KEY_STORAGE_KEY = 'library:booksSortKey'
+
+function readStored<T extends string>(key: string, allowed: readonly T[], fallback: T): T {
+  if (typeof window === 'undefined') return fallback
+  const v = window.localStorage.getItem(key)
+  return (allowed as readonly string[]).includes(v ?? '') ? (v as T) : fallback
+}
+
+function sortBooks(books: BookSummary[], key: SortKey): BookSummary[] {
+  const copy = books.slice()
+  if (key === 'title') {
+    copy.sort((a, b) => a.title.localeCompare(b.title))
+  } else if (key === 'lastAdded') {
+    copy.sort((a, b) => b.addedAt - a.addedAt)
+  } else {
+    // lastOpened: most recently opened first; never-opened books fall back to addedAt
+    copy.sort((a, b) => {
+      const av = a.lastOpenedAt ?? a.addedAt
+      const bv = b.lastOpenedAt ?? b.addedAt
+      return bv - av
+    })
+  }
+  return copy
+}
+
 interface GroupedSection {
   id: string
   name: string
@@ -60,7 +89,23 @@ function Library({ onOpen }: LibraryProps): React.JSX.Element {
   const [importing, setImporting] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
+  const [viewMode, setViewModeState] = useState<ViewMode>(() =>
+    readStored<ViewMode>(VIEW_MODE_STORAGE_KEY, ['collections', 'books'], 'books')
+  )
+  const [sortKey, setSortKeyState] = useState<SortKey>(() =>
+    readStored<SortKey>(SORT_KEY_STORAGE_KEY, ['lastOpened', 'lastAdded', 'title'], 'lastOpened')
+  )
   const { mode, setMode } = useTheme()
+
+  function setViewMode(next: ViewMode): void {
+    setViewModeState(next)
+    window.localStorage.setItem(VIEW_MODE_STORAGE_KEY, next)
+  }
+
+  function setSortKey(next: SortKey): void {
+    setSortKeyState(next)
+    window.localStorage.setItem(SORT_KEY_STORAGE_KEY, next)
+  }
 
   async function refresh(): Promise<void> {
     const [booksResult, collectionsResult] = await Promise.all([
@@ -122,6 +167,11 @@ function Library({ onOpen }: LibraryProps): React.JSX.Element {
     [books, collections]
   )
 
+  const sortedBooks = useMemo(
+    () => (books ? sortBooks(books, sortKey) : []),
+    [books, sortKey]
+  )
+
   return (
     <div style={{ padding: 32, color: cv.text1 }}>
       <header style={{ display: 'flex', alignItems: 'baseline', gap: 16 }}>
@@ -133,6 +183,8 @@ function Library({ onOpen }: LibraryProps): React.JSX.Element {
             : ''}
         </span>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>
+          <ViewToggle viewMode={viewMode} setViewMode={setViewMode} />
+          {viewMode === 'books' && <SortPicker sortKey={sortKey} setSortKey={setSortKey} />}
           <ErrorInbox />
           <ThemeToggle mode={mode} setMode={setMode} />
           <button
@@ -159,58 +211,144 @@ function Library({ onOpen }: LibraryProps): React.JSX.Element {
       <div style={{ marginTop: 24, display: 'flex', flexDirection: 'column', gap: 32 }}>
         <ImportTile importing={importing} onImport={handleImport} />
 
-        {sections.map((section) => {
-          const isCollapsed = collapsed.has(section.id)
-          return (
-            <section key={section.id}>
-              <button
-                onClick={() => toggleCollapsed(section.id)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'baseline',
-                  gap: 10,
-                  width: '100%',
-                  textAlign: 'left',
-                  background: 'transparent',
-                  border: 'none',
-                  borderBottom: `1px solid ${cv.border2}`,
-                  padding: '6px 0',
-                  marginBottom: 16,
-                  cursor: 'pointer',
-                  color: cv.text1
-                }}
-              >
-                <span style={{ fontSize: 12, color: cv.text4, width: 12 }}>
-                  {isCollapsed ? '▸' : '▾'}
-                </span>
-                <h2 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>{section.name}</h2>
-                <span style={{ fontSize: 12, color: cv.text4 }}>
-                  {section.books.length} {section.books.length === 1 ? 'book' : 'books'}
-                </span>
-              </button>
-              {!isCollapsed && (
-                <div
+        {viewMode === 'books' ? (
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
+              gap: 24
+            }}
+          >
+            {sortedBooks.map((book) => (
+              <BookCard key={book.id} book={book} onOpen={onOpen} onRemove={handleRemove} />
+            ))}
+          </div>
+        ) : (
+          sections.map((section) => {
+            const isCollapsed = collapsed.has(section.id)
+            return (
+              <section key={section.id}>
+                <button
+                  onClick={() => toggleCollapsed(section.id)}
                   style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
-                    gap: 24
+                    display: 'flex',
+                    alignItems: 'baseline',
+                    gap: 10,
+                    width: '100%',
+                    textAlign: 'left',
+                    background: 'transparent',
+                    border: 'none',
+                    borderBottom: `1px solid ${cv.border2}`,
+                    padding: '6px 0',
+                    marginBottom: 16,
+                    cursor: 'pointer',
+                    color: cv.text1
                   }}
                 >
-                  {section.books.map((book) => (
-                    <BookCard
-                      key={book.id}
-                      book={book}
-                      onOpen={onOpen}
-                      onRemove={handleRemove}
-                    />
-                  ))}
-                </div>
-              )}
-            </section>
-          )
-        })}
+                  <span style={{ fontSize: 12, color: cv.text4, width: 12 }}>
+                    {isCollapsed ? '▸' : '▾'}
+                  </span>
+                  <h2 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>{section.name}</h2>
+                  <span style={{ fontSize: 12, color: cv.text4 }}>
+                    {section.books.length} {section.books.length === 1 ? 'book' : 'books'}
+                  </span>
+                </button>
+                {!isCollapsed && (
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
+                      gap: 24
+                    }}
+                  >
+                    {section.books.map((book) => (
+                      <BookCard
+                        key={book.id}
+                        book={book}
+                        onOpen={onOpen}
+                        onRemove={handleRemove}
+                      />
+                    ))}
+                  </div>
+                )}
+              </section>
+            )
+          })
+        )}
       </div>
     </div>
+  )
+}
+
+interface ViewToggleProps {
+  viewMode: ViewMode
+  setViewMode: (next: ViewMode) => void
+}
+
+function ViewToggle({ viewMode, setViewMode }: ViewToggleProps): React.JSX.Element {
+  return (
+    <div
+      role="tablist"
+      style={{
+        display: 'inline-flex',
+        border: `1px solid ${cv.border2}`,
+        borderRadius: 4,
+        overflow: 'hidden'
+      }}
+    >
+      {(['books', 'collections'] as const).map((m) => {
+        const active = viewMode === m
+        return (
+          <button
+            key={m}
+            role="tab"
+            aria-selected={active}
+            onClick={() => setViewMode(m)}
+            style={{
+              padding: '5px 10px',
+              fontSize: 12,
+              cursor: 'pointer',
+              background: active ? cv.surface2 : cv.bg,
+              color: active ? cv.text1 : cv.text3,
+              border: 'none',
+              borderRight: m === 'books' ? `1px solid ${cv.border2}` : 'none'
+            }}
+          >
+            {m === 'books' ? 'Books' : 'Collections'}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+interface SortPickerProps {
+  sortKey: SortKey
+  setSortKey: (next: SortKey) => void
+}
+
+function SortPicker({ sortKey, setSortKey }: SortPickerProps): React.JSX.Element {
+  return (
+    <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: cv.text3 }}>
+      Sort
+      <select
+        value={sortKey}
+        onChange={(e) => setSortKey(e.target.value as SortKey)}
+        style={{
+          padding: '4px 8px',
+          fontSize: 12,
+          background: cv.bg,
+          color: cv.text2,
+          border: `1px solid ${cv.border2}`,
+          borderRadius: 4,
+          cursor: 'pointer'
+        }}
+      >
+        <option value="lastOpened">Last opened</option>
+        <option value="lastAdded">Last added</option>
+        <option value="title">Title</option>
+      </select>
+    </label>
   )
 }
 
