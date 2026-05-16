@@ -9,6 +9,7 @@ import type {
   ChunksGetResult,
   ChunksListResult,
   ChunksRunResult,
+  CollectionsListResult,
   EmbedRunIpcResult,
   EmbeddingsListIpcResult,
   EmbeddingsRemoveIpcResult,
@@ -48,6 +49,9 @@ const api = {
     import: (): Promise<LibraryImportResult> => ipcRenderer.invoke('library:import'),
     open: (id: string): Promise<LibraryOpenResult> => ipcRenderer.invoke('library:open', id),
     remove: (id: string): Promise<LibraryRemoveResult> => ipcRenderer.invoke('library:remove', id)
+  },
+  collections: {
+    list: (): Promise<CollectionsListResult> => ipcRenderer.invoke('collections:list')
   },
   chunks: {
     run: (bookId: string, params: ChunkParams): Promise<ChunksRunResult> =>

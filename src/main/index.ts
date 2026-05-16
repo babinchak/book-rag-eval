@@ -2,7 +2,13 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import { importEpubFromDialog, listLibrary, openBook, removeBook } from './library'
+import {
+  importEpubFromDialog,
+  listCollections,
+  listLibrary,
+  openBook,
+  removeBook
+} from './library'
 import { getChunkSet, listChunkSets, runChunking } from './chunking'
 import { listEmbeddingSets, removeEmbeddings, runEmbedding } from './embeddings'
 import { listBm25Indexes, removeBm25Index, runBm25Indexing } from './bm25'
@@ -43,6 +49,7 @@ import type {
   Bm25RemoveIpcResult,
   Bm25RunIpcResult,
   ChunkParams,
+  CollectionsListResult,
   ChunksGetResult,
   ChunksListResult,
   ChunksRunResult,
@@ -126,6 +133,14 @@ app.whenReady().then(() => {
       return { ok: true, books: await listLibrary() }
     } catch (err) {
       return { ok: false, error: captureIpcError(err, 'library:list', []) }
+    }
+  })
+
+  ipcMain.handle('collections:list', async (): Promise<CollectionsListResult> => {
+    try {
+      return { ok: true, collections: await listCollections() }
+    } catch (err) {
+      return { ok: false, error: captureIpcError(err, 'collections:list', []) }
     }
   })
 

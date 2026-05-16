@@ -36,11 +36,19 @@ export interface BookSummary {
   addedAt: number
   sizeBytes: number
   coverDataUrl: string | null
+  collectionId: string | null
 }
 
 export interface ImportOutcome {
   summary: BookSummary
   alreadyExisted: boolean
+}
+
+export interface CollectionSummary {
+  id: string
+  name: string
+  addedAt: number
+  bookCount: number
 }
 
 export interface IpcError {
@@ -93,6 +101,10 @@ export type ErrorsBundleIpcResult = { ok: true; markdown: string } | { ok: false
 export type ErrorsReportIpcResult = { ok: true; errorId: string } | { ok: false; error: IpcError }
 
 export type LibraryListResult = { ok: true; books: BookSummary[] } | { ok: false; error: IpcError }
+
+export type CollectionsListResult =
+  | { ok: true; collections: CollectionSummary[] }
+  | { ok: false; error: IpcError }
 
 export type LibraryImportResult =
   | { ok: true; data: ImportOutcome | null }

@@ -6,6 +6,7 @@ import AdmZip from 'adm-zip'
 import { runReadiumManifest, extractSpineHtml } from './epub'
 import type {
   BookSummary,
+  CollectionSummary,
   ImportOutcome,
   LoadedEpub,
   ReadiumManifest,
@@ -19,10 +20,21 @@ interface IndexEntry {
   addedAt: number
   sizeBytes: number
   coverExt: string | null
+  collectionId?: string | null
 }
 
 interface LibraryIndex {
   books: IndexEntry[]
+}
+
+interface CollectionEntry {
+  id: string
+  name: string
+  addedAt: number
+}
+
+interface CollectionsFile {
+  collections: CollectionEntry[]
 }
 
 const EXT_BY_MIME: Record<string, string> = {
@@ -50,6 +62,10 @@ function indexPath(): string {
   return join(libraryDir(), 'index.json')
 }
 
+function collectionsPath(): string {
+  return join(libraryDir(), 'collections.json')
+}
+
 export function bookDir(id: string): string {
   return join(libraryDir(), id)
 }
@@ -74,6 +90,17 @@ async function writeIndex(index: LibraryIndex): Promise<void> {
   const tmp = indexPath() + '.tmp'
   await fs.writeFile(tmp, JSON.stringify(index, null, 2), 'utf8')
   await fs.rename(tmp, indexPath())
+}
+
+async function readCollections(): Promise<CollectionsFile> {
+  await ensureLibraryDir()
+  try {
+    const raw = await fs.readFile(collectionsPath(), 'utf8')
+    return JSON.parse(raw) as CollectionsFile
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === 'ENOENT') return { collections: [] }
+    throw err
+  }
 }
 
 function sha256File(path: string): Promise<string> {
@@ -146,8 +173,22 @@ function entryToSummary(entry: IndexEntry, coverDataUrl: string | null): BookSum
     author: entry.author,
     addedAt: entry.addedAt,
     sizeBytes: entry.sizeBytes,
-    coverDataUrl
+    coverDataUrl,
+    collectionId: entry.collectionId ?? null
   }
+}
+
+export async function listCollections(): Promise<CollectionSummary[]> {
+  const [index, file] = await Promise.all([readIndex(), readCollections()])
+  const counts = new Map<string, number>()
+  for (const b of index.books) {
+    const id = b.collectionId ?? null
+    if (id == null) continue
+    counts.set(id, (counts.get(id) ?? 0) + 1)
+  }
+  return file.collections
+    .map((c) => ({ id: c.id, name: c.name, addedAt: c.addedAt, bookCount: counts.get(c.id) ?? 0 }))
+    .sort((a, b) => a.name.localeCompare(b.name))
 }
 
 export async function listLibrary(): Promise<BookSummary[]> {
