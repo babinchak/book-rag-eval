@@ -107,6 +107,12 @@ export type ChunkParams =
   | { kind: 'paragraph'; targetSize: number }
   | { kind: 'sentence'; targetSize: number }
   | { kind: 'structural'; maxSize: number }
+  | {
+      kind: 'semantic'
+      targetSize: number
+      breakpointPercentile: number
+      bufferSize: number
+    }
 
 export interface Chunk {
   id: string

@@ -10,6 +10,8 @@ export function strategyIdOf(params: ChunkParams): string {
       return `sentence-${params.targetSize}`
     case 'structural':
       return `structural-${params.maxSize}`
+    case 'semantic':
+      return `semantic-${params.targetSize}-p${params.breakpointPercentile}-b${params.bufferSize}`
   }
 }
 
@@ -23,6 +25,8 @@ export function strategyLabel(params: ChunkParams): string {
       return `Sentence ~${params.targetSize}`
     case 'structural':
       return `Structural ≤${params.maxSize}`
+    case 'semantic':
+      return `Semantic ~${params.targetSize} (p${params.breakpointPercentile})`
   }
 }
 
@@ -30,7 +34,8 @@ export const DEFAULT_STRATEGIES: ChunkParams[] = [
   { kind: 'fixed', size: 1200, overlap: 200 },
   { kind: 'paragraph', targetSize: 1200 },
   { kind: 'sentence', targetSize: 1200 },
-  { kind: 'structural', maxSize: 4000 }
+  { kind: 'structural', maxSize: 4000 },
+  { kind: 'semantic', targetSize: 1200, breakpointPercentile: 95, bufferSize: 1 }
 ]
 
 export function normalizeParams(p: unknown): ChunkParams {
