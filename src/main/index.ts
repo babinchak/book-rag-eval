@@ -12,6 +12,15 @@ import {
 import { getChunkSet, listChunkSets, runChunking } from './chunking'
 import { listEmbeddingSets, removeEmbeddings, runEmbedding } from './embeddings'
 import { listBm25Indexes, removeBm25Index, runBm25Indexing } from './bm25'
+import {
+  createSavedStrategy,
+  deleteSavedStrategy,
+  duplicateSavedStrategy,
+  getSavedStrategy,
+  listSavedStrategies,
+  updateSavedStrategy
+} from './savedStrategies'
+import type { StrategyConfig } from '../shared/savedStrategy'
 import { ask } from './retrieval'
 import { normalizeRetrieverParams, type RetrieverParams } from '../shared/retriever'
 import {
@@ -82,7 +91,11 @@ import type {
   SettingsGetStringResult,
   SettingsHasKeyResult,
   SettingsSetKeyResult,
-  SettingsSetStringResult
+  SettingsSetStringResult,
+  StrategiesListIpcResult,
+  StrategyDeleteIpcResult,
+  StrategyGetIpcResult,
+  StrategyMutateIpcResult
 } from '../preload/types'
 
 function createWindow(): void {
@@ -260,6 +273,70 @@ app.whenReady().then(() => {
         return { ok: true }
       } catch (err) {
         return { ok: false, error: captureIpcError(err, 'bm25:remove', [bookId, strategyId]) }
+      }
+    }
+  )
+
+  ipcMain.handle('strategies:list', async (): Promise<StrategiesListIpcResult> => {
+    try {
+      return { ok: true, strategies: await listSavedStrategies() }
+    } catch (err) {
+      return { ok: false, error: captureIpcError(err, 'strategies:list', []) }
+    }
+  })
+
+  ipcMain.handle('strategies:get', async (_, id: string): Promise<StrategyGetIpcResult> => {
+    try {
+      const strat = await getSavedStrategy(id)
+      if (!strat) return { ok: false, error: { message: `Strategy "${id}" not found` } }
+      return { ok: true, data: strat }
+    } catch (err) {
+      return { ok: false, error: captureIpcError(err, 'strategies:get', [id]) }
+    }
+  })
+
+  ipcMain.handle(
+    'strategies:create',
+    async (_, name: string, config: StrategyConfig): Promise<StrategyMutateIpcResult> => {
+      try {
+        return { ok: true, data: await createSavedStrategy(name, config) }
+      } catch (err) {
+        return { ok: false, error: captureIpcError(err, 'strategies:create', [name, config]) }
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'strategies:update',
+    async (
+      _,
+      id: string,
+      patch: { name?: string; config?: StrategyConfig }
+    ): Promise<StrategyMutateIpcResult> => {
+      try {
+        return { ok: true, data: await updateSavedStrategy(id, patch) }
+      } catch (err) {
+        return { ok: false, error: captureIpcError(err, 'strategies:update', [id, patch]) }
+      }
+    }
+  )
+
+  ipcMain.handle('strategies:delete', async (_, id: string): Promise<StrategyDeleteIpcResult> => {
+    try {
+      await deleteSavedStrategy(id)
+      return { ok: true }
+    } catch (err) {
+      return { ok: false, error: captureIpcError(err, 'strategies:delete', [id]) }
+    }
+  })
+
+  ipcMain.handle(
+    'strategies:duplicate',
+    async (_, id: string): Promise<StrategyMutateIpcResult> => {
+      try {
+        return { ok: true, data: await duplicateSavedStrategy(id) }
+      } catch (err) {
+        return { ok: false, error: captureIpcError(err, 'strategies:duplicate', [id]) }
       }
     }
   )

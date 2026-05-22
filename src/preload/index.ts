@@ -36,6 +36,11 @@ import type {
   LogEntry,
   RendererErrorReport,
   RetrieverParams,
+  StrategiesListIpcResult,
+  StrategyConfig,
+  StrategyDeleteIpcResult,
+  StrategyGetIpcResult,
+  StrategyMutateIpcResult,
   SettingsClearKeyResult,
   SettingsGetStringResult,
   SettingsHasKeyResult,
@@ -67,6 +72,20 @@ const api = {
       ipcRenderer.invoke('embeddings:list', bookId),
     remove: (bookId: string, strategyId: string): Promise<EmbeddingsRemoveIpcResult> =>
       ipcRenderer.invoke('embeddings:remove', bookId, strategyId)
+  },
+  strategies: {
+    list: (): Promise<StrategiesListIpcResult> => ipcRenderer.invoke('strategies:list'),
+    get: (id: string): Promise<StrategyGetIpcResult> => ipcRenderer.invoke('strategies:get', id),
+    create: (name: string, config: StrategyConfig): Promise<StrategyMutateIpcResult> =>
+      ipcRenderer.invoke('strategies:create', name, config),
+    update: (
+      id: string,
+      patch: { name?: string; config?: StrategyConfig }
+    ): Promise<StrategyMutateIpcResult> => ipcRenderer.invoke('strategies:update', id, patch),
+    delete: (id: string): Promise<StrategyDeleteIpcResult> =>
+      ipcRenderer.invoke('strategies:delete', id),
+    duplicate: (id: string): Promise<StrategyMutateIpcResult> =>
+      ipcRenderer.invoke('strategies:duplicate', id)
   },
   bm25: {
     run: (bookId: string, strategyId: string): Promise<Bm25RunIpcResult> =>
