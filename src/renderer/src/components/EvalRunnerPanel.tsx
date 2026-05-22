@@ -10,8 +10,10 @@ import type {
   EvalSet,
   EvalSetSummary,
   IpcError,
-  RetrieverParams
+  SavedStrategy
 } from '../../../preload/types'
+import { strategyIdOf } from '../../../shared/strategy'
+import { retrieverIdOf } from '../../../shared/retriever'
 import { cv } from '../lib/theme'
 import { chatCostUsd, embeddingCostUsd, formatUsd } from '../../../shared/pricing'
 import AddCaseModal from './AddCaseModal'
@@ -32,24 +34,29 @@ interface EvalRunnerPanelProps {
   layout?: 'sidebar' | 'full'
 }
 
-const DEFAULT_K = 5
-
-type RetrieverKind = RetrieverParams['kind']
-
-// String key used to match this UI selection against persisted run records.
-// Must mirror retrieverIdOf() in src/shared/retriever.ts.
-function retrieverIdOfKind(kind: RetrieverKind): string {
-  return kind === 'hybrid-rrf' ? 'hybrid-rrf-60' : kind
-}
-
-function buildRetriever(kind: RetrieverKind): RetrieverParams {
-  return kind === 'hybrid-rrf' ? { kind: 'hybrid-rrf' } : { kind }
-}
-
-function emptyStateMessage(kind: RetrieverKind): string {
-  if (kind === 'vector') return 'No fully-embedded strategies. Embed one in the Strategies tab.'
-  if (kind === 'bm25') return 'No BM25-indexed strategies. Build a BM25 index in the Strategies tab.'
-  return 'No strategies are both embedded AND BM25-indexed. Build both for the same chunking.'
+function isStrategyRunnable(
+  strategy: SavedStrategy,
+  embeddedChunkerIds: Set<string>,
+  bm25ChunkerIds: Set<string>
+): { runnable: boolean; missing: string | null } {
+  const chunkerId = strategyIdOf(strategy.config.chunker)
+  const retriever = strategy.config.retriever.kind
+  const hasEmbed = embeddedChunkerIds.has(chunkerId)
+  const hasBm25 = bm25ChunkerIds.has(chunkerId)
+  if (retriever === 'vector') {
+    return hasEmbed
+      ? { runnable: true, missing: null }
+      : { runnable: false, missing: 'needs embedding' }
+  }
+  if (retriever === 'bm25') {
+    return hasBm25
+      ? { runnable: true, missing: null }
+      : { runnable: false, missing: 'needs BM25 index' }
+  }
+  // hybrid-rrf
+  if (hasEmbed && hasBm25) return { runnable: true, missing: null }
+  if (!hasEmbed && !hasBm25) return { runnable: false, missing: 'needs embedding + BM25' }
+  return { runnable: false, missing: hasEmbed ? 'needs BM25 index' : 'needs embedding' }
 }
 
 function EvalRunnerPanel({
@@ -72,10 +79,9 @@ function EvalRunnerPanel({
   const [casePickerForCaseId, setCasePickerForCaseId] = useState<string | null>(null)
   const [runningCase, setRunningCase] = useState<string | null>(null)
   const [runMode, setRunMode] = useState<EvalMode>('retrieval')
-  const [retrieverKind, setRetrieverKind] = useState<RetrieverKind>('vector')
   const [running, setRunning] = useState<string | null>(null)
-  const [k, setK] = useState(DEFAULT_K)
   const [error, setError] = useState<IpcError | null>(null)
+  const [savedStrategies, setSavedStrategies] = useState<SavedStrategy[]>([])
   const [detailRunId, setDetailRunId] = useState<string | null>(null)
   const [compareOpen, setCompareOpen] = useState(false)
   const [autoGenOpen, setAutoGenOpen] = useState(false)
@@ -109,14 +115,14 @@ function EvalRunnerPanel({
     [bm25Sets, chunkSets]
   )
 
-  // Strategies (chunkings) that can be run with the currently-selected retriever.
-  const runnableStrategyIds = useMemo(() => {
-    const embeddedIds = new Set(fullyEmbedded.map((e) => e.strategyId))
-    const bm25Ids = new Set(bm25Indexed.map((b) => b.strategyId))
-    if (retrieverKind === 'vector') return [...embeddedIds]
-    if (retrieverKind === 'bm25') return [...bm25Ids]
-    return [...embeddedIds].filter((id) => bm25Ids.has(id))
-  }, [fullyEmbedded, bm25Indexed, retrieverKind])
+  const embeddedChunkerIds = useMemo(
+    () => new Set(fullyEmbedded.map((e) => e.strategyId)),
+    [fullyEmbedded]
+  )
+  const bm25ChunkerIds = useMemo(
+    () => new Set(bm25Indexed.map((b) => b.strategyId)),
+    [bm25Indexed]
+  )
 
   // Per-strategy chunk set, useful for showing counts in the run rows.
   const chunkCountByStrategy = useMemo(
@@ -149,9 +155,16 @@ function EvalRunnerPanel({
     else setError(r.error)
   }
 
+  async function refreshSavedStrategies(): Promise<void> {
+    const r = await window.api.strategies.list()
+    if (r.ok) setSavedStrategies(r.strategies)
+    else setError(r.error)
+  }
+
   useEffect(() => {
     void refreshSets()
     void refreshRuns()
+    void refreshSavedStrategies()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookId])
 
@@ -199,17 +212,17 @@ function EvalRunnerPanel({
     await refreshSets()
   }
 
-  async function handleRun(strategyId: string): Promise<void> {
+  async function handleRun(strategy: SavedStrategy): Promise<void> {
     if (!selectedEvalSetId) return
-    setRunning(strategyId)
+    setRunning(strategy.id)
     setError(null)
     try {
       const r = await window.api.evals.run(
         bookId,
         selectedEvalSetId,
-        strategyId,
-        buildRetriever(retrieverKind),
-        k,
+        strategyIdOf(strategy.config.chunker),
+        strategy.config.retriever,
+        strategy.config.generation.topK,
         runMode
       )
       if (!r.ok) { setError(r.error); return }
@@ -289,18 +302,18 @@ function EvalRunnerPanel({
     }
   }
 
-  async function handleRunCase(caseId: string, strategyId: string): Promise<void> {
+  async function handleRunCase(caseId: string, strategy: SavedStrategy): Promise<void> {
     if (!selectedEvalSetId) return
-    setRunningCase(`${caseId}::${strategyId}`)
+    setRunningCase(`${caseId}::${strategy.id}`)
     setCasePickerForCaseId(null)
     setError(null)
     try {
       const r = await window.api.evals.run(
         bookId,
         selectedEvalSetId,
-        strategyId,
-        buildRetriever(retrieverKind),
-        k,
+        strategyIdOf(strategy.config.chunker),
+        strategy.config.retriever,
+        strategy.config.generation.topK,
         runMode,
         [caseId]
       )
@@ -312,20 +325,32 @@ function EvalRunnerPanel({
     }
   }
 
-  function latestRun(setId: string, strategyId: string): EvalRunSummary | undefined {
-    const expectedRetrieverId = retrieverIdOfKind(retrieverKind)
+  function latestRunFor(setId: string, strategy: SavedStrategy): EvalRunSummary | undefined {
+    const chunkerId = strategyIdOf(strategy.config.chunker)
+    const retrId = retrieverIdOf(strategy.config.retriever)
     return runs.find(
       (r) =>
         r.evalSetId === setId &&
-        r.strategyId === strategyId &&
+        r.strategyId === chunkerId &&
         (r.mode ?? 'agentic') === runMode &&
-        (r.retrieverId ?? 'vector') === expectedRetrieverId
+        (r.retrieverId ?? 'vector') === retrId
     )
   }
 
+  const runnableSavedStrategies = useMemo(
+    () =>
+      savedStrategies
+        .map((s) => ({
+          strategy: s,
+          status: isStrategyRunnable(s, embeddedChunkerIds, bm25ChunkerIds)
+        }))
+        .filter((x) => x.status.runnable),
+    [savedStrategies, embeddedChunkerIds, bm25ChunkerIds]
+  )
+
   const compareRunIds = activeSet
-    ? runnableStrategyIds
-        .map((sid) => latestRun(activeSet.id, sid)?.id)
+    ? runnableSavedStrategies
+        .map(({ strategy }) => latestRunFor(activeSet.id, strategy)?.id)
         .filter((id): id is string => id !== undefined)
     : []
 
@@ -558,8 +583,7 @@ function EvalRunnerPanel({
                     {casePickerForCaseId === c.id && (
                       <CaseRunPicker
                         caseId={c.id}
-                        runnableStrategyIds={runnableStrategyIds}
-                        emptyMessage={emptyStateMessage(retrieverKind)}
+                        strategies={runnableSavedStrategies.map((x) => x.strategy)}
                         runningCase={runningCase}
                         onRun={handleRunCase}
                       />
@@ -598,25 +622,7 @@ function EvalRunnerPanel({
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <div style={{ padding: '14px 20px 10px', borderBottom: `1px solid ${cv.border}`, display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0, flexWrap: 'wrap' }}>
             <ResultsTabs tab={resultsTab} onChange={setResultsTab} />
-            {resultsTab === 'runs' && (
-              <>
-                <ModeTabs mode={runMode} onChange={setRunMode} />
-                <RetrieverTabs kind={retrieverKind} onChange={setRetrieverKind} />
-                {activeSet && activeSet.cases.length > 0 && (
-                  <label style={{ fontSize: 12, color: cv.text3, display: 'flex', alignItems: 'center', gap: 4, marginLeft: 'auto' }}>
-                    k =
-                    <input
-                      type="number"
-                      value={k}
-                      min={1}
-                      max={20}
-                      onChange={(e) => setK(Math.max(1, Math.min(20, parseInt(e.target.value) || 1)))}
-                      style={{ width: 40, padding: '3px 5px', fontSize: 12, border: `1px solid ${cv.border2}`, borderRadius: 3, background: cv.bg, color: cv.text1 }}
-                    />
-                  </label>
-                )}
-              </>
-            )}
+            {resultsTab === 'runs' && <ModeTabs mode={runMode} onChange={setRunMode} />}
           </div>
           <div style={{ flex: 1, overflowY: 'auto', padding: '10px 20px' }}>
             <ErrorDisplay error={error} marginTop={0} />
@@ -634,32 +640,39 @@ function EvalRunnerPanel({
               <div style={{ fontSize: 12, color: cv.text5 }}>Select an eval set to run</div>
             ) : activeSet.cases.length === 0 ? (
               <div style={{ fontSize: 12, color: cv.text5 }}>Add cases to run evals</div>
-            ) : runnableStrategyIds.length === 0 ? (
+            ) : savedStrategies.length === 0 ? (
               <div style={{ fontSize: 12, color: cv.text4 }}>
-                {emptyStateMessage(retrieverKind)}
+                No saved strategies yet. Create one in the Strategies view (top-level nav).
+              </div>
+            ) : runnableSavedStrategies.length === 0 ? (
+              <div style={{ fontSize: 12, color: cv.text4 }}>
+                No strategies are runnable on this book. Each strategy needs its chunker
+                chunked + embedded / BM25 indexed (see the Strategies sub-tab inside this book).
               </div>
             ) : (
               <>
                 <div style={{ display: 'grid', gap: 8 }}>
-                  {runnableStrategyIds.map((sid) => {
-                    const last = latestRun(activeSet.id, sid)
-                    const isRunning = running === sid
-                    const count = chunkCountByStrategy.get(sid)
+                  {runnableSavedStrategies.map(({ strategy: s }) => {
+                    const chunkerId = strategyIdOf(s.config.chunker)
+                    const last = latestRunFor(activeSet.id, s)
+                    const isRunning = running === s.id
+                    const count = chunkCountByStrategy.get(chunkerId)
                     return (
                       <div
-                        key={sid}
+                        key={s.id}
                         style={{ background: cv.bg, border: `1px solid ${cv.border}`, borderRadius: 6, padding: '12px 14px' }}
                       >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginBottom: last ? 8 : 0 }}>
                           <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-                            <span style={{ fontFamily: 'monospace', fontSize: 12, color: cv.text1 }} title={count !== undefined ? `${count} chunks` : undefined}>
-                              {sid}
+                            <span style={{ fontSize: 13, fontWeight: 600, color: cv.text1 }}>{s.name}</span>
+                            <span style={{ fontFamily: 'monospace', fontSize: 11, color: cv.text4, marginTop: 2 }} title={count !== undefined ? `${count} chunks` : undefined}>
+                              {chunkerId} · {retrieverIdOf(s.config.retriever)} · k={s.config.generation.topK}
                             </span>
-                            <SetupCostLabel embedding={fullyEmbedded.find((x) => x.strategyId === sid)} />
+                            <SetupCostLabel embedding={fullyEmbedded.find((x) => x.strategyId === chunkerId)} />
                           </div>
 
                           <button
-                            onClick={() => void handleRun(sid)}
+                            onClick={() => void handleRun(s)}
                             disabled={running !== null}
                             style={{
                               padding: '5px 14px',
@@ -803,8 +816,7 @@ function EvalRunnerPanel({
                     {casePickerForCaseId === c.id && (
                       <CaseRunPicker
                         caseId={c.id}
-                        runnableStrategyIds={runnableStrategyIds}
-                        emptyMessage={emptyStateMessage(retrieverKind)}
+                        strategies={runnableSavedStrategies.map((x) => x.strategy)}
                         runningCase={runningCase}
                         onRun={handleRunCase}
                       />
@@ -821,26 +833,34 @@ function EvalRunnerPanel({
           {activeSet.cases.length > 0 && (
             <div style={{ marginTop: 16 }}>
               <div style={{ fontSize: 11, fontWeight: 600, color: cv.text2, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                Run @
-                <input type="number" value={k} min={1} max={20} onChange={(e) => setK(Math.max(1, Math.min(20, parseInt(e.target.value) || 1)))} style={{ width: 36, padding: '2px 4px', fontSize: 11, border: `1px solid ${cv.border2}`, borderRadius: 3, background: cv.bg, color: cv.text1 }} />
+                Strategies
                 <ModeTabs mode={runMode} onChange={setRunMode} />
-                <RetrieverTabs kind={retrieverKind} onChange={setRetrieverKind} />
               </div>
-              {runnableStrategyIds.length === 0 ? (
-                <div style={{ fontSize: 11, color: cv.text4 }}>{emptyStateMessage(retrieverKind)}</div>
+              {savedStrategies.length === 0 ? (
+                <div style={{ fontSize: 11, color: cv.text4 }}>
+                  No saved strategies yet. Create one in the top-level Strategies view.
+                </div>
+              ) : runnableSavedStrategies.length === 0 ? (
+                <div style={{ fontSize: 11, color: cv.text4 }}>
+                  No strategies are runnable on this book. Embed/index a chunker first.
+                </div>
               ) : (
                 <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'grid', gap: 4 }}>
-                  {runnableStrategyIds.map((sid) => {
-                    const last = latestRun(activeSet.id, sid)
-                    const isRunning = running === sid
+                  {runnableSavedStrategies.map(({ strategy: s }) => {
+                    const chunkerId = strategyIdOf(s.config.chunker)
+                    const last = latestRunFor(activeSet.id, s)
+                    const isRunning = running === s.id
                     return (
-                      <li key={sid} style={{ background: cv.bg, border: `1px solid ${cv.border}`, borderRadius: 4, padding: '6px 8px', fontSize: 11 }}>
+                      <li key={s.id} style={{ background: cv.bg, border: `1px solid ${cv.border}`, borderRadius: 4, padding: '6px 8px', fontSize: 11 }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6 }}>
                           <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1 }}>
-                            <span style={{ fontFamily: 'monospace', fontSize: 11, color: cv.text2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={sid}>{sid}</span>
-                            <SetupCostLabel embedding={fullyEmbedded.find((x) => x.strategyId === sid)} />
+                            <span style={{ fontSize: 11, fontWeight: 600, color: cv.text1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={s.name}>{s.name}</span>
+                            <span style={{ fontFamily: 'monospace', fontSize: 10, color: cv.text4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={`${chunkerId} · ${retrieverIdOf(s.config.retriever)}`}>
+                              {chunkerId} · {retrieverIdOf(s.config.retriever)} · k={s.config.generation.topK}
+                            </span>
+                            <SetupCostLabel embedding={fullyEmbedded.find((x) => x.strategyId === chunkerId)} />
                           </div>
-                          <button onClick={() => void handleRun(sid)} disabled={running !== null} style={{ padding: '3px 8px', fontSize: 11, cursor: running !== null ? 'wait' : 'pointer', background: cv.bg, color: cv.text2, border: `1px solid ${cv.border2}`, borderRadius: 3 }}>
+                          <button onClick={() => void handleRun(s)} disabled={running !== null} style={{ padding: '3px 8px', fontSize: 11, cursor: running !== null ? 'wait' : 'pointer', background: cv.bg, color: cv.text2, border: `1px solid ${cv.border2}`, borderRadius: 3 }}>
                             {isRunning ? '…' : last ? 'Re-run' : 'Run'}
                           </button>
                         </div>
@@ -877,51 +897,6 @@ function EvalRunnerPanel({
       <ErrorDisplay error={error} marginTop={12} />
 
       {modals}
-    </div>
-  )
-}
-
-const RETRIEVER_TAB_LABELS: Record<RetrieverKind, string> = {
-  vector: 'Vector',
-  bm25: 'BM25',
-  'hybrid-rrf': 'Hybrid'
-}
-
-function RetrieverTabs({
-  kind,
-  onChange
-}: {
-  kind: RetrieverKind
-  onChange: (k: RetrieverKind) => void
-}): React.JSX.Element {
-  const kinds: RetrieverKind[] = ['vector', 'bm25', 'hybrid-rrf']
-  return (
-    <div style={{ display: 'inline-flex', background: cv.surface2, border: `1px solid ${cv.border}`, borderRadius: 4, padding: 1 }}>
-      {kinds.map((k) => (
-        <button
-          key={k}
-          onClick={() => onChange(k)}
-          title={
-            k === 'vector'
-              ? 'Vector: cosine similarity over embeddings'
-              : k === 'bm25'
-              ? 'BM25: lexical scoring via FTS5'
-              : 'Hybrid: Reciprocal Rank Fusion of vector + BM25'
-          }
-          style={{
-            padding: '2px 8px',
-            fontSize: 10,
-            cursor: 'pointer',
-            background: kind === k ? cv.bg : 'transparent',
-            color: kind === k ? cv.text1 : cv.text4,
-            border: `1px solid ${kind === k ? cv.border2 : 'transparent'}`,
-            borderRadius: 3,
-            fontWeight: kind === k ? 600 : 500
-          }}
-        >
-          {RETRIEVER_TAB_LABELS[k]}
-        </button>
-      ))}
     </div>
   )
 }
@@ -992,31 +967,32 @@ function ModeTabs({ mode, onChange }: { mode: EvalMode; onChange: (m: EvalMode) 
 
 function CaseRunPicker({
   caseId,
-  runnableStrategyIds,
-  emptyMessage,
+  strategies,
   runningCase,
   onRun
 }: {
   caseId: string
-  runnableStrategyIds: string[]
-  emptyMessage: string
+  strategies: SavedStrategy[]
   runningCase: string | null
-  onRun: (caseId: string, strategyId: string) => Promise<void>
+  onRun: (caseId: string, strategy: SavedStrategy) => Promise<void>
 }): React.JSX.Element {
   return (
     <div style={{ marginTop: 6, paddingTop: 6, borderTop: `1px solid ${cv.border}` }}>
       <div style={{ fontSize: 10, color: cv.text4, marginBottom: 4 }}>Run case against:</div>
-      {runnableStrategyIds.length === 0 ? (
-        <div style={{ fontSize: 10, color: cv.text4 }}>{emptyMessage}</div>
+      {strategies.length === 0 ? (
+        <div style={{ fontSize: 10, color: cv.text4 }}>
+          No runnable strategies. Embed/index a chunker that matches one of your saved strategies.
+        </div>
       ) : (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-          {runnableStrategyIds.map((sid) => {
-            const isRunning = runningCase === `${caseId}::${sid}`
+          {strategies.map((s) => {
+            const isRunning = runningCase === `${caseId}::${s.id}`
             return (
               <button
-                key={sid}
-                onClick={() => void onRun(caseId, sid)}
+                key={s.id}
+                onClick={() => void onRun(caseId, s)}
                 disabled={runningCase !== null}
+                title={`${strategyIdOf(s.config.chunker)} · ${retrieverIdOf(s.config.retriever)} · k=${s.config.generation.topK}`}
                 style={{
                   padding: '3px 8px',
                   fontSize: 10,
@@ -1024,11 +1000,10 @@ function CaseRunPicker({
                   background: cv.bg,
                   color: cv.text2,
                   border: `1px solid ${cv.border2}`,
-                  borderRadius: 3,
-                  fontFamily: 'monospace'
+                  borderRadius: 3
                 }}
               >
-                {isRunning ? '…' : sid}
+                {isRunning ? '…' : s.name}
               </button>
             )
           })}

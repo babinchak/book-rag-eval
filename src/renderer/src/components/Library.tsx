@@ -8,6 +8,7 @@ import { cv, useTheme } from '../lib/theme'
 
 interface LibraryProps {
   onOpen: (book: BookSummary) => void
+  onOpenStrategies: () => void
 }
 
 const UNCATEGORIZED_ID = '__uncategorized__'
@@ -82,7 +83,7 @@ function groupByCollection(
   return sections
 }
 
-function Library({ onOpen }: LibraryProps): React.JSX.Element {
+function Library({ onOpen, onOpenStrategies }: LibraryProps): React.JSX.Element {
   const [books, setBooks] = useState<BookSummary[] | null>(null)
   const [collections, setCollections] = useState<CollectionSummary[]>([])
   const [error, setError] = useState<IpcError | null>(null)
@@ -185,6 +186,21 @@ function Library({ onOpen }: LibraryProps): React.JSX.Element {
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>
           <ViewToggle viewMode={viewMode} setViewMode={setViewMode} />
           {viewMode === 'books' && <SortPicker sortKey={sortKey} setSortKey={setSortKey} />}
+          <button
+            onClick={onOpenStrategies}
+            title="Manage saved strategies"
+            style={{
+              padding: '5px 10px',
+              fontSize: 12,
+              cursor: 'pointer',
+              background: cv.bg,
+              color: cv.text2,
+              border: `1px solid ${cv.border2}`,
+              borderRadius: 4
+            }}
+          >
+            Strategies
+          </button>
           <ErrorInbox />
           <ThemeToggle mode={mode} setMode={setMode} />
           <button

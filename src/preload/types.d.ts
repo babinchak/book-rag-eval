@@ -203,6 +203,49 @@ export type RetrieverParams =
   | { kind: 'bm25' }
   | { kind: 'hybrid-rrf'; rrfK?: number }
 
+export type AugmentStep =
+  | { kind: 'breadcrumb' }
+  | { kind: 'summary'; model: string }
+
+export type PostRetrieveStep = { kind: 'rerank-identity' } | { kind: 'dedup' }
+
+export interface EmbeddingSlot {
+  model: 'text-embedding-3-small' | 'text-embedding-3-large'
+}
+
+export interface GenerationSlot {
+  model: 'gpt-4o-mini' | 'gpt-4o' | 'gpt-4.1' | 'gpt-4.1-mini'
+  topK: number
+}
+
+export interface StrategyConfig {
+  chunker: ChunkParams
+  augment: AugmentStep[]
+  embedding: EmbeddingSlot
+  retriever: RetrieverParams
+  postRetrieve: PostRetrieveStep[]
+  generation: GenerationSlot
+}
+
+export interface SavedStrategy {
+  id: string
+  name: string
+  createdAt: number
+  updatedAt: number
+  config: StrategyConfig
+}
+
+export type StrategiesListIpcResult =
+  | { ok: true; strategies: SavedStrategy[] }
+  | { ok: false; error: IpcError }
+export type StrategyGetIpcResult =
+  | { ok: true; data: SavedStrategy }
+  | { ok: false; error: IpcError }
+export type StrategyMutateIpcResult =
+  | { ok: true; data: SavedStrategy }
+  | { ok: false; error: IpcError }
+export type StrategyDeleteIpcResult = { ok: true } | { ok: false; error: IpcError }
+
 export type SettingsHasKeyResult = { ok: true; hasKey: boolean } | { ok: false; error: IpcError }
 export type SettingsSetKeyResult = { ok: true } | { ok: false; error: IpcError }
 export type SettingsClearKeyResult = { ok: true } | { ok: false; error: IpcError }
