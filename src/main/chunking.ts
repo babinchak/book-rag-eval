@@ -183,6 +183,7 @@ interface TokenSpan extends Span {
 
 function structuralTokenSpans(
   spine: CanonicalSpineDocument,
+  targetSize: number,
   maxSize: number
 ): TokenSpan[] {
   const spans: TokenSpan[] = []
@@ -203,7 +204,9 @@ function structuralTokenSpans(
         isHeading: node.kind === 'heading'
       })
     } else {
-      for (const span of chunkTokenSpans(nodeText, maxSize, 0)) {
+      const segmentCount = Math.ceil(tokenCount / targetSize)
+      const balancedSize = Math.ceil(tokenCount / segmentCount)
+      for (const span of chunkTokenSpans(nodeText, balancedSize, 0)) {
         spans.push({
           text: nodeText.slice(span.start, span.end),
           start: start + span.start,
@@ -233,7 +236,7 @@ export function chunkStructuralTokens(
   if (params.targetSize > params.maxSize) {
     throw new Error('structural token targetSize must not exceed maxSize')
   }
-  const atoms = structuralTokenSpans(spine, params.maxSize)
+  const atoms = structuralTokenSpans(spine, params.targetSize, params.maxSize)
   const chunks: Chunk[] = []
   let current: TokenSpan[] = []
   let currentTokens = 0
@@ -271,7 +274,53 @@ export function chunkStructuralTokens(
     currentTokens = countChunkTokens(spine.text.slice(current[0].start, atom.end))
   }
   flush()
-  return chunks
+
+  const minimumUsefulTokens = Math.min(64, Math.max(1, Math.floor(params.targetSize / 4)))
+  const coalesced: Chunk[] = []
+  for (const chunk of chunks) {
+    const previous = coalesced.at(-1)
+    if (previous && (previous.tokenCount ?? 0) < minimumUsefulTokens) {
+      const text = spine.text.slice(previous.textStart, chunk.textEnd)
+      const tokenCount = countChunkTokens(text)
+      if (tokenCount <= params.maxSize) {
+        coalesced[coalesced.length - 1] = makeChunk(
+          sid,
+          spine.href,
+          text,
+          previous.textStart,
+          chunk.textEnd,
+          tokenCount
+        )
+        continue
+      }
+    }
+    coalesced.push(chunk)
+  }
+  const trailing = coalesced.at(-1)
+  const beforeTrailing = coalesced.at(-2)
+  if (
+    trailing &&
+    beforeTrailing &&
+    (trailing.tokenCount ?? 0) < minimumUsefulTokens
+  ) {
+    const text = spine.text.slice(beforeTrailing.textStart, trailing.textEnd)
+    const tokenCount = countChunkTokens(text)
+    if (tokenCount <= params.maxSize) {
+      coalesced.splice(
+        -2,
+        2,
+        makeChunk(
+          sid,
+          spine.href,
+          text,
+          beforeTrailing.textStart,
+          trailing.textEnd,
+          tokenCount
+        )
+      )
+    }
+  }
+  return coalesced
 }
 
 function cosineDistance(a: number[], b: number[]): number {

@@ -31,6 +31,7 @@ test('structural token chunks follow headings and enforce a hard token maximum',
   assert.ok(chunks.length > 2)
   assert.ok(chunks.every((chunk) => countChunkTokens(chunk.text) <= 160))
   assert.ok(chunks.every((chunk) => chunk.tokenCount === countChunkTokens(chunk.text)))
+  assert.ok(chunks.every((chunk) => (chunk.tokenCount ?? 0) >= 32))
   const secondHeading = spine.text.indexOf('Second section')
   assert.ok(chunks.some((chunk) => chunk.textStart === secondHeading))
 })
