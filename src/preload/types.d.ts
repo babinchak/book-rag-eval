@@ -134,6 +134,13 @@ export type ChunkParams =
   | { kind: 'fixed'; size: number; overlap: number }
   | { kind: 'paragraph'; targetSize: number }
   | { kind: 'sentence'; targetSize: number }
+  | {
+      kind: 'structural-token'
+      targetSize: number
+      maxSize: number
+      encoding: 'cl100k_base'
+    }
+  // Legacy character slicing that was historically called "structural".
   | { kind: 'structural'; maxSize: number }
   | {
       kind: 'semantic'

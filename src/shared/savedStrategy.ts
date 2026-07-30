@@ -80,7 +80,12 @@ export function defaultSeedStrategies(): SavedStrategy[] {
     { kind: 'fixed-token', size: 1024, overlap: 128, encoding: 'cl100k_base' },
     { kind: 'paragraph', targetSize: 1200 },
     { kind: 'sentence', targetSize: 1200 },
-    { kind: 'structural', maxSize: 4000 },
+    {
+      kind: 'structural-token',
+      targetSize: 1024,
+      maxSize: 1280,
+      encoding: 'cl100k_base'
+    },
     { kind: 'semantic', targetSize: 1200, breakpointPercentile: 95, bufferSize: 1 }
   ]
   const retrievers: RetrieverParams[] = [
@@ -122,8 +127,10 @@ function strategyLabelShort(p: ChunkParams): string {
       return `Para ~${p.targetSize}`
     case 'sentence':
       return `Sent ~${p.targetSize}`
+    case 'structural-token':
+      return `Struct tokens ~${p.targetSize}`
     case 'structural':
-      return `Struct ≤${p.maxSize}`
+      return `Struct chars ≤${p.maxSize} legacy`
     case 'semantic':
       return `Sem ~${p.targetSize}`
   }

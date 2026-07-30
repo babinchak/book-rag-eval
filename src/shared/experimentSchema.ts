@@ -18,6 +18,12 @@ const chunkerSchema = z.discriminatedUnion('kind', [
   }),
   z.object({ kind: z.literal('paragraph'), targetSize: positiveInteger }),
   z.object({ kind: z.literal('sentence'), targetSize: positiveInteger }),
+  z.object({
+    kind: z.literal('structural-token'),
+    targetSize: positiveInteger,
+    maxSize: positiveInteger,
+    encoding: z.literal('cl100k_base').default('cl100k_base')
+  }),
   z.object({ kind: z.literal('structural'), maxSize: positiveInteger }),
   z.object({
     kind: z.literal('semantic'),
@@ -90,6 +96,12 @@ const experimentSchema = z
         context.addIssue({
           code: 'custom',
           message: `${chunker.kind} overlap must be smaller than size`
+        })
+      }
+      if (chunker.kind === 'structural-token' && chunker.targetSize > chunker.maxSize) {
+        context.addIssue({
+          code: 'custom',
+          message: 'structural-token targetSize must not exceed maxSize'
         })
       }
     }

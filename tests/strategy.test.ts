@@ -28,3 +28,17 @@ test('keeps legacy fixed character strategy IDs stable', () => {
   assert.equal(strategyIdOf(params), 'fixed-1200-200')
   assert.match(strategyLabel(params), /legacy/)
 })
+
+test('structural token strategy IDs distinguish the target and hard maximum', () => {
+  const params = {
+    kind: 'structural-token',
+    targetSize: 1024,
+    maxSize: 1280,
+    encoding: 'cl100k_base'
+  } as const
+  assert.equal(
+    strategyIdOf(params),
+    'structural-token-cl100k_base-1024-1280'
+  )
+  assert.match(strategyLabel(params), /tokens.*1024.*1280/)
+})

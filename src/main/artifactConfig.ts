@@ -5,7 +5,7 @@ import type { ChunkParams, ChunkSet, EmbeddingModel } from '../preload/types'
 export const BM25_TOKENIZER = 'porter unicode61'
 export const EMBEDDING_NORMALIZATION = 'provider-default'
 export const SEMANTIC_CHUNK_EMBEDDING_MODEL = 'text-embedding-3-small'
-export const CHUNKER_IMPLEMENTATION_VERSION = 'chunkers-v2'
+export const CHUNKER_IMPLEMENTATION_VERSION = 'chunkers-v3'
 
 export function chunkArtifactIdentity(
   bookId: string,

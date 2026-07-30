@@ -4,7 +4,7 @@ import { bookDir } from './library'
 import { loadCanonicalBookDocument } from './canonicalStore'
 import { sidecar } from './sidecar'
 import { getOpenaiKey } from './settings'
-import { chunkTokenSpans } from './tokenChunking'
+import { chunkTokenSpans, countChunkTokens } from './tokenChunking'
 import { normalizeParams, strategyIdOf } from '../shared/strategy'
 import {
   SEMANTIC_CHUNK_EMBEDDING_MODEL,
@@ -176,6 +176,104 @@ function chunkStructural(
   return out
 }
 
+interface TokenSpan extends Span {
+  tokenCount: number
+  isHeading: boolean
+}
+
+function structuralTokenSpans(
+  spine: CanonicalSpineDocument,
+  maxSize: number
+): TokenSpan[] {
+  const spans: TokenSpan[] = []
+  let consumedThrough = 0
+  for (const node of [...spine.nodes].sort(
+    (left, right) => left.textStart - right.textStart || left.textEnd - right.textEnd
+  )) {
+    const start = Math.max(node.textStart, consumedThrough)
+    if (node.textEnd <= start) continue
+    const nodeText = spine.text.slice(start, node.textEnd)
+    const tokenCount = countChunkTokens(nodeText)
+    if (tokenCount <= maxSize) {
+      spans.push({
+        text: nodeText,
+        start,
+        end: node.textEnd,
+        tokenCount,
+        isHeading: node.kind === 'heading'
+      })
+    } else {
+      for (const span of chunkTokenSpans(nodeText, maxSize, 0)) {
+        spans.push({
+          text: nodeText.slice(span.start, span.end),
+          start: start + span.start,
+          end: start + span.end,
+          tokenCount: span.tokenCount,
+          isHeading: node.kind === 'heading'
+        })
+      }
+    }
+    consumedThrough = Math.max(consumedThrough, node.textEnd)
+  }
+  return spans
+}
+
+export function chunkStructuralTokens(
+  spine: CanonicalSpineDocument,
+  params: {
+    targetSize: number
+    maxSize: number
+    encoding: 'cl100k_base'
+  },
+  sid: string
+): Chunk[] {
+  if (params.encoding !== 'cl100k_base') {
+    throw new Error(`unsupported token encoding: ${params.encoding}`)
+  }
+  if (params.targetSize > params.maxSize) {
+    throw new Error('structural token targetSize must not exceed maxSize')
+  }
+  const atoms = structuralTokenSpans(spine, params.maxSize)
+  const chunks: Chunk[] = []
+  let current: TokenSpan[] = []
+  let currentTokens = 0
+
+  const flush = (): void => {
+    if (current.length === 0) return
+    const start = current[0].start
+    const end = current[current.length - 1].end
+    const text = spine.text.slice(start, end)
+    const tokenCount = countChunkTokens(text)
+    if (tokenCount > params.maxSize) {
+      throw new Error(`structural chunk exceeded hard token maximum: ${tokenCount}`)
+    }
+    chunks.push(makeChunk(sid, spine.href, text, start, end, tokenCount))
+    current = []
+    currentTokens = 0
+  }
+
+  for (const atom of atoms) {
+    if (
+      current.length > 0 &&
+      atom.isHeading &&
+      current.some((currentAtom) => !currentAtom.isHeading)
+    ) {
+      flush()
+    }
+    if (current.length > 0) {
+      const candidateText = spine.text.slice(current[0].start, atom.end)
+      const candidateTokens = countChunkTokens(candidateText)
+      const currentDistance = Math.abs(params.targetSize - currentTokens)
+      const candidateDistance = Math.abs(params.targetSize - candidateTokens)
+      if (candidateTokens > params.maxSize || currentDistance <= candidateDistance) flush()
+    }
+    current.push(atom)
+    currentTokens = countChunkTokens(spine.text.slice(current[0].start, atom.end))
+  }
+  flush()
+  return chunks
+}
+
 function cosineDistance(a: number[], b: number[]): number {
   let dot = 0
   let na = 0
@@ -331,6 +429,9 @@ export async function runChunking(
         break
       case 'sentence':
         chunks.push(...chunkSentences(item.href, text, params, sid))
+        break
+      case 'structural-token':
+        chunks.push(...chunkStructuralTokens(item, params, sid))
         break
       case 'structural':
         chunks.push(...chunkStructural(item.href, text, params, sid))

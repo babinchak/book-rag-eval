@@ -22,8 +22,10 @@ chunkers:
     size: 1024
     overlap: 128
     encoding: cl100k_base
-  - kind: structural
-    maxSize: 4096
+  - kind: structural-token
+    targetSize: 1024
+    maxSize: 1280
+    encoding: cl100k_base
 
 retrievers:
   - kind: bm25

@@ -10,6 +10,8 @@ export function strategyIdOf(params: ChunkParams): string {
       return `paragraph-${params.targetSize}`
     case 'sentence':
       return `sentence-${params.targetSize}`
+    case 'structural-token':
+      return `structural-token-${params.encoding}-${params.targetSize}-${params.maxSize}`
     case 'structural':
       return `structural-${params.maxSize}`
     case 'semantic':
@@ -27,8 +29,10 @@ export function strategyLabel(params: ChunkParams): string {
       return `Paragraph ~${params.targetSize}`
     case 'sentence':
       return `Sentence ~${params.targetSize}`
+    case 'structural-token':
+      return `Structural tokens ~${params.targetSize} (max ${params.maxSize})`
     case 'structural':
-      return `Structural ≤${params.maxSize}`
+      return `Structural chars ≤${params.maxSize} (legacy)`
     case 'semantic':
       return `Semantic ~${params.targetSize} (p${params.breakpointPercentile})`
   }
@@ -38,7 +42,12 @@ export const DEFAULT_STRATEGIES: ChunkParams[] = [
   { kind: 'fixed-token', size: 1024, overlap: 128, encoding: 'cl100k_base' },
   { kind: 'paragraph', targetSize: 1200 },
   { kind: 'sentence', targetSize: 1200 },
-  { kind: 'structural', maxSize: 4000 },
+  {
+    kind: 'structural-token',
+    targetSize: 1024,
+    maxSize: 1280,
+    encoding: 'cl100k_base'
+  },
   { kind: 'semantic', targetSize: 1200, breakpointPercentile: 95, bufferSize: 1 }
 ]
 
@@ -47,6 +56,15 @@ export function normalizeParams(p: unknown): ChunkParams {
     const kind = (p as { kind: unknown }).kind
     if (kind === 'fixed-token') {
       const tokenParams = p as Omit<Extract<ChunkParams, { kind: 'fixed-token' }>, 'encoding'> & {
+        encoding?: 'cl100k_base'
+      }
+      return { ...tokenParams, encoding: tokenParams.encoding ?? 'cl100k_base' }
+    }
+    if (kind === 'structural-token') {
+      const tokenParams = p as Omit<
+        Extract<ChunkParams, { kind: 'structural-token' }>,
+        'encoding'
+      > & {
         encoding?: 'cl100k_base'
       }
       return { ...tokenParams, encoding: tokenParams.encoding ?? 'cl100k_base' }

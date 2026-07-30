@@ -23,6 +23,7 @@ const CHUNKER_KINDS: ChunkParams['kind'][] = [
   'fixed',
   'paragraph',
   'sentence',
+  'structural-token',
   'structural',
   'semantic'
 ]
@@ -38,6 +39,13 @@ function defaultChunkerOf(kind: ChunkParams['kind']): ChunkParams {
       return { kind: 'paragraph', targetSize: 1200 }
     case 'sentence':
       return { kind: 'sentence', targetSize: 1200 }
+    case 'structural-token':
+      return {
+        kind: 'structural-token',
+        targetSize: 1024,
+        maxSize: 1280,
+        encoding: 'cl100k_base'
+      }
     case 'structural':
       return { kind: 'structural', maxSize: 4000 }
     case 'semantic':
@@ -336,8 +344,10 @@ function describeChunker(c: ChunkParams): string {
       return `paragraph ~${c.targetSize}`
     case 'sentence':
       return `sentence ~${c.targetSize}`
+    case 'structural-token':
+      return `structural tokens ~${c.targetSize} max ${c.maxSize}`
     case 'structural':
-      return `structural ≤${c.maxSize}`
+      return `structural chars ≤${c.maxSize} legacy`
     case 'semantic':
       return `semantic ~${c.targetSize} p${c.breakpointPercentile}`
   }
@@ -492,8 +502,31 @@ function StrategyEditorModal({
             />
           </Field>
         )}
+        {config.chunker.kind === 'structural-token' && (
+          <>
+            <Field label="Target size (tokens)">
+              <NumberInput
+                value={config.chunker.targetSize}
+                onChange={(v) => patchChunker({ targetSize: v })}
+                min={64}
+                max={8192}
+              />
+            </Field>
+            <Field label="Hard maximum (tokens)">
+              <NumberInput
+                value={config.chunker.maxSize}
+                onChange={(v) => patchChunker({ maxSize: v })}
+                min={config.chunker.targetSize}
+                max={8192}
+              />
+            </Field>
+            <Field label="Encoding">
+              <input value={config.chunker.encoding} readOnly style={inputStyle} />
+            </Field>
+          </>
+        )}
         {config.chunker.kind === 'structural' && (
-          <Field label="Max size (chars)">
+          <Field label="Max size (chars, legacy)">
             <NumberInput
               value={config.chunker.maxSize}
               onChange={(v) => patchChunker({ maxSize: v })}
