@@ -120,8 +120,15 @@ function assertDraftIdentity(
       throw new Error(`Approved draft ${draft.candidateId} changed immutable ${field}`)
     }
   }
+  const successfulAttempt = [...run.attempts]
+    .reverse()
+    .find(
+      (attempt) =>
+        attempt.candidateId === draft.candidateId && attempt.validationError === undefined
+    )
+  const expectedModel = successfulAttempt?.resolvedModel ?? run.plan.model.name
   if (
-    draft.provenance.model !== run.plan.model.name ||
+    draft.provenance.model !== expectedModel ||
     draft.provenance.promptHash !== run.plan.promptHash ||
     draft.provenance.packetFingerprint !== run.plan.corpusFingerprint
   ) {

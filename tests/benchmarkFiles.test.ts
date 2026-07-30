@@ -43,7 +43,7 @@ test('committed pilot benchmark data and experiment config validate', async () =
     '../benchmarks/evals/nietzsche-genealogy-pilot-v1.json'
   )
   assert.equal(corpus.books.length, 6)
-  assert.equal(draftGeneration.model.name, 'gpt-4o-mini-2024-07-18')
+  assert.equal(draftGeneration.model.name, 'gpt-4o-mini')
   assert.equal(draftGeneration.model.reasoningEffort, undefined)
   assert.equal(draftGeneration.pricing.inputUsdPerMillion, 0.15)
   assert.equal(draftGeneration.maxCandidatesPerBook, 25)

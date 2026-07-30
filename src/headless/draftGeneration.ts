@@ -75,6 +75,7 @@ export interface DraftGenerationPlan {
 export interface DraftModelResponse {
   draft: unknown
   rawModelContent?: unknown
+  resolvedModel?: string
   inputTokens: number
   outputTokens: number
 }
@@ -91,6 +92,7 @@ export interface DraftAttempt {
   costUsd: number
   rawDraft: unknown
   rawModelContent?: unknown
+  resolvedModel?: string
   validationError?: string
 }
 
@@ -416,6 +418,8 @@ async function createOpenAiDraftModel(config: DraftGenerationConfig): Promise<Dr
             output_tokens?: number
           }
           response_metadata?: {
+            model_name?: string
+            model?: string
             tokenUsage?: {
               promptTokens?: number
               completionTokens?: number
@@ -435,6 +439,8 @@ async function createOpenAiDraftModel(config: DraftGenerationConfig): Promise<Dr
       return {
         draft: response.parsed ?? null,
         rawModelContent: response.raw?.content,
+        resolvedModel:
+          response.raw?.response_metadata?.model_name ?? response.raw?.response_metadata?.model,
         inputTokens,
         outputTokens
       }
@@ -518,7 +524,7 @@ export async function runDraftGeneration(
             validateDraft(
               candidate,
               recoverable.rawDraft,
-              loaded.config.model.name,
+              recoverable.resolvedModel ?? loaded.config.model.name,
               plan.promptHash,
               loaded.packet.corpusFingerprint
             )
@@ -567,7 +573,8 @@ export async function runDraftGeneration(
           rawDraft: response.draft,
           ...(response.rawModelContent === undefined
             ? {}
-            : { rawModelContent: response.rawModelContent })
+            : { rawModelContent: response.rawModelContent }),
+          ...(response.resolvedModel === undefined ? {} : { resolvedModel: response.resolvedModel })
         }
         run.attempts.push(attempt)
         run.updatedAt = Date.now()
@@ -577,7 +584,7 @@ export async function runDraftGeneration(
             validateDraft(
               candidate,
               response.draft,
-              loaded.config.model.name,
+              response.resolvedModel ?? loaded.config.model.name,
               plan.promptHash,
               loaded.packet.corpusFingerprint
             )

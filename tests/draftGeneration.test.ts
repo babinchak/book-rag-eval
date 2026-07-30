@@ -97,6 +97,7 @@ test('plans, validates, meters, and resumes canonical draft generation', async (
         tags: ['direct_fact'],
         difficulty: 'easy' as const
       },
+      resolvedModel: 'fake-model-1-snapshot',
       inputTokens: 110,
       outputTokens: 22
     }
@@ -127,6 +128,7 @@ test('plans, validates, meters, and resumes canonical draft generation', async (
   assert.equal(run.attempts[0].rawModelContent, '{"answerSpan":"not copied from evidence"}')
   assert.match(run.attempts[0].validationError ?? '', /exact contiguous/)
   assert.equal(run.drafts.length, 1)
+  assert.equal(run.drafts[0].provenance.model, 'fake-model-1-snapshot')
   assert.equal(run.drafts[0].evidenceTextStart, 100)
   assert.equal(run.drafts[0].evidenceTextEnd, 131)
   assert.equal(run.ledger.requests, 2)

@@ -5,7 +5,8 @@ outputDir: ../../.rag-eval/eval-drafts
 
 model:
   provider: openai
-  name: gpt-4o-mini-2024-07-18
+  # Every attempt records the provider-resolved model version.
+  name: gpt-4o-mini
   maxOutputTokensPerCandidate: 500
 
 # https://developers.openai.com/api/docs/models/gpt-4o-mini

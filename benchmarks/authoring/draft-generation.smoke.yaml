@@ -5,7 +5,9 @@ outputDir: ../../.rag-eval/eval-drafts
 
 model:
   provider: openai
-  name: gpt-4o-mini-2024-07-18
+  # This project exposes the alias but rejects direct snapshot requests.
+  # Every attempt records the provider-resolved model version.
+  name: gpt-4o-mini
   maxOutputTokensPerCandidate: 500
 
 # Pinned alongside the model snapshot. Recheck before a paid run:
