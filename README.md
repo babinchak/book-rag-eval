@@ -99,7 +99,11 @@ The eval harness is independent of the desktop app and runs headless. For each (
 - **Answer metrics** — faithfulness and answer relevance via LLM-judge, with the judging prompt and model versioned alongside results.
 - **Operational metrics** — latency, token cost, index size.
 
-Q/A sets are authored per book and version-controlled. Each question carries the gold passage span as a Readium locator range so retrieval scoring is exact rather than fuzzy text-match.
+Eval sets use a versioned schema. Each case records a stable canonical search
+query, within-book or library scope, answerability, dev/test split, difficulty,
+tags, provenance, and canonical gold evidence. Evidence can contain multiple
+required groups, alternative valid sources, cross-book spans, tables, and
+images. Legacy pilot sets are validated and migrated when loaded.
 
 ## Status
 

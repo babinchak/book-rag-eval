@@ -14,6 +14,12 @@ import { getOpenaiKey } from './settings'
 import { captureIpcError } from './ipcContext'
 import { retrieverIdOf, type RetrieverParams } from '../shared/retriever'
 import type { CanonicalBookDocument } from '../shared/canonicalDocument'
+import {
+  EVAL_SCHEMA_VERSION,
+  goldEvidenceFromSpans,
+  parseEvalSet,
+  type EvalProvenance
+} from '../shared/evalSchema'
 import type {
   AutoGenerateProgress,
   Chunk,
@@ -95,6 +101,28 @@ async function writeJsonAtomic(path: string, value: unknown): Promise<void> {
   await fs.rename(tmp, path)
 }
 
+async function parseStoredEvalSet(serialized: string, bookId: string): Promise<EvalSet> {
+  const value = JSON.parse(serialized) as unknown
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    const raw = value as Record<string, unknown>
+    if (raw.schemaVersion !== EVAL_SCHEMA_VERSION && Array.isArray(raw.cases)) {
+      const document = await loadCanonicalBookDocument(bookId)
+      raw.cases = raw.cases.map((item) => {
+        if (!item || typeof item !== 'object' || Array.isArray(item)) return item
+        const evalCase = item as Record<string, unknown>
+        if (Array.isArray(evalCase.goldEvidence) || !Array.isArray(evalCase.goldSpans)) {
+          return evalCase
+        }
+        return {
+          ...evalCase,
+          goldSpans: enrichGoldSpans(bookId, document, evalCase.goldSpans as GoldSpan[])
+        }
+      })
+    }
+  }
+  return parseEvalSet(value, bookId)
+}
+
 function isValidSetId(id: string): boolean {
   return /^[a-zA-Z0-9_-]{1,64}$/.test(id)
 }
@@ -112,7 +140,7 @@ export async function listEvalSets(bookId: string): Promise<EvalSetSummary[]> {
     if (!name.endsWith('.json')) continue
     try {
       const raw = await fs.readFile(join(evalsDir(bookId), name), 'utf8')
-      const set = JSON.parse(raw) as EvalSet
+      const set = await parseStoredEvalSet(raw, bookId)
       summaries.push({
         id: set.id,
         caseCount: set.cases.length,
@@ -127,7 +155,7 @@ export async function listEvalSets(bookId: string): Promise<EvalSetSummary[]> {
 
 export async function getEvalSet(bookId: string, setId: string): Promise<EvalSet> {
   const raw = await fs.readFile(evalSetPath(bookId, setId), 'utf8')
-  return JSON.parse(raw) as EvalSet
+  return parseStoredEvalSet(raw, bookId)
 }
 
 export async function createEvalSet(bookId: string, setId: string): Promise<EvalSet> {
@@ -142,6 +170,7 @@ export async function createEvalSet(bookId: string, setId: string): Promise<Eval
   }
   const now = Date.now()
   const set: EvalSet = {
+    schemaVersion: EVAL_SCHEMA_VERSION,
     id: setId,
     bookId,
     cases: [],
@@ -162,7 +191,8 @@ export async function addCase(
   question: string,
   searchQuery: string,
   goldSpans: GoldSpan[],
-  notes?: string
+  notes?: string,
+  provenance: EvalProvenance = { kind: 'human' }
 ): Promise<EvalCase> {
   const trimmedQ = question.trim()
   if (!trimmedQ) throw new Error('Question is required')
@@ -171,11 +201,20 @@ export async function addCase(
   if (goldSpans.length === 0) throw new Error('At least one gold span is required')
   const set = await getEvalSet(bookId, setId)
   const document = await loadCanonicalBookDocument(bookId)
+  const enrichedSpans = enrichGoldSpans(bookId, document, goldSpans)
   const newCase: EvalCase = {
     id: randomUUID(),
     question: trimmedQ,
+    canonicalSearchQuery: trimmedSQ,
     searchQuery: trimmedSQ,
-    goldSpans: enrichGoldSpans(bookId, document, goldSpans),
+    scope: 'within_book',
+    answerability: 'answerable',
+    goldEvidence: goldEvidenceFromSpans(bookId, enrichedSpans),
+    goldSpans: enrichedSpans,
+    tags: [],
+    difficulty: 'medium',
+    split: 'dev',
+    provenance,
     notes
   }
   set.cases.push(newCase)
@@ -230,7 +269,12 @@ export async function updateCase(
   const updated: EvalCase = {
     ...existing,
     question,
+    canonicalSearchQuery: searchQuery,
     searchQuery,
+    goldEvidence:
+      updates.goldSpans !== undefined
+        ? goldEvidenceFromSpans(bookId, goldSpans)
+        : existing.goldEvidence,
     goldSpans,
     notes: updates.notes !== undefined ? updates.notes : existing.notes
   }
@@ -745,7 +789,8 @@ export async function autoGenerateCases(
           result.question,
           result.searchQuery,
           [goldSpan],
-          noteParts.join('\n\n')
+          noteParts.join('\n\n'),
+          { kind: 'llm_assisted', model: AUTOGEN_MODEL }
         )
         progress.generated += 1
         succeeded = true

@@ -287,31 +287,9 @@ export interface AskResultPayload {
 
 export type AskIpcResult = { ok: true; data: AskResultPayload } | { ok: false; error: IpcError }
 
-export interface GoldSpan {
-  // Optional for backward compatibility with pilot eval sets. New evidence
-  // locators are enriched with both fields when they are saved.
-  bookId?: string
-  nodeId?: string
-  spineHref: string
-  textStart: number
-  textEnd: number
-}
-
-export interface EvalCase {
-  id: string
-  question: string
-  searchQuery: string
-  goldSpans: GoldSpan[]
-  notes?: string
-}
-
-export interface EvalSet {
-  id: string
-  bookId: string
-  cases: EvalCase[]
-  createdAt: number
-  updatedAt: number
-}
+export type GoldSpan = LegacyGoldSpan
+export type EvalCase = BenchmarkEvalCase
+export type EvalSet = BenchmarkEvalSet
 
 export interface EvalSetSummary {
   id: string
@@ -436,3 +414,8 @@ export interface AutoGenerateProgress {
 export type EvalAutoGenerateIpcResult =
   | { ok: true; data: AutoGenerateProgress }
   | { ok: false; error: IpcError }
+import type {
+  BenchmarkEvalCase,
+  BenchmarkEvalSet,
+  LegacyGoldSpan
+} from '../shared/evalSchema'
