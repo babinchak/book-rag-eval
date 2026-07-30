@@ -3,6 +3,8 @@ import { exportRun, planExperiment, runExperiment } from './experimentRunner'
 import { exportEvalSetFile } from './benchmarkData'
 import { createEvidenceReviewPacket } from './evidenceSampler'
 import { writeRunReport } from './report'
+import { planDraftGeneration, runDraftGeneration } from './draftGeneration'
+import { compileApprovedDrafts } from './draftCompilation'
 
 interface ParsedArgs {
   positional: string[]
@@ -48,7 +50,11 @@ function usage(): string {
     '  npm run rag-eval -- export <run.json> --format jsonl|csv',
     '  npm run rag-eval -- export-eval <book-id> <eval-set-id> <output.json> [--library-dir <path>]',
     '  npm run rag-eval -- sample-evidence <corpus.json> <output.json> --per-book <count> [--library-dir <path>]',
-    '  npm run rag-eval -- report <run.json> [--output <report.md>] [--bootstrap <iterations>]'
+    '  npm run rag-eval -- report <run.json> [--output <report.md>] [--bootstrap <iterations>]',
+    '  npm run rag-eval -- plan-drafts <draft-generation.yaml>',
+    '  npm run rag-eval -- run-drafts <draft-generation.yaml> --max-usd <amount>',
+    '  npm run rag-eval -- resume-drafts <draft-generation.yaml> --max-usd <amount>',
+    '  npm run rag-eval -- compile-drafts <draft-run.json> <output-dir> --reviewed-by <name>'
   ].join('\n')
 }
 
@@ -133,6 +139,43 @@ async function main(): Promise<void> {
       rawBootstrap === undefined ? 2000 : Number(rawBootstrap)
     )
     process.stdout.write(`${JSON.stringify(paths, null, 2)}\n`)
+    return
+  }
+
+  if (command === 'plan-drafts') {
+    const plan = await planDraftGeneration(target)
+    process.stdout.write(`${JSON.stringify(plan, null, 2)}\n`)
+    return
+  }
+
+  if (command === 'run-drafts' || command === 'resume-drafts') {
+    const rawMaxUsd = optionString(args, '--max-usd')
+    if (rawMaxUsd === undefined) throw new Error(`${command} requires --max-usd\n\n${usage()}`)
+    const run = await runDraftGeneration(target, Number(rawMaxUsd), {
+      resume: command === 'resume-drafts'
+    })
+    process.stdout.write(
+      `${JSON.stringify(
+        {
+          status: run.status,
+          runPath: run.plan.runPath,
+          drafts: run.drafts.length,
+          failures: run.failures.length,
+          actualCostUsd: run.ledger.actualCostUsd
+        },
+        null,
+        2
+      )}\n`
+    )
+    return
+  }
+
+  if (command === 'compile-drafts') {
+    const outputDir = args.positional[1]
+    const reviewedBy = optionString(args, '--reviewed-by')
+    if (!outputDir || !reviewedBy) throw new Error(usage())
+    const compiled = await compileApprovedDrafts(target, outputDir, reviewedBy)
+    process.stdout.write(`${JSON.stringify(compiled, null, 2)}\n`)
     return
   }
 

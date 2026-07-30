@@ -5,30 +5,28 @@ import test from 'node:test'
 import { parseEvalSet } from '../src/shared/evalSchema'
 import { parseExperimentConfig } from '../src/shared/experimentSchema'
 import { parseCorpusManifest } from '../src/shared/corpusSchema'
+import { parseDraftGenerationConfig } from '../src/shared/draftGenerationSchema'
 import { parse as parseYaml } from 'yaml'
 
 test('committed pilot benchmark data and experiment config validate', async () => {
   const evalSet = parseEvalSet(
     JSON.parse(
-      await fs.readFile(
-        resolve('benchmarks/evals/nietzsche-genealogy-pilot-v1.json'),
-        'utf8'
-      )
+      await fs.readFile(resolve('benchmarks/evals/nietzsche-genealogy-pilot-v1.json'), 'utf8')
     )
   )
   const experiment = parseExperimentConfig(
     parseYaml(await fs.readFile(resolve('experiments/nietzsche-pilot.yaml'), 'utf8'))
   )
   const corpus = parseCorpusManifest(
-    JSON.parse(
-      await fs.readFile(resolve('benchmarks/corpora/six-book-smoke.json'), 'utf8')
+    JSON.parse(await fs.readFile(resolve('benchmarks/corpora/six-book-smoke.json'), 'utf8'))
+  )
+  const draftGeneration = parseDraftGenerationConfig(
+    parseYaml(
+      await fs.readFile(resolve('benchmarks/authoring/draft-generation.smoke.yaml'), 'utf8')
     )
   )
   const authoringPacket = JSON.parse(
-    await fs.readFile(
-      resolve('benchmarks/authoring/six-book-smoke-candidates-v1.json'),
-      'utf8'
-    )
+    await fs.readFile(resolve('benchmarks/authoring/six-book-smoke-candidates-v1.json'), 'utf8')
   ) as {
     corpusId: string
     candidatesPerBook: number
@@ -45,6 +43,10 @@ test('committed pilot benchmark data and experiment config validate', async () =
     '../benchmarks/evals/nietzsche-genealogy-pilot-v1.json'
   )
   assert.equal(corpus.books.length, 6)
+  assert.equal(draftGeneration.model.name, 'gpt-5-mini-2025-08-07')
+  assert.equal(draftGeneration.model.reasoningEffort, 'minimal')
+  assert.equal(draftGeneration.pricing.inputUsdPerMillion, 0.25)
+  assert.equal(draftGeneration.maxCandidatesPerBook, 25)
   assert.ok(corpus.books.some((book) => book.tags.includes('figures')))
   assert.equal(authoringPacket.corpusId, corpus.id)
   assert.equal(authoringPacket.candidatesPerBook, 25)

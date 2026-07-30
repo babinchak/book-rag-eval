@@ -158,6 +158,9 @@ npm run rag-eval -- export .rag-eval/runs/<run>.json -- --format jsonl
 npm run rag-eval -- export-eval <book-id> <set-id> benchmarks/evals/<set>.json
 npm run rag-eval -- sample-evidence benchmarks/corpora/six-book-smoke.json .rag-eval/review.json -- --per-book 25
 npm run rag-eval -- report .rag-eval/runs/<run>.json
+npm run rag-eval -- plan-drafts .rag-eval/draft-generation.yaml
+npm run rag-eval -- run-drafts .rag-eval/draft-generation.yaml -- --max-usd 5
+npm run rag-eval -- compile-drafts .rag-eval/eval-drafts/<run>.json benchmarks/evals/smoke-v1 -- --reviewed-by <name>
 ```
 
 `plan` reports selected books/cases, missing content-addressed artifacts,
@@ -185,6 +188,16 @@ The first 150-candidate packet is versioned at
 `report` writes Markdown and JSON summaries with deterministic 95% bootstrap
 intervals plus paired evidence-recall deltas against the first configured
 strategy at each context budget.
+
+Canonical eval drafting is configured from
+`benchmarks/authoring/draft-generation.template.yaml`. `plan-drafts` requires
+pinned input/output prices but no API key. `run-drafts` journals every metered
+attempt, validates exact evidence spans and query leakage, stops before a
+request could cross the dollar ceiling, and leaves every case pending human
+review. Edit each draft status to `approved` or `rejected`; `compile-drafts`
+refuses pending cases or generation failures, revalidates reviewer edits
+against the canonical packet, and writes schema-v2 eval sets plus a fingerprinted
+manifest.
 
 Python sidecar setup will be documented once it lands.
 

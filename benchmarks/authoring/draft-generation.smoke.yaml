@@ -1,0 +1,19 @@
+schemaVersion: 1
+name: six-book-smoke-drafts-gpt5mini-v1
+packetPath: ./six-book-smoke-candidates-v1.json
+outputDir: ../../.rag-eval/eval-drafts
+
+model:
+  provider: openai
+  name: gpt-5-mini-2025-08-07
+  reasoningEffort: minimal
+  maxOutputTokensPerCandidate: 500
+
+# Pinned alongside the model snapshot. Recheck before a paid run:
+# https://developers.openai.com/api/docs/models/gpt-5-mini
+pricing:
+  inputUsdPerMillion: 0.25
+  outputUsdPerMillion: 2
+
+maxCandidatesPerBook: 25
+maxAttemptsPerCandidate: 3

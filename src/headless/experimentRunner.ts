@@ -1,7 +1,5 @@
 import { promises as fs } from 'node:fs'
-import { execFile } from 'node:child_process'
 import { dirname, isAbsolute, join, resolve } from 'node:path'
-import { promisify } from 'node:util'
 import { parse as parseYaml } from 'yaml'
 import { configureLibraryDir } from '../main/library'
 import { loadCanonicalBookDocument } from '../main/canonicalStore'
@@ -37,9 +35,9 @@ import type {
   RetrievedChunkPayload,
   RetrieverParams
 } from '../preload/types'
+import { readSourceControlState, type SourceControlState } from './sourceControl'
 
 export const HEADLESS_RUN_SCHEMA_VERSION = 1
-const execFileAsync = promisify(execFile)
 
 interface LoadedExperiment extends Omit<ExperimentConfig, 'libraryDir' | 'outputDir'> {
   libraryDir: string
@@ -69,10 +67,7 @@ export interface ExperimentPlan {
   libraryDir: string
   outputDir: string
   runPath: string
-  sourceControl: {
-    gitCommit: string | null
-    workingTreeDiffHash: string | null
-  }
+  sourceControl: SourceControlState
   books: Array<{
     bookId: string
     evalSetId: string
@@ -129,10 +124,7 @@ export interface CostLedger {
   embeddingQueryTokens: number
   actualCostUsd: number
   byModel: Partial<
-    Record<
-      EmbeddingModel,
-      { indexTokens: number; queryTokens: number; costUsd: number }
-    >
+    Record<EmbeddingModel, { indexTokens: number; queryTokens: number; costUsd: number }>
   >
 }
 
@@ -154,27 +146,6 @@ export interface HeadlessRun {
 
 function resolveFrom(baseDir: string, path: string): string {
   return isAbsolute(path) ? path : resolve(baseDir, path)
-}
-
-async function sourceControlState(): Promise<ExperimentPlan['sourceControl']> {
-  const projectDir = process.env.BOOK_RAG_EVAL_APP_DIR ?? process.cwd()
-  try {
-    const [{ stdout: commit }, { stdout: diff }] = await Promise.all([
-      execFileAsync('git', ['-C', projectDir, 'rev-parse', 'HEAD'], {
-        encoding: 'utf8'
-      }),
-      execFileAsync('git', ['-C', projectDir, 'diff', '--binary', 'HEAD', '--'], {
-        encoding: 'utf8',
-        maxBuffer: 50 * 1024 * 1024
-      })
-    ])
-    return {
-      gitCommit: commit.trim(),
-      workingTreeDiffHash: diff.length > 0 ? contentHash(diff) : null
-    }
-  } catch {
-    return { gitCommit: null, workingTreeDiffHash: null }
-  }
 }
 
 function reproducibleConfig(config: LoadedExperiment): object {
@@ -241,7 +212,10 @@ export async function loadExperiment(
   return { configPath: absoluteConfigPath, config, books }
 }
 
-function approximateChunkTokens(sourceTokens: number, chunker: ExperimentConfig['chunkers'][number]): number {
+function approximateChunkTokens(
+  sourceTokens: number,
+  chunker: ExperimentConfig['chunkers'][number]
+): number {
   if (chunker.kind === 'fixed-token') {
     return Math.ceil(sourceTokens * (chunker.size / (chunker.size - chunker.overlap)))
   }
@@ -305,7 +279,7 @@ export async function planExperiment(
   const models = embeddingModels(config)
   const artifacts: PlannedArtifact[] = []
   const warnings: string[] = []
-  const sourceControl = await sourceControlState()
+  const sourceControl = await readSourceControlState()
   if (sourceControl.gitCommit === null) {
     warnings.push('Git commit could not be resolved; this run is not tied to a source revision.')
   } else if (sourceControl.workingTreeDiffHash !== null) {
@@ -380,10 +354,7 @@ export async function planExperiment(
         if (retriever.kind === 'bm25') continue
         const queryTokens = book.cases
           .filter((evalCase) => evalCase.scope === 'within_book')
-          .reduce(
-            (total, evalCase) => total + countChunkTokens(evalCase.canonicalSearchQuery),
-            0
-          )
+          .reduce((total, evalCase) => total + countChunkTokens(evalCase.canonicalSearchQuery), 0)
         estimatedEmbeddingTokens += queryTokens
         const price = priceOf(config, retriever.embeddingModel)
         if (price === undefined) unknownCostModels.add(retriever.embeddingModel)
@@ -408,8 +379,7 @@ export async function planExperiment(
       total + book.cases.filter((evalCase) => evalCase.scope === 'within_book').length,
     0
   )
-  const retrievalQueries =
-    withinBookCases * config.chunkers.length * config.retrievers.length
+  const retrievalQueries = withinBookCases * config.chunkers.length * config.retrievers.length
   const experimentCells = retrievalQueries * config.contextBudgets.length
 
   return {
@@ -544,7 +514,10 @@ function contextCandidates(bookId: string, hits: RetrievedChunkPayload[]): Conte
 async function readExistingRun(path: string, fingerprint: string): Promise<HeadlessRun | null> {
   try {
     const parsed = JSON.parse(await fs.readFile(path, 'utf8')) as HeadlessRun
-    if (parsed.schemaVersion !== HEADLESS_RUN_SCHEMA_VERSION || parsed.fingerprint !== fingerprint) {
+    if (
+      parsed.schemaVersion !== HEADLESS_RUN_SCHEMA_VERSION ||
+      parsed.fingerprint !== fingerprint
+    ) {
       throw new Error(`Existing run at ${path} has a different fingerprint or schema`)
     }
     return parsed
@@ -575,20 +548,19 @@ export async function runExperiment(
   if (!options.resume && (await readExistingRun(plan.runPath, plan.fingerprint))) {
     throw new Error(`Run already exists at ${plan.runPath}; use resume`)
   }
-  const run: HeadlessRun =
-    existing ?? {
-      schemaVersion: HEADLESS_RUN_SCHEMA_VERSION,
-      fingerprint: plan.fingerprint,
-      status: 'running',
-      configPath: prepared.configPath,
-      plan,
-      startedAt: Date.now(),
-      updatedAt: Date.now(),
-      maxUsd,
-      ledger: emptyLedger(),
-      queryCache: {},
-      results: []
-    }
+  const run: HeadlessRun = existing ?? {
+    schemaVersion: HEADLESS_RUN_SCHEMA_VERSION,
+    fingerprint: plan.fingerprint,
+    status: 'running',
+    configPath: prepared.configPath,
+    plan,
+    startedAt: Date.now(),
+    updatedAt: Date.now(),
+    maxUsd,
+    ledger: emptyLedger(),
+    queryCache: {},
+    results: []
+  }
   if (run.ledger.actualCostUsd > maxUsd + 1e-9) {
     throw new Error(
       `Existing run has already spent $${run.ledger.actualCostUsd.toFixed(6)}, above the new --max-usd $${maxUsd.toFixed(6)}`
@@ -628,11 +600,7 @@ export async function runExperiment(
             if (!existingEmbedding || existingEmbedding.count !== set.chunks.length) {
               assertAffordable(run, prepared.config, retriever.embeddingModel, exactTokens)
             }
-            const embed = await runEmbedding(
-              book.bookId,
-              set.strategyId,
-              retriever.embeddingModel
-            )
+            const embed = await runEmbedding(book.bookId, set.strategyId, retriever.embeddingModel)
             if (embed.totalTokens > 0) {
               recordCost(run, prepared.config, retriever.embeddingModel, 'index', embed.totalTokens)
               run.updatedAt = Date.now()
@@ -744,10 +712,7 @@ function csvCell(value: unknown): string {
   return `"${text.replace(/"/g, '""')}"`
 }
 
-export async function exportRun(
-  runPath: string,
-  format: 'jsonl' | 'csv'
-): Promise<string> {
+export async function exportRun(runPath: string, format: 'jsonl' | 'csv'): Promise<string> {
   const absoluteRunPath = resolve(runPath)
   const run = JSON.parse(await fs.readFile(absoluteRunPath, 'utf8')) as HeadlessRun
   const outputPath = absoluteRunPath.replace(/\.json$/i, `.${format}`)

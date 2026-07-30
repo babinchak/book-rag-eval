@@ -3,46 +3,13 @@ import { dirname, isAbsolute, resolve } from 'node:path'
 import { configureLibraryDir } from '../main/library'
 import { loadCanonicalBookDocument } from '../main/canonicalStore'
 import { contentHash } from '../shared/artifactIdentity'
-import {
-  parseCorpusManifest,
-  type CorpusManifest
-} from '../shared/corpusSchema'
+import { parseCorpusManifest, type CorpusManifest } from '../shared/corpusSchema'
+import type { EvidenceCandidate, EvidenceReviewPacket } from '../shared/authoringSchema'
 import type {
   CanonicalBookDocument,
   CanonicalDocumentNode,
   CanonicalNodeKind
 } from '../shared/canonicalDocument'
-
-export interface EvidenceCandidate {
-  id: string
-  bookId: string
-  sourceHash: string
-  nodeId: string
-  kind: CanonicalNodeKind
-  spineHref: string
-  textStart: number
-  textEnd: number
-  headingPath: string[]
-  excerpt: string
-  assets: string[]
-  reviewStatus: 'pending'
-}
-
-export interface EvidenceReviewPacket {
-  schemaVersion: 1
-  corpusId: string
-  corpusFingerprint: string
-  candidatesPerBook: number
-  books: Array<{
-    bookId: string
-    title: string
-    author: string
-    sourceHash: string
-    selectedCandidates: number
-    availableKinds: Partial<Record<CanonicalNodeKind, number>>
-  }>
-  candidates: EvidenceCandidate[]
-}
 
 function sampleEvenly<T>(items: T[], count: number): T[] {
   if (items.length === 0 || count <= 0) return []

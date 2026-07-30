@@ -1,0 +1,19 @@
+# Copy to an ignored working file, pin a model snapshot and its current prices,
+# then run plan-drafts before providing an API key to run-drafts.
+schemaVersion: 1
+name: six-book-smoke-drafts
+packetPath: ./six-book-smoke-candidates-v1.json
+outputDir: ../../.rag-eval/eval-drafts
+
+model:
+  provider: openai
+  name: REPLACE_WITH_PINNED_MODEL
+  # reasoningEffort: minimal
+  maxOutputTokensPerCandidate: 500
+
+pricing:
+  inputUsdPerMillion: REPLACE_WITH_CURRENT_RATE
+  outputUsdPerMillion: REPLACE_WITH_CURRENT_RATE
+
+maxCandidatesPerBook: 25
+maxAttemptsPerCandidate: 3
