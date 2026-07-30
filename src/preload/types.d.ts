@@ -1,3 +1,10 @@
+import type { ArtifactIdentity } from '../shared/artifactIdentity'
+import type {
+  BenchmarkEvalCase,
+  BenchmarkEvalSet,
+  LegacyGoldSpan
+} from '../shared/evalSchema'
+
 export interface ReadiumManifestLink {
   href: string
   type?: string
@@ -153,6 +160,8 @@ export interface CanonicalArtifactIdentity {
 }
 
 export interface ChunkSetSummary {
+  artifactId?: string
+  artifactIdentity?: ArtifactIdentity
   strategyId: string
   params: ChunkParams
   count: number
@@ -174,6 +183,8 @@ export type ChunksListResult =
 export type ChunksGetResult = { ok: true; data: ChunkSet } | { ok: false; error: IpcError }
 
 export interface EmbeddingSetSummary {
+  artifactId?: string
+  chunkArtifactId?: string
   strategyId: string
   count: number
   model: string
@@ -184,6 +195,8 @@ export interface EmbeddingSetSummary {
 }
 
 export interface EmbedRunResult {
+  artifactId?: string
+  chunkArtifactId?: string
   embedded: number
   skipped: number
   totalTokens: number
@@ -199,12 +212,16 @@ export type EmbeddingsListIpcResult =
 export type EmbeddingsRemoveIpcResult = { ok: true } | { ok: false; error: IpcError }
 
 export interface Bm25IndexSummary {
+  artifactId?: string
+  chunkArtifactId?: string
   strategyId: string
   count: number
   updatedAt: number
 }
 
 export interface Bm25RunResult {
+  artifactId?: string
+  chunkArtifactId?: string
   indexed: number
   skipped: number
 }
@@ -414,8 +431,3 @@ export interface AutoGenerateProgress {
 export type EvalAutoGenerateIpcResult =
   | { ok: true; data: AutoGenerateProgress }
   | { ok: false; error: IpcError }
-import type {
-  BenchmarkEvalCase,
-  BenchmarkEvalSet,
-  LegacyGoldSpan
-} from '../shared/evalSchema'

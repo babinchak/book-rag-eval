@@ -51,6 +51,12 @@ Chunkers and eval evidence use these canonical offsets. New gold spans also
 record their canonical node and book IDs, so changing a chunking strategy does
 not redefine the benchmark's source of truth.
 
+Derived chunks, vector indexes, and BM25 indexes are content-addressed. Their
+SHA-256 identities include the canonical source/parser, chunker implementation
+and parameters, and the relevant index configuration. A parser, source,
+embedding-model, dimensions, or tokenizer change therefore creates a distinct
+artifact instead of silently reusing stale data.
+
 ### Why Python in the loop
 
 Most useful retrieval components — embedding models, rerankers, vector indexes, evaluation tooling — have their canonical implementations in Python. Rather than reimplement or settle for whatever is available in JS, the app ships a Python sidecar that the Electron main process spawns and speaks to over a local transport. The TypeScript side stays in charge of orchestration, storage of locators and chunks, and rendering; Python handles the ML-heavy work and the eval runner.

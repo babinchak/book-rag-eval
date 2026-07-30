@@ -6,6 +6,7 @@ import { sidecar } from './sidecar'
 import { getOpenaiKey } from './settings'
 import { chunkTokenSpans } from './tokenChunking'
 import { normalizeParams, strategyIdOf } from '../shared/strategy'
+import { createArtifactIdentity } from '../shared/artifactIdentity'
 import type { CanonicalSpineDocument } from '../shared/canonicalDocument'
 import type { Chunk, ChunkParams, ChunkSet, ChunkSetSummary } from '../preload/types'
 
@@ -13,13 +14,14 @@ import type { Chunk, ChunkParams, ChunkSet, ChunkSetSummary } from '../preload/t
 // similarity signal between adjacent sentence windows, not high-quality vectors.
 const SEMANTIC_EMBED_MODEL = 'text-embedding-3-small'
 const SEMANTIC_EMBED_BATCH = 256
+const CHUNKER_IMPLEMENTATION_VERSION = 'chunkers-v2'
 
 function chunksDir(bookId: string): string {
   return join(bookDir(bookId), 'chunks')
 }
 
-function chunkSetPath(bookId: string, sid: string): string {
-  return join(chunksDir(bookId), `${sid}.json`)
+function chunkSetPath(bookId: string, artifactId: string): string {
+  return join(chunksDir(bookId), `${artifactId}.json`)
 }
 
 interface Span {
@@ -301,6 +303,22 @@ export async function runChunking(
   const params = normalizeParams(paramsRaw)
   const sid = strategyIdOf(params)
   const document = await loadCanonicalBookDocument(bookId)
+  const artifactIdentity = createArtifactIdentity(
+    'chunks',
+    {
+      bookId,
+      implementation: CHUNKER_IMPLEMENTATION_VERSION,
+      chunker: params,
+      ...(params.kind === 'semantic'
+        ? { semanticEmbeddingModel: SEMANTIC_EMBED_MODEL }
+        : {})
+    },
+    {
+      canonicalSource: document.sourceHash,
+      parser: document.parserVersion,
+      schema: String(document.schemaVersion)
+    }
+  )
 
   if (params.kind === 'semantic') {
     const apiKey = await getOpenaiKey()
@@ -346,6 +364,8 @@ export async function runChunking(
   }
 
   const set: ChunkSet = {
+    artifactId: artifactIdentity.id,
+    artifactIdentity,
     bookId,
     strategyId: sid,
     params,
@@ -360,11 +380,13 @@ export async function runChunking(
   }
 
   await fs.mkdir(chunksDir(bookId), { recursive: true })
-  const tmp = chunkSetPath(bookId, sid) + '.tmp'
+  const tmp = chunkSetPath(bookId, artifactIdentity.id) + '.tmp'
   await fs.writeFile(tmp, JSON.stringify(set), 'utf8')
-  await fs.rename(tmp, chunkSetPath(bookId, sid))
+  await fs.rename(tmp, chunkSetPath(bookId, artifactIdentity.id))
 
   return {
+    artifactId: set.artifactId,
+    artifactIdentity: set.artifactIdentity,
     strategyId: sid,
     params,
     count: chunks.length,
@@ -381,29 +403,57 @@ export async function listChunkSets(bookId: string): Promise<ChunkSetSummary[]> 
     if ((err as NodeJS.ErrnoException).code === 'ENOENT') return []
     throw err
   }
-  const summaries: ChunkSetSummary[] = []
+  const newestByStrategy = new Map<string, ChunkSetSummary>()
   for (const name of names) {
     if (!name.endsWith('.json')) continue
     try {
       const raw = await fs.readFile(join(chunksDir(bookId), name), 'utf8')
       const set = JSON.parse(raw) as ChunkSet
-      summaries.push({
+      const summary: ChunkSetSummary = {
+        artifactId: set.artifactId,
+        artifactIdentity: set.artifactIdentity,
         strategyId: set.strategyId,
         params: normalizeParams(set.params),
         count: set.count,
         generatedAt: set.generatedAt,
         canonicalDocument: set.canonicalDocument
-      })
+      }
+      const existing = newestByStrategy.get(summary.strategyId)
+      if (!existing || existing.generatedAt < summary.generatedAt) {
+        newestByStrategy.set(summary.strategyId, summary)
+      }
     } catch {
       // skip unreadable/corrupt sets
     }
   }
-  return summaries.sort((a, b) => b.generatedAt - a.generatedAt)
+  return [...newestByStrategy.values()].sort((a, b) => b.generatedAt - a.generatedAt)
 }
 
 export async function getChunkSet(bookId: string, sid: string): Promise<ChunkSet> {
-  const raw = await fs.readFile(chunkSetPath(bookId, sid), 'utf8')
-  const set = JSON.parse(raw) as ChunkSet
-  set.params = normalizeParams(set.params)
-  return set
+  let names: string[]
+  try {
+    names = await fs.readdir(chunksDir(bookId))
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      throw new Error(`Chunk set "${sid}" not found`)
+    }
+    throw error
+  }
+
+  const matches: ChunkSet[] = []
+  for (const name of names) {
+    if (!name.endsWith('.json')) continue
+    try {
+      const raw = await fs.readFile(join(chunksDir(bookId), name), 'utf8')
+      const set = JSON.parse(raw) as ChunkSet
+      if (set.strategyId !== sid && set.artifactId !== sid) continue
+      set.params = normalizeParams(set.params)
+      matches.push(set)
+    } catch {
+      // Ignore unrelated/corrupt artifacts and report not found below.
+    }
+  }
+  const newest = matches.sort((a, b) => b.generatedAt - a.generatedAt)[0]
+  if (!newest) throw new Error(`Chunk set "${sid}" not found`)
+  return newest
 }

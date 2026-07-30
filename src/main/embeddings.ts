@@ -6,6 +6,7 @@ import { bookDir } from './library'
 import { getChunkSet } from './chunking'
 import { sidecar } from './sidecar'
 import { getOpenaiKey } from './settings'
+import { embeddingArtifactIdentity, resolvedChunkArtifactId } from './artifactConfig'
 import type { EmbeddingSetSummary } from '../preload/types'
 
 const EMBEDDING_MODEL = 'text-embedding-3-large'
@@ -16,8 +17,8 @@ function vectorsDir(bookId: string): string {
   return join(bookDir(bookId), 'vectors')
 }
 
-function vectorsDbPath(bookId: string, sid: string): string {
-  return join(vectorsDir(bookId), `${sid}.db`)
+function vectorsDbPath(bookId: string, artifactId: string): string {
+  return join(vectorsDir(bookId), `${artifactId}.db`)
 }
 
 function openDb(path: string): Database.Database {
@@ -50,6 +51,8 @@ function readTokensTotal(db: Database.Database): number {
 }
 
 export interface EmbedResult {
+  artifactId: string
+  chunkArtifactId: string
   embedded: number
   skipped: number
   totalTokens: number
@@ -64,9 +67,11 @@ export async function runEmbedding(bookId: string, strategyId: string): Promise<
   await sidecar.ensureStarted(apiKey)
 
   const set = await getChunkSet(bookId, strategyId)
+  const artifact = embeddingArtifactIdentity(set, EMBEDDING_MODEL, EMBEDDING_DIMS)
+  const chunkArtifactId = resolvedChunkArtifactId(set)
   await fs.mkdir(vectorsDir(bookId), { recursive: true })
 
-  const db = openDb(vectorsDbPath(bookId, strategyId))
+  const db = openDb(vectorsDbPath(bookId, artifact.id))
   try {
     const existingIds = new Set(
       db
@@ -77,6 +82,18 @@ export async function runEmbedding(bookId: string, strategyId: string): Promise<
 
     db.prepare('INSERT OR REPLACE INTO meta(key, value) VALUES (?, ?)').run('model', EMBEDDING_MODEL)
     db.prepare('INSERT OR REPLACE INTO meta(key, value) VALUES (?, ?)').run(
+      'artifact_id',
+      artifact.id
+    )
+    db.prepare('INSERT OR REPLACE INTO meta(key, value) VALUES (?, ?)').run(
+      'chunk_artifact_id',
+      chunkArtifactId
+    )
+    db.prepare('INSERT OR REPLACE INTO meta(key, value) VALUES (?, ?)').run(
+      'strategy_id',
+      strategyId
+    )
+    db.prepare('INSERT OR REPLACE INTO meta(key, value) VALUES (?, ?)').run(
       'dims',
       String(EMBEDDING_DIMS)
     )
@@ -85,7 +102,14 @@ export async function runEmbedding(bookId: string, strategyId: string): Promise<
     const skipped = set.chunks.length - toEmbed.length
 
     if (toEmbed.length === 0) {
-      return { embedded: 0, skipped, totalTokens: 0, model: EMBEDDING_MODEL }
+      return {
+        artifactId: artifact.id,
+        chunkArtifactId,
+        embedded: 0,
+        skipped,
+        totalTokens: 0,
+        model: EMBEDDING_MODEL
+      }
     }
 
     let totalTokens = 0
@@ -117,7 +141,14 @@ export async function runEmbedding(bookId: string, strategyId: string): Promise<
       String(priorTokens + totalTokens)
     )
 
-    return { embedded: toEmbed.length, skipped, totalTokens, model: EMBEDDING_MODEL }
+    return {
+      artifactId: artifact.id,
+      chunkArtifactId,
+      embedded: toEmbed.length,
+      skipped,
+      totalTokens,
+      model: EMBEDDING_MODEL
+    }
   } finally {
     db.close()
   }
@@ -134,7 +165,7 @@ export async function listEmbeddingSets(bookId: string): Promise<EmbeddingSetSum
   const result: EmbeddingSetSummary[] = []
   for (const name of names) {
     if (!name.endsWith('.db')) continue
-    const sid = name.slice(0, -3)
+    const filenameId = name.slice(0, -3)
     const path = join(vectorsDir(bookId), name)
     try {
       const db = openDb(path)
@@ -145,11 +176,22 @@ export async function listEmbeddingSets(bookId: string): Promise<EmbeddingSetSum
       const tokensRow = db.prepare("SELECT value FROM meta WHERE key = 'tokens_total'").get() as
         | { value: string }
         | undefined
+      const artifactRow = db.prepare("SELECT value FROM meta WHERE key = 'artifact_id'").get() as
+        | { value: string }
+        | undefined
+      const chunkArtifactRow = db
+        .prepare("SELECT value FROM meta WHERE key = 'chunk_artifact_id'")
+        .get() as { value: string } | undefined
+      const strategyRow = db.prepare("SELECT value FROM meta WHERE key = 'strategy_id'").get() as
+        | { value: string }
+        | undefined
       const stat = await fs.stat(path)
       db.close()
       const tokensTotal = tokensRow ? parseInt(tokensRow.value, 10) : NaN
       result.push({
-        strategyId: sid,
+        artifactId: artifactRow?.value ?? filenameId,
+        chunkArtifactId: chunkArtifactRow?.value,
+        strategyId: strategyRow?.value ?? filenameId,
         count: countRow.c,
         model: modelRow?.value ?? 'unknown',
         updatedAt: stat.mtimeMs,
@@ -163,5 +205,29 @@ export async function listEmbeddingSets(bookId: string): Promise<EmbeddingSetSum
 }
 
 export async function removeEmbeddings(bookId: string, strategyId: string): Promise<void> {
-  await fs.rm(vectorsDbPath(bookId, strategyId), { force: true })
+  let names: string[]
+  try {
+    names = await fs.readdir(vectorsDir(bookId))
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return
+    throw error
+  }
+  for (const name of names) {
+    if (!name.endsWith('.db')) continue
+    const path = join(vectorsDir(bookId), name)
+    let matches = name === `${strategyId}.db`
+    if (!matches) {
+      try {
+        const db = openDb(path)
+        const row = db.prepare("SELECT value FROM meta WHERE key = 'strategy_id'").get() as
+          | { value: string }
+          | undefined
+        db.close()
+        matches = row?.value === strategyId
+      } catch {
+        matches = false
+      }
+    }
+    if (matches) await fs.rm(path, { force: true })
+  }
 }

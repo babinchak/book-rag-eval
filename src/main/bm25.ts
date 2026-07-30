@@ -3,14 +3,15 @@ import { join } from 'node:path'
 import Database from 'better-sqlite3'
 import { bookDir } from './library'
 import { getChunkSet } from './chunking'
-import type { Bm25IndexSummary, Bm25RunResult } from '../preload/types'
+import { BM25_TOKENIZER, bm25ArtifactIdentity, resolvedChunkArtifactId } from './artifactConfig'
+import type { Bm25IndexSummary, Bm25RunResult, ChunkSet } from '../preload/types'
 
 function bm25Dir(bookId: string): string {
   return join(bookDir(bookId), 'bm25')
 }
 
-function bm25DbPath(bookId: string, sid: string): string {
-  return join(bm25Dir(bookId), `${sid}.db`)
+function bm25DbPath(bookId: string, artifactId: string): string {
+  return join(bm25Dir(bookId), `${artifactId}.db`)
 }
 
 function openDb(path: string): Database.Database {
@@ -22,7 +23,11 @@ function openDb(path: string): Database.Database {
     CREATE VIRTUAL TABLE IF NOT EXISTS fts_chunks USING fts5(
       id UNINDEXED,
       text,
-      tokenize = 'porter unicode61'
+      tokenize = '${BM25_TOKENIZER}'
+    );
+    CREATE TABLE IF NOT EXISTS meta (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL
     );
   `)
   return db
@@ -30,9 +35,11 @@ function openDb(path: string): Database.Database {
 
 export async function runBm25Indexing(bookId: string, strategyId: string): Promise<Bm25RunResult> {
   const set = await getChunkSet(bookId, strategyId)
+  const artifact = bm25ArtifactIdentity(set)
+  const chunkArtifactId = resolvedChunkArtifactId(set)
   await fs.mkdir(bm25Dir(bookId), { recursive: true })
 
-  const db = openDb(bm25DbPath(bookId, strategyId))
+  const db = openDb(bm25DbPath(bookId, artifact.id))
   try {
     // Rebuild from scratch. FTS5 upserts are awkward (id is UNINDEXED so we
     // can't WHERE on it cheaply), indexing is fast (~1s for a book), and a
@@ -43,7 +50,17 @@ export async function runBm25Indexing(bookId: string, strategyId: string): Promi
       for (const c of chunks) insert.run(c.id, c.text)
     })
     tx(set.chunks)
-    return { indexed: set.chunks.length, skipped: 0 }
+    const writeMeta = db.prepare('INSERT OR REPLACE INTO meta(key, value) VALUES (?, ?)')
+    writeMeta.run('artifact_id', artifact.id)
+    writeMeta.run('chunk_artifact_id', chunkArtifactId)
+    writeMeta.run('strategy_id', strategyId)
+    writeMeta.run('tokenizer', BM25_TOKENIZER)
+    return {
+      artifactId: artifact.id,
+      chunkArtifactId,
+      indexed: set.chunks.length,
+      skipped: 0
+    }
   } finally {
     db.close()
   }
@@ -60,14 +77,29 @@ export async function listBm25Indexes(bookId: string): Promise<Bm25IndexSummary[
   const result: Bm25IndexSummary[] = []
   for (const name of names) {
     if (!name.endsWith('.db')) continue
-    const sid = name.slice(0, -3)
+    const filenameId = name.slice(0, -3)
     const path = join(bm25Dir(bookId), name)
     try {
       const db = openDb(path)
       const countRow = db.prepare('SELECT COUNT(*) AS c FROM fts_chunks').get() as { c: number }
+      const artifactRow = db.prepare("SELECT value FROM meta WHERE key = 'artifact_id'").get() as
+        | { value: string }
+        | undefined
+      const chunkArtifactRow = db
+        .prepare("SELECT value FROM meta WHERE key = 'chunk_artifact_id'")
+        .get() as { value: string } | undefined
+      const strategyRow = db.prepare("SELECT value FROM meta WHERE key = 'strategy_id'").get() as
+        | { value: string }
+        | undefined
       const stat = await fs.stat(path)
       db.close()
-      result.push({ strategyId: sid, count: countRow.c, updatedAt: stat.mtimeMs })
+      result.push({
+        artifactId: artifactRow?.value ?? filenameId,
+        chunkArtifactId: chunkArtifactRow?.value,
+        strategyId: strategyRow?.value ?? filenameId,
+        count: countRow.c,
+        updatedAt: stat.mtimeMs
+      })
     } catch (err) {
       console.error('failed to read bm25 db', path, err)
     }
@@ -76,7 +108,31 @@ export async function listBm25Indexes(bookId: string): Promise<Bm25IndexSummary[
 }
 
 export async function removeBm25Index(bookId: string, strategyId: string): Promise<void> {
-  await fs.rm(bm25DbPath(bookId, strategyId), { force: true })
+  let names: string[]
+  try {
+    names = await fs.readdir(bm25Dir(bookId))
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return
+    throw error
+  }
+  for (const name of names) {
+    if (!name.endsWith('.db')) continue
+    const path = join(bm25Dir(bookId), name)
+    let matches = name === `${strategyId}.db`
+    if (!matches) {
+      try {
+        const db = openDb(path)
+        const row = db.prepare("SELECT value FROM meta WHERE key = 'strategy_id'").get() as
+          | { value: string }
+          | undefined
+        db.close()
+        matches = row?.value === strategyId
+      } catch {
+        matches = false
+      }
+    }
+    if (matches) await fs.rm(path, { force: true })
+  }
 }
 
 export interface Bm25Hit {
@@ -99,9 +155,12 @@ export async function queryBm25(
   bookId: string,
   strategyId: string,
   query: string,
-  k: number
+  k: number,
+  suppliedSet?: ChunkSet
 ): Promise<Bm25Hit[]> {
-  const dbPath = bm25DbPath(bookId, strategyId)
+  const set = suppliedSet ?? (await getChunkSet(bookId, strategyId))
+  const artifact = bm25ArtifactIdentity(set)
+  const dbPath = bm25DbPath(bookId, artifact.id)
   try {
     await fs.access(dbPath)
   } catch {
