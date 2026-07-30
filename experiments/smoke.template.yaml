@@ -7,7 +7,7 @@ outputDir: ../.rag-eval/runs
 
 books:
   - bookId: REPLACE_WITH_BOOK_ID
-    evalSetId: reviewed-v1
+    evalSetPath: ../benchmarks/evals/REPLACE_WITH_EVAL_FILE.json
 
 chunkers:
   - kind: fixed-token

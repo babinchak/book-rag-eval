@@ -19,6 +19,7 @@ import { countChunkTokens } from '../main/tokenChunking'
 import { getEvalSet } from '../main/evals'
 import { strategyIdOf } from '../shared/strategy'
 import { contentHash } from '../shared/artifactIdentity'
+import { parseEvalSet } from '../shared/evalSchema'
 import {
   assembleContextBudget,
   computeRetrievalMetrics,
@@ -176,19 +177,22 @@ async function sourceControlState(): Promise<ExperimentPlan['sourceControl']> {
   }
 }
 
-function reproducibleConfig(config: LoadedExperiment): ExperimentConfig {
+function reproducibleConfig(config: LoadedExperiment): object {
   return {
     schemaVersion: config.schemaVersion,
     name: config.name,
-    books: config.books,
+    books: config.books.map((selection) => ({
+      bookId: selection.bookId,
+      evalSetId: selection.evalSetId ?? null,
+      externalEvalSet: selection.evalSetPath !== undefined
+    })),
     chunkers: config.chunkers,
     retrievers: config.retrievers,
     contextBudgets: config.contextBudgets,
     candidatePoolSize: config.candidatePoolSize,
     splits: config.splits,
     maxCasesPerBook: config.maxCasesPerBook,
-    pricing: config.pricing,
-    outputDir: '.'
+    pricing: config.pricing
   }
 }
 
@@ -216,14 +220,19 @@ export async function loadExperiment(
 
   const books: PreparedBook[] = []
   for (const selection of config.books) {
-    const [document, evalSet] = await Promise.all([
-      loadCanonicalBookDocument(selection.bookId),
-      getEvalSet(selection.bookId, selection.evalSetId)
-    ])
+    const documentPromise = loadCanonicalBookDocument(selection.bookId)
+    const evalSetPromise =
+      selection.evalSetPath !== undefined
+        ? fs
+            .readFile(resolveFrom(configDir, selection.evalSetPath), 'utf8')
+            .then((serialized) => parseEvalSet(JSON.parse(serialized) as unknown, selection.bookId))
+        : getEvalSet(selection.bookId, selection.evalSetId!)
+    const [document, evalSet] = await Promise.all([documentPromise, evalSetPromise])
     let cases = evalSet.cases.filter((evalCase) => config.splits.includes(evalCase.split))
     if (config.maxCasesPerBook !== undefined) cases = cases.slice(0, config.maxCasesPerBook)
     books.push({
-      ...selection,
+      bookId: selection.bookId,
+      evalSetId: evalSet.id,
       sourceHash: document.sourceHash,
       evalSetHash: contentHash(evalSet),
       cases

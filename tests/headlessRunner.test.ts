@@ -45,9 +45,7 @@ test('plans, runs, resumes, and exports a zero-cost BM25 experiment', async (con
   const paragraph = canonical.spine[0].nodes.find((node) => node.kind === 'paragraph')!
   const claimStart = canonical.spine[0].text.indexOf('freedom requires responsibility')
   const claimEnd = claimStart + 'freedom requires responsibility'.length
-  await fs.writeFile(
-    join(evalsDir, 'reviewed.json'),
-    JSON.stringify({
+  const evalSet = {
       schemaVersion: EVAL_SCHEMA_VERSION,
       id: 'reviewed',
       bookId,
@@ -88,9 +86,9 @@ test('plans, runs, resumes, and exports a zero-cost BM25 experiment', async (con
           provenance: { kind: 'human' }
         }
       ]
-    }),
-    'utf8'
-  )
+    }
+  await fs.writeFile(join(evalsDir, 'reviewed.json'), JSON.stringify(evalSet), 'utf8')
+  await fs.writeFile(join(root, 'portable-reviewed.json'), JSON.stringify(evalSet), 'utf8')
 
   const configPath = join(root, 'smoke.yaml')
   await fs.writeFile(
@@ -102,7 +100,7 @@ test('plans, runs, resumes, and exports a zero-cost BM25 experiment', async (con
       'outputDir: ./results',
       'books:',
       `  - bookId: ${bookId}`,
-      '    evalSetId: reviewed',
+      '    evalSetPath: ./portable-reviewed.json',
       'chunkers:',
       '  - kind: fixed-token',
       '    size: 32',
@@ -164,4 +162,20 @@ test('plans, runs, resumes, and exports a zero-cost BM25 experiment', async (con
   const csvPath = (await cli('export', first.plan.runPath, '--format', 'csv')).stdout.trim()
   assert.match(await fs.readFile(jsonlPath, 'utf8'), /"caseId":"case-1"/)
   assert.match(await fs.readFile(csvPath, 'utf8'), /"evidenceRecall"/)
+
+  const exportedEvalPath = join(root, 'exported-reviewed.json')
+  await cli(
+    'export-eval',
+    bookId,
+    'reviewed',
+    exportedEvalPath,
+    '--library-dir',
+    libraryDir
+  )
+  const exportedEval = JSON.parse(await fs.readFile(exportedEvalPath, 'utf8')) as {
+    schemaVersion: number
+    cases: unknown[]
+  }
+  assert.equal(exportedEval.schemaVersion, EVAL_SCHEMA_VERSION)
+  assert.equal(exportedEval.cases.length, 1)
 })

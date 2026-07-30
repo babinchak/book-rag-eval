@@ -1,5 +1,6 @@
 import { resolve } from 'node:path'
 import { exportRun, planExperiment, runExperiment } from './experimentRunner'
+import { exportEvalSetFile } from './benchmarkData'
 
 interface ParsedArgs {
   positional: string[]
@@ -42,7 +43,8 @@ function usage(): string {
     '  npm run rag-eval -- plan <experiment.yaml> [--library-dir <path>]',
     '  npm run rag-eval -- run <experiment.yaml> --max-usd <amount> [--library-dir <path>]',
     '  npm run rag-eval -- resume <experiment.yaml> --max-usd <amount> [--library-dir <path>]',
-    '  npm run rag-eval -- export <run.json> --format jsonl|csv'
+    '  npm run rag-eval -- export <run.json> --format jsonl|csv',
+    '  npm run rag-eval -- export-eval <book-id> <eval-set-id> <output.json> [--library-dir <path>]'
   ].join('\n')
 }
 
@@ -88,6 +90,20 @@ async function main(): Promise<void> {
     }
     const outputPath = await exportRun(resolve(target), format)
     process.stdout.write(`${outputPath}\n`)
+    return
+  }
+
+  if (command === 'export-eval') {
+    const evalSetId = args.positional[1]
+    const outputPath = args.positional[2]
+    if (!evalSetId || !outputPath) throw new Error(usage())
+    const exportedPath = await exportEvalSetFile(
+      target,
+      evalSetId,
+      outputPath,
+      optionString(args, '--library-dir')
+    )
+    process.stdout.write(`${exportedPath}\n`)
     return
   }
 

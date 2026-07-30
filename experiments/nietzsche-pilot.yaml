@@ -1,0 +1,32 @@
+# Portable zero-cost pilot using the repository's canonical eval data.
+# Set BOOK_RAG_EVAL_LIBRARY_DIR to the Electron library directory.
+schemaVersion: 1
+name: nietzsche-bm25-pilot
+outputDir: ../.rag-eval/runs
+
+books:
+  - bookId: b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32
+    evalSetPath: ../benchmarks/evals/nietzsche-genealogy-pilot-v1.json
+
+chunkers:
+  - kind: fixed-token
+    size: 256
+    overlap: 32
+    encoding: cl100k_base
+  - kind: fixed-token
+    size: 512
+    overlap: 64
+    encoding: cl100k_base
+  - kind: fixed-token
+    size: 1024
+    overlap: 128
+    encoding: cl100k_base
+  - kind: structural
+    maxSize: 4096
+
+retrievers:
+  - kind: bm25
+
+contextBudgets: [2048, 4096, 8192]
+candidatePoolSize: 50
+splits: [dev]

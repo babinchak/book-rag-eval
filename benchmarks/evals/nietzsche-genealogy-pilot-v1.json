@@ -1,0 +1,340 @@
+{
+  "schemaVersion": 2,
+  "id": "first-eval",
+  "bookId": "b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32",
+  "cases": [
+    {
+      "id": "ebbe2752-4302-41fe-800f-4656e89aee39",
+      "question": "According to Nietzsche, what earlier kind of human relationship lies behind moral obligation?",
+      "canonicalSearchQuery": "Nietzsche human relationships moral obligation",
+      "scope": "within_book",
+      "answerability": "answerable",
+      "goldEvidence": [
+        {
+          "id": "evidence-1",
+          "requirementId": "required-1",
+          "kind": "text",
+          "bookId": "b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32",
+          "nodeId": "node_16dbfb141613f00bc31f",
+          "spineHref": "OEBPS/6131909342849337521_52319-h-0.htm.xhtml",
+          "textStart": 112436,
+          "textEnd": 112562
+        }
+      ],
+      "tags": [],
+      "difficulty": "medium",
+      "split": "dev",
+      "provenance": {
+        "kind": "imported",
+        "source": "legacy-eval-schema-v1"
+      },
+      "searchQuery": "Nietzsche human relationships moral obligation",
+      "goldSpans": [
+        {
+          "bookId": "b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32",
+          "nodeId": "node_16dbfb141613f00bc31f",
+          "spineHref": "OEBPS/6131909342849337521_52319-h-0.htm.xhtml",
+          "textStart": 112436,
+          "textEnd": 112562
+        }
+      ]
+    },
+    {
+      "id": "e8c64c0a-9085-44b2-aecf-10d13dd4b000",
+      "question": "What line in this section shows that the ascetic priest’s existence depends on the ascetic ideal?",
+      "canonicalSearchQuery": "ascetic priest dependence on ideal",
+      "scope": "within_book",
+      "answerability": "answerable",
+      "goldEvidence": [
+        {
+          "id": "evidence-1",
+          "requirementId": "required-1",
+          "kind": "text",
+          "bookId": "b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32",
+          "nodeId": "node_dc58fcf0740c7e3e309c",
+          "spineHref": "OEBPS/6131909342849337521_52319-h-1.htm.xhtml",
+          "textStart": 43817,
+          "textEnd": 43872
+        }
+      ],
+      "tags": [],
+      "difficulty": "medium",
+      "split": "dev",
+      "provenance": {
+        "kind": "imported",
+        "source": "legacy-eval-schema-v1"
+      },
+      "searchQuery": "ascetic priest dependence on ideal",
+      "goldSpans": [
+        {
+          "bookId": "b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32",
+          "nodeId": "node_dc58fcf0740c7e3e309c",
+          "spineHref": "OEBPS/6131909342849337521_52319-h-1.htm.xhtml",
+          "textStart": 43817,
+          "textEnd": 43872
+        }
+      ]
+    },
+    {
+      "id": "ad8108ae-a28c-4fad-a6a3-58b694b30912",
+      "question": "What philosophical influences shaped Nietzsche's views on morality in this passage?",
+      "canonicalSearchQuery": "Nietzsche's thoughts on morality origins",
+      "scope": "within_book",
+      "answerability": "answerable",
+      "goldEvidence": [
+        {
+          "id": "evidence-1",
+          "requirementId": "required-1",
+          "kind": "text",
+          "bookId": "b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32",
+          "nodeId": "node_3e34ab3f0c647d1508d7",
+          "spineHref": "OEBPS/6131909342849337521_52319-h-0.htm.xhtml",
+          "textStart": 9691,
+          "textEnd": 9743
+        }
+      ],
+      "tags": [],
+      "difficulty": "medium",
+      "split": "dev",
+      "provenance": {
+        "kind": "imported",
+        "source": "legacy-eval-schema-v1"
+      },
+      "notes": "Auto-generated from OEBPS/6131909342849337521_52319-h-0.htm.xhtml (window 0-12000).\n\nAnswer span: \"theories of origin to which these essays are devoted\"",
+      "searchQuery": "Nietzsche's thoughts on morality origins",
+      "goldSpans": [
+        {
+          "bookId": "b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32",
+          "nodeId": "node_3e34ab3f0c647d1508d7",
+          "spineHref": "OEBPS/6131909342849337521_52319-h-0.htm.xhtml",
+          "textStart": 9691,
+          "textEnd": 9743
+        }
+      ]
+    },
+    {
+      "id": "11192df9-f956-46d8-b72e-42615ab6c420",
+      "question": "How does Nietzsche describe the relationship between priestly and knightly-aristocratic values?",
+      "canonicalSearchQuery": "contrast between priestly and knightly values",
+      "scope": "within_book",
+      "answerability": "answerable",
+      "goldEvidence": [
+        {
+          "id": "evidence-1",
+          "requirementId": "required-1",
+          "kind": "text",
+          "bookId": "b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32",
+          "nodeId": "node_b25acc68fe266a5a0cc5",
+          "spineHref": "OEBPS/6131909342849337521_52319-h-0.htm.xhtml",
+          "textStart": 38098,
+          "textEnd": 38131
+        }
+      ],
+      "tags": [],
+      "difficulty": "medium",
+      "split": "dev",
+      "provenance": {
+        "kind": "imported",
+        "source": "legacy-eval-schema-v1"
+      },
+      "notes": "Auto-generated from OEBPS/6131909342849337521_52319-h-0.htm.xhtml (window 34500-46500).\n\nAnswer span: \"the very antithesis of the latter\"",
+      "searchQuery": "contrast between priestly and knightly values",
+      "goldSpans": [
+        {
+          "bookId": "b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32",
+          "nodeId": "node_b25acc68fe266a5a0cc5",
+          "spineHref": "OEBPS/6131909342849337521_52319-h-0.htm.xhtml",
+          "textStart": 38098,
+          "textEnd": 38131
+        }
+      ]
+    },
+    {
+      "id": "4f44b111-1fee-4ca2-850b-1fefab144126",
+      "question": "What does Nietzsche suggest about the relationship between the Jews and Romans in terms of moral values?",
+      "canonicalSearchQuery": "Jews and Romans moral conflict",
+      "scope": "within_book",
+      "answerability": "answerable",
+      "goldEvidence": [
+        {
+          "id": "evidence-1",
+          "requirementId": "required-1",
+          "kind": "text",
+          "bookId": "b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32",
+          "nodeId": "node_129d30f23d85b87c0446",
+          "spineHref": "OEBPS/6131909342849337521_52319-h-0.htm.xhtml",
+          "textStart": 76427,
+          "textEnd": 76454
+        }
+      ],
+      "tags": [],
+      "difficulty": "medium",
+      "split": "dev",
+      "provenance": {
+        "kind": "imported",
+        "source": "legacy-eval-schema-v1"
+      },
+      "notes": "Auto-generated from OEBPS/6131909342849337521_52319-h-0.htm.xhtml (window 69000-81000).\n\nAnswer span: \"the unnatural, as though it\"",
+      "searchQuery": "Jews and Romans moral conflict",
+      "goldSpans": [
+        {
+          "bookId": "b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32",
+          "nodeId": "node_129d30f23d85b87c0446",
+          "spineHref": "OEBPS/6131909342849337521_52319-h-0.htm.xhtml",
+          "textStart": 76427,
+          "textEnd": 76454
+        }
+      ]
+    },
+    {
+      "id": "7f1cbb14-ef6f-4560-9f3a-280f4c8605b9",
+      "question": "How did ancient perceptions of cruelty relate to societal celebrations and executions?",
+      "canonicalSearchQuery": "cruelty in ancient celebrations",
+      "scope": "within_book",
+      "answerability": "answerable",
+      "goldEvidence": [
+        {
+          "id": "evidence-1",
+          "requirementId": "required-1",
+          "kind": "text",
+          "bookId": "b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32",
+          "nodeId": "node_9e4551501f360fef0f4d",
+          "spineHref": "OEBPS/6131909342849337521_52319-h-0.htm.xhtml",
+          "textStart": 105462,
+          "textEnd": 105487
+        }
+      ],
+      "tags": [],
+      "difficulty": "medium",
+      "split": "dev",
+      "provenance": {
+        "kind": "imported",
+        "source": "legacy-eval-schema-v1"
+      },
+      "notes": "Auto-generated from OEBPS/6131909342849337521_52319-h-0.htm.xhtml (window 103500-115500).\n\nAnswer span: \"Without cruelty, no feast\"",
+      "searchQuery": "cruelty in ancient celebrations",
+      "goldSpans": [
+        {
+          "bookId": "b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32",
+          "nodeId": "node_9e4551501f360fef0f4d",
+          "spineHref": "OEBPS/6131909342849337521_52319-h-0.htm.xhtml",
+          "textStart": 105462,
+          "textEnd": 105487
+        }
+      ]
+    },
+    {
+      "id": "5d4372c5-e848-4f6f-b352-d43670a93099",
+      "question": "How does Schopenhauer's view of aesthetic contemplation differ from Kant's perspective on art?",
+      "canonicalSearchQuery": "differences between Schopenhauer and Kant on art",
+      "scope": "within_book",
+      "answerability": "answerable",
+      "goldEvidence": [
+        {
+          "id": "evidence-1",
+          "requirementId": "required-1",
+          "kind": "text",
+          "bookId": "b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32",
+          "nodeId": "node_7d44054de96e699c144f",
+          "spineHref": "OEBPS/6131909342849337521_52319-h-1.htm.xhtml",
+          "textStart": 18667,
+          "textEnd": 18690
+        }
+      ],
+      "tags": [],
+      "difficulty": "medium",
+      "split": "dev",
+      "provenance": {
+        "kind": "imported",
+        "source": "legacy-eval-schema-v1"
+      },
+      "notes": "Auto-generated from OEBPS/6131909342849337521_52319-h-1.htm.xhtml (window 11500-23500).\n\nAnswer span: \"the calming of the will\"",
+      "searchQuery": "differences between Schopenhauer and Kant on art",
+      "goldSpans": [
+        {
+          "bookId": "b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32",
+          "nodeId": "node_7d44054de96e699c144f",
+          "spineHref": "OEBPS/6131909342849337521_52319-h-1.htm.xhtml",
+          "textStart": 18667,
+          "textEnd": 18690
+        }
+      ]
+    },
+    {
+      "id": "36715dca-6fd5-4cfd-a90c-e43c0da9a1b4",
+      "question": "How does Nietzsche describe the relationship between the ascetic priest and life itself?",
+      "canonicalSearchQuery": "Nietzsche views asceticism and life",
+      "scope": "within_book",
+      "answerability": "answerable",
+      "goldEvidence": [
+        {
+          "id": "evidence-1",
+          "requirementId": "required-1",
+          "kind": "text",
+          "bookId": "b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32",
+          "nodeId": "node_602b94a117f08d3c12a7",
+          "spineHref": "OEBPS/6131909342849337521_52319-h-1.htm.xhtml",
+          "textStart": 52510,
+          "textEnd": 52538
+        }
+      ],
+      "tags": [],
+      "difficulty": "medium",
+      "split": "dev",
+      "provenance": {
+        "kind": "imported",
+        "source": "legacy-eval-schema-v1"
+      },
+      "notes": "Auto-generated from OEBPS/6131909342849337521_52319-h-1.htm.xhtml (window 46000-58000).\n\nAnswer span: \"the ascetic ideal is a dodge\"",
+      "searchQuery": "Nietzsche views asceticism and life",
+      "goldSpans": [
+        {
+          "bookId": "b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32",
+          "nodeId": "node_602b94a117f08d3c12a7",
+          "spineHref": "OEBPS/6131909342849337521_52319-h-1.htm.xhtml",
+          "textStart": 52510,
+          "textEnd": 52538
+        }
+      ]
+    },
+    {
+      "id": "df4e07cf-e114-4328-9373-2c4a0767b530",
+      "question": "What does Nietzsche suggest about the Germans' moral development compared to the Hellenes?",
+      "canonicalSearchQuery": "Germans vs Hellenes moral differences",
+      "scope": "within_book",
+      "answerability": "answerable",
+      "goldEvidence": [
+        {
+          "id": "evidence-1",
+          "requirementId": "required-1",
+          "kind": "text",
+          "bookId": "b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32",
+          "nodeId": "node_c2269f03dcdcd58d79a1",
+          "spineHref": "OEBPS/6131909342849337521_52319-h-2.htm.xhtml",
+          "textStart": 1197,
+          "textEnd": 1244
+        }
+      ],
+      "tags": [],
+      "difficulty": "medium",
+      "split": "dev",
+      "provenance": {
+        "kind": "imported",
+        "source": "legacy-eval-schema-v1"
+      },
+      "notes": "Auto-generated from OEBPS/6131909342849337521_52319-h-2.htm.xhtml (window 0-12000).\n\nAnswer span: \"their morals grew up among the governing castes\"",
+      "searchQuery": "Germans vs Hellenes moral differences",
+      "goldSpans": [
+        {
+          "bookId": "b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32",
+          "nodeId": "node_c2269f03dcdcd58d79a1",
+          "spineHref": "OEBPS/6131909342849337521_52319-h-2.htm.xhtml",
+          "textStart": 1197,
+          "textEnd": 1244
+        }
+      ]
+    }
+  ],
+  "createdAt": 1778103237825,
+  "updatedAt": 1778449417028
+}

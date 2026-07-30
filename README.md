@@ -152,9 +152,10 @@ run:
 
 ```bash
 npm run rag-eval -- plan experiments/smoke.yaml
-npm run rag-eval -- run experiments/smoke.yaml --max-usd 10
-npm run rag-eval -- resume experiments/smoke.yaml --max-usd 10
-npm run rag-eval -- export .rag-eval/runs/<run>.json --format jsonl
+npm run rag-eval -- run experiments/smoke.yaml -- --max-usd 10
+npm run rag-eval -- resume experiments/smoke.yaml -- --max-usd 10
+npm run rag-eval -- export .rag-eval/runs/<run>.json -- --format jsonl
+npm run rag-eval -- export-eval <book-id> <set-id> benchmarks/evals/<set>.json
 ```
 
 `plan` reports selected books/cases, missing content-addressed artifacts,
@@ -168,6 +169,10 @@ Set `libraryDir` in the experiment or use
 `BOOK_RAG_EVAL_LIBRARY_DIR`/`--library-dir`. For headless paid retrieval, set
 `OPENAI_API_KEY`; the key is read from the environment and never written by the
 runner.
+
+For portable benchmarks, use `evalSetPath` in experiment YAML and commit the
+canonical eval JSON. `evalSetId` remains available for draft sets stored inside
+the Electron library.
 
 Python sidecar setup will be documented once it lands.
 

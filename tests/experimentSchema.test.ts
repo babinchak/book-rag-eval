@@ -41,3 +41,26 @@ test('rejects invalid overlap and duplicate context budgets', () => {
     /overlap must be smaller|contextBudgets must be unique/
   )
 })
+
+test('accepts portable eval files and rejects ambiguous eval sources', () => {
+  const base = {
+    schemaVersion: 1,
+    name: 'portable',
+    chunkers: [{ kind: 'fixed-token', size: 256, overlap: 32 }],
+    retrievers: [{ kind: 'bm25' }],
+    contextBudgets: [2048]
+  }
+  const parsed = parseExperimentConfig({
+    ...base,
+    books: [{ bookId: 'book-1', evalSetPath: '../benchmarks/evals/book-1.json' }]
+  })
+  assert.equal(parsed.books[0].evalSetPath, '../benchmarks/evals/book-1.json')
+  assert.throws(
+    () =>
+      parseExperimentConfig({
+        ...base,
+        books: [{ bookId: 'book-1', evalSetId: 'draft', evalSetPath: 'draft.json' }]
+      }),
+    /exactly one/
+  )
+})
