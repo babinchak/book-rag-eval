@@ -613,8 +613,9 @@ export async function runDraftGeneration(
       const previousAttempts = run.attempts.filter(
         (attempt) => attempt.candidateId === candidate.id
       )
-      const maximumAttempts =
-        loaded.config.maxAttemptsPerCandidate + (options.failuresOnly ? additionalAttempts : 0)
+      const maximumAttempts = options.failuresOnly
+        ? previousAttempts.length + additionalAttempts
+        : loaded.config.maxAttemptsPerCandidate
       if (
         previousAttempts.length >= maximumAttempts &&
         run.failures.some((failure) => failure.candidateId === candidate.id)
