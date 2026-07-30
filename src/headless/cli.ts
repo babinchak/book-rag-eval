@@ -1,6 +1,7 @@
 import { resolve } from 'node:path'
 import { exportRun, planExperiment, runExperiment } from './experimentRunner'
 import { exportEvalSetFile } from './benchmarkData'
+import { createEvidenceReviewPacket } from './evidenceSampler'
 
 interface ParsedArgs {
   positional: string[]
@@ -44,7 +45,8 @@ function usage(): string {
     '  npm run rag-eval -- run <experiment.yaml> --max-usd <amount> [--library-dir <path>]',
     '  npm run rag-eval -- resume <experiment.yaml> --max-usd <amount> [--library-dir <path>]',
     '  npm run rag-eval -- export <run.json> --format jsonl|csv',
-    '  npm run rag-eval -- export-eval <book-id> <eval-set-id> <output.json> [--library-dir <path>]'
+    '  npm run rag-eval -- export-eval <book-id> <eval-set-id> <output.json> [--library-dir <path>]',
+    '  npm run rag-eval -- sample-evidence <corpus.json> <output.json> --per-book <count> [--library-dir <path>]'
   ].join('\n')
 }
 
@@ -104,6 +106,20 @@ async function main(): Promise<void> {
       optionString(args, '--library-dir')
     )
     process.stdout.write(`${exportedPath}\n`)
+    return
+  }
+
+  if (command === 'sample-evidence') {
+    const outputPath = args.positional[1]
+    const rawPerBook = optionString(args, '--per-book')
+    if (!outputPath || rawPerBook === undefined) throw new Error(usage())
+    const sampledPath = await createEvidenceReviewPacket(
+      target,
+      outputPath,
+      Number(rawPerBook),
+      optionString(args, '--library-dir')
+    )
+    process.stdout.write(`${sampledPath}\n`)
     return
   }
 

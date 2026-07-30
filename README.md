@@ -156,6 +156,7 @@ npm run rag-eval -- run experiments/smoke.yaml -- --max-usd 10
 npm run rag-eval -- resume experiments/smoke.yaml -- --max-usd 10
 npm run rag-eval -- export .rag-eval/runs/<run>.json -- --format jsonl
 npm run rag-eval -- export-eval <book-id> <set-id> benchmarks/evals/<set>.json
+npm run rag-eval -- sample-evidence benchmarks/corpora/six-book-smoke.json .rag-eval/review.json -- --per-book 25
 ```
 
 `plan` reports selected books/cases, missing content-addressed artifacts,
@@ -173,6 +174,12 @@ runner.
 For portable benchmarks, use `evalSetPath` in experiment YAML and commit the
 canonical eval JSON. `evalSetId` remains available for draft sets stored inside
 the Electron library.
+
+`sample-evidence` creates a deterministic, chunker-independent authoring packet
+from canonical EPUB nodes. It samples across each book and reserves slots for
+tables, images, footnotes, lists, and blockquotes when those node types exist.
+The first 150-candidate packet is versioned at
+`benchmarks/authoring/six-book-smoke-candidates-v1.json`.
 
 Python sidecar setup will be documented once it lands.
 
