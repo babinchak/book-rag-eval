@@ -18,8 +18,11 @@ async function ensureLibraryDir(): Promise<void> {
 }
 
 interface StrategiesFile {
+  version?: number
   strategies: SavedStrategy[]
 }
+
+const STRATEGIES_FILE_VERSION = 2
 
 let cache: SavedStrategy[] | null = null
 
@@ -39,15 +42,36 @@ async function readFile(): Promise<SavedStrategy[]> {
     throw err
   }
   const parsed = JSON.parse(raw) as StrategiesFile
-  const list = Array.isArray(parsed.strategies) ? parsed.strategies.filter(isValidSavedStrategy) : []
+  let list = Array.isArray(parsed.strategies) ? parsed.strategies.filter(isValidSavedStrategy) : []
+
+  if ((parsed.version ?? 1) < STRATEGIES_FILE_VERSION) {
+    list = migrateToTokenBaseline(list)
+    await writeFile(list)
+  }
+
   cache = list
   return list
+}
+
+function migrateToTokenBaseline(strategies: SavedStrategy[]): SavedStrategy[] {
+  const renamed = strategies.map((strategy) => {
+    if (!strategy.id.startsWith('seed-fixed-1200-200-')) return strategy
+    return {
+      ...strategy,
+      name: strategy.name.replace(/^Fixed 1200\/200/, 'Chars 1200/200 (legacy)')
+    }
+  })
+  const existingIds = new Set(renamed.map((strategy) => strategy.id))
+  const missingDefaults = defaultSeedStrategies().filter(
+    (strategy) => strategy.config.chunker.kind === 'fixed-token' && !existingIds.has(strategy.id)
+  )
+  return [...renamed, ...missingDefaults]
 }
 
 async function writeFile(strategies: SavedStrategy[]): Promise<void> {
   await ensureLibraryDir()
   const tmp = strategiesPath() + '.tmp'
-  const payload: StrategiesFile = { strategies }
+  const payload: StrategiesFile = { version: STRATEGIES_FILE_VERSION, strategies }
   await fs.writeFile(tmp, JSON.stringify(payload, null, 2), 'utf8')
   await fs.rename(tmp, strategiesPath())
   cache = strategies

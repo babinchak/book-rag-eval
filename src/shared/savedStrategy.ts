@@ -26,9 +26,7 @@ export interface StrategyConfig {
 
 // Augment stage — stackable steps that enrich a chunk before embedding.
 // v1 ships "breadcrumb" only; "summary" is reserved for the next pass.
-export type AugmentStep =
-  | { kind: 'breadcrumb' }
-  | { kind: 'summary'; model: string }
+export type AugmentStep = { kind: 'breadcrumb' } | { kind: 'summary'; model: string }
 
 export interface EmbeddingSlot {
   model: 'text-embedding-3-small' | 'text-embedding-3-large'
@@ -37,9 +35,7 @@ export interface EmbeddingSlot {
 // Post-retrieve stage — stackable steps that reshape candidates before
 // the answer model sees them. v1 ships only the no-op identity reranker
 // (preserves shape for future cross-encoder / Cohere reranker work).
-export type PostRetrieveStep =
-  | { kind: 'rerank-identity' }
-  | { kind: 'dedup' }
+export type PostRetrieveStep = { kind: 'rerank-identity' } | { kind: 'dedup' }
 
 export interface GenerationSlot {
   model: 'gpt-4o-mini' | 'gpt-4o' | 'gpt-4.1' | 'gpt-4.1-mini'
@@ -81,7 +77,7 @@ export function newSavedStrategyId(name: string): string {
 export function defaultSeedStrategies(): SavedStrategy[] {
   const now = Date.now()
   const chunkers: ChunkParams[] = [
-    { kind: 'fixed', size: 1200, overlap: 200 },
+    { kind: 'fixed-token', size: 1024, overlap: 128, encoding: 'cl100k_base' },
     { kind: 'paragraph', targetSize: 1200 },
     { kind: 'sentence', targetSize: 1200 },
     { kind: 'structural', maxSize: 4000 },
@@ -118,8 +114,10 @@ export function defaultSeedStrategies(): SavedStrategy[] {
 
 function strategyLabelShort(p: ChunkParams): string {
   switch (p.kind) {
+    case 'fixed-token':
+      return `Tokens ${p.size}/${p.overlap}`
     case 'fixed':
-      return `Fixed ${p.size}/${p.overlap}`
+      return `Chars ${p.size}/${p.overlap} (legacy)`
     case 'paragraph':
       return `Para ~${p.targetSize}`
     case 'sentence':

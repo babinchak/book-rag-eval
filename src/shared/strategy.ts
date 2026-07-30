@@ -2,6 +2,8 @@ import type { ChunkParams } from '../preload/types'
 
 export function strategyIdOf(params: ChunkParams): string {
   switch (params.kind) {
+    case 'fixed-token':
+      return `fixed-token-${params.encoding}-${params.size}-${params.overlap}`
     case 'fixed':
       return `fixed-${params.size}-${params.overlap}`
     case 'paragraph':
@@ -17,8 +19,10 @@ export function strategyIdOf(params: ChunkParams): string {
 
 export function strategyLabel(params: ChunkParams): string {
   switch (params.kind) {
+    case 'fixed-token':
+      return `Fixed tokens ${params.size}/${params.overlap}`
     case 'fixed':
-      return `Fixed ${params.size}/${params.overlap}`
+      return `Fixed chars ${params.size}/${params.overlap} (legacy)`
     case 'paragraph':
       return `Paragraph ~${params.targetSize}`
     case 'sentence':
@@ -31,7 +35,7 @@ export function strategyLabel(params: ChunkParams): string {
 }
 
 export const DEFAULT_STRATEGIES: ChunkParams[] = [
-  { kind: 'fixed', size: 1200, overlap: 200 },
+  { kind: 'fixed-token', size: 1024, overlap: 128, encoding: 'cl100k_base' },
   { kind: 'paragraph', targetSize: 1200 },
   { kind: 'sentence', targetSize: 1200 },
   { kind: 'structural', maxSize: 4000 },
@@ -40,6 +44,13 @@ export const DEFAULT_STRATEGIES: ChunkParams[] = [
 
 export function normalizeParams(p: unknown): ChunkParams {
   if (p && typeof p === 'object' && 'kind' in p) {
+    const kind = (p as { kind: unknown }).kind
+    if (kind === 'fixed-token') {
+      const tokenParams = p as Omit<Extract<ChunkParams, { kind: 'fixed-token' }>, 'encoding'> & {
+        encoding?: 'cl100k_base'
+      }
+      return { ...tokenParams, encoding: tokenParams.encoding ?? 'cl100k_base' }
+    }
     return p as ChunkParams
   }
   // Backward compat: old persisted chunks had { size, overlap } without kind

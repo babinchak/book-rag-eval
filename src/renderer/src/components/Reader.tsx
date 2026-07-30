@@ -1644,6 +1644,15 @@ function ChunkInspector({
         <span style={{ color: cv.text4 }}>Words</span>
         <span style={{ fontFamily: 'monospace', color: cv.text1 }}>{words.toLocaleString()}</span>
 
+        {chunk.tokenCount !== undefined && (
+          <>
+            <span style={{ color: cv.text4 }}>Tokens</span>
+            <span style={{ fontFamily: 'monospace', color: cv.text1 }}>
+              {chunk.tokenCount.toLocaleString()}
+            </span>
+          </>
+        )}
+
         <span style={{ color: cv.text4 }}>Position</span>
         <span style={{ fontFamily: 'monospace', color: cv.text1 }}>
           {chunk.textStart.toLocaleString()}–{chunk.textEnd.toLocaleString()}

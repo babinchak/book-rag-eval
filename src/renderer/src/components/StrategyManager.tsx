@@ -19,6 +19,7 @@ interface StrategyManagerProps {
 const EMBED_MODELS: EmbeddingSlot['model'][] = ['text-embedding-3-small', 'text-embedding-3-large']
 const CHAT_MODELS: GenerationSlot['model'][] = ['gpt-4o-mini', 'gpt-4o', 'gpt-4.1-mini', 'gpt-4.1']
 const CHUNKER_KINDS: ChunkParams['kind'][] = [
+  'fixed-token',
   'fixed',
   'paragraph',
   'sentence',
@@ -29,6 +30,8 @@ const RETRIEVER_KINDS: RetrieverParams['kind'][] = ['vector', 'bm25', 'hybrid-rr
 
 function defaultChunkerOf(kind: ChunkParams['kind']): ChunkParams {
   switch (kind) {
+    case 'fixed-token':
+      return { kind: 'fixed-token', size: 1024, overlap: 128, encoding: 'cl100k_base' }
     case 'fixed':
       return { kind: 'fixed', size: 1200, overlap: 200 }
     case 'paragraph':
@@ -49,7 +52,7 @@ function defaultRetrieverOf(kind: RetrieverParams['kind']): RetrieverParams {
 
 function emptyConfig(): StrategyConfig {
   return {
-    chunker: defaultChunkerOf('paragraph'),
+    chunker: defaultChunkerOf('fixed-token'),
     augment: [],
     embedding: { model: 'text-embedding-3-large' },
     retriever: { kind: 'vector' },
@@ -61,9 +64,10 @@ function emptyConfig(): StrategyConfig {
 function StrategyManager({ onBack }: StrategyManagerProps): React.JSX.Element {
   const [strategies, setStrategies] = useState<SavedStrategy[]>([])
   const [editing, setEditing] = useState<SavedStrategy | null>(null)
-  const [creatingDraft, setCreatingDraft] = useState<{ name: string; config: StrategyConfig } | null>(
-    null
-  )
+  const [creatingDraft, setCreatingDraft] = useState<{
+    name: string
+    config: StrategyConfig
+  } | null>(null)
   const [error, setError] = useState<IpcError | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -92,7 +96,12 @@ function StrategyManager({ onBack }: StrategyManagerProps): React.JSX.Element {
   }
 
   async function handleDelete(s: SavedStrategy): Promise<void> {
-    if (!confirm(`Delete strategy "${s.name}"?\n\nExisting chunks, embeddings, and run records on disk are not removed.`)) return
+    if (
+      !confirm(
+        `Delete strategy "${s.name}"?\n\nExisting chunks, embeddings, and run records on disk are not removed.`
+      )
+    )
+      return
     const r = await window.api.strategies.delete(s.id)
     if (!r.ok) {
       setError(r.error)
@@ -272,7 +281,9 @@ function StrategyRow({
 function Pill({ label, value }: { label: string; value: string }): React.JSX.Element {
   return (
     <div style={{ minWidth: 110, fontSize: 12 }}>
-      <div style={{ color: cv.text4, fontSize: 10, textTransform: 'uppercase', letterSpacing: 0.4 }}>
+      <div
+        style={{ color: cv.text4, fontSize: 10, textTransform: 'uppercase', letterSpacing: 0.4 }}
+      >
         {label}
       </div>
       <div style={{ color: cv.text2, fontFamily: 'monospace', marginTop: 2 }}>{value}</div>
@@ -317,8 +328,10 @@ function btnStyle(variant: 'default' | 'danger' | 'primary'): React.CSSPropertie
 
 function describeChunker(c: ChunkParams): string {
   switch (c.kind) {
+    case 'fixed-token':
+      return `tokens ${c.size}/${c.overlap}`
     case 'fixed':
-      return `fixed ${c.size}/${c.overlap}`
+      return `chars ${c.size}/${c.overlap} legacy`
     case 'paragraph':
       return `paragraph ~${c.targetSize}`
     case 'sentence':
@@ -426,9 +439,32 @@ function StrategyEditorModal({
             options={CHUNKER_KINDS}
           />
         </Field>
+        {config.chunker.kind === 'fixed-token' && (
+          <>
+            <Field label="Size (tokens)">
+              <NumberInput
+                value={config.chunker.size}
+                onChange={(v) => patchChunker({ size: v })}
+                min={32}
+                max={8192}
+              />
+            </Field>
+            <Field label="Overlap (tokens)">
+              <NumberInput
+                value={config.chunker.overlap}
+                onChange={(v) => patchChunker({ overlap: v })}
+                min={0}
+                max={Math.max(0, config.chunker.size - 1)}
+              />
+            </Field>
+            <Field label="Encoding">
+              <input value={config.chunker.encoding} readOnly style={inputStyle} />
+            </Field>
+          </>
+        )}
         {config.chunker.kind === 'fixed' && (
           <>
-            <Field label="Size (chars)">
+            <Field label="Size (chars, legacy)">
               <NumberInput
                 value={config.chunker.size}
                 onChange={(v) => patchChunker({ size: v })}
@@ -436,7 +472,7 @@ function StrategyEditorModal({
                 max={8000}
               />
             </Field>
-            <Field label="Overlap (chars)">
+            <Field label="Overlap (chars, legacy)">
               <NumberInput
                 value={config.chunker.overlap}
                 onChange={(v) => patchChunker({ overlap: v })}
@@ -653,11 +689,7 @@ function Select<T extends string>({
   options: readonly T[]
 }): React.JSX.Element {
   return (
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value as T)}
-      style={inputStyle}
-    >
+    <select value={value} onChange={(e) => onChange(e.target.value as T)} style={inputStyle}>
       {options.map((o) => (
         <option key={o} value={o}>
           {o}

@@ -50,15 +50,22 @@ Every chunk produced by any strategy carries:
 interface Chunk {
   id: string
   strategyId: string
-  spineHref: string           // Readium spine item this chunk belongs to
-  startLocator: Locator       // Readium locator (CFI / progression)
+  spineHref: string // Readium spine item this chunk belongs to
+  startLocator: Locator // Readium locator (CFI / progression)
   endLocator: Locator
   text: string
+  tokenCount?: number // exact for token-window chunkers
   meta?: Record<string, unknown>
 }
 ```
 
 Locators are what make the visual overlay possible: any retrieved chunk can be projected back onto the rendered page as a highlight, regardless of which strategy produced it.
+
+The default fixed baseline is `1024` tokens with `128` tokens of overlap,
+counted with `cl100k_base` to match the current OpenAI embedding models.
+Persisted character offsets remain the source of truth for reader highlights
+and gold-span evaluation. The older `1200`/`200` character chunker remains
+available as a labeled legacy strategy so historical runs stay reproducible.
 
 ## Strategies
 
@@ -104,6 +111,12 @@ Build:
 npm run build:win    # Windows
 npm run build:mac    # macOS
 npm run build:linux  # Linux
+```
+
+Tests:
+
+```bash
+npm test
 ```
 
 Python sidecar setup will be documented once it lands.

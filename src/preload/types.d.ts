@@ -116,6 +116,14 @@ export type LibraryOpenResult = { ok: true; data: LoadedEpub } | { ok: false; er
 export type LibraryRemoveResult = { ok: true } | { ok: false; error: IpcError }
 
 export type ChunkParams =
+  | {
+      kind: 'fixed-token'
+      size: number
+      overlap: number
+      encoding: 'cl100k_base'
+    }
+  // Legacy character-window chunker. Kept so existing chunk sets and saved
+  // strategies remain reproducible; new strategies default to fixed-token.
   | { kind: 'fixed'; size: number; overlap: number }
   | { kind: 'paragraph'; targetSize: number }
   | { kind: 'sentence'; targetSize: number }
@@ -134,6 +142,7 @@ export interface Chunk {
   textStart: number
   textEnd: number
   text: string
+  tokenCount?: number
 }
 
 export interface ChunkSetSummary {
@@ -203,9 +212,7 @@ export type RetrieverParams =
   | { kind: 'bm25' }
   | { kind: 'hybrid-rrf'; rrfK?: number }
 
-export type AugmentStep =
-  | { kind: 'breadcrumb' }
-  | { kind: 'summary'; model: string }
+export type AugmentStep = { kind: 'breadcrumb' } | { kind: 'summary'; model: string }
 
 export type PostRetrieveStep = { kind: 'rerank-identity' } | { kind: 'dedup' }
 

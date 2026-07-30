@@ -4,6 +4,7 @@ import { bookDir } from './library'
 import { readSpineRaw } from './epub'
 import { sidecar } from './sidecar'
 import { getOpenaiKey } from './settings'
+import { chunkTokenSpans } from './tokenChunking'
 import { normalizeParams, strategyIdOf } from '../shared/strategy'
 import type {
   Chunk,
@@ -78,7 +79,8 @@ function makeChunk(
   spineHref: string,
   text: string,
   textStart: number,
-  textEnd: number
+  textEnd: number,
+  tokenCount?: number
 ): Chunk {
   return {
     id: `${sid}::${spineHref}#${textStart}`,
@@ -86,8 +88,30 @@ function makeChunk(
     spineHref,
     textStart,
     textEnd,
-    text
+    text,
+    ...(tokenCount !== undefined ? { tokenCount } : {})
   }
+}
+
+function chunkFixedTokens(
+  spineHref: string,
+  text: string,
+  params: { size: number; overlap: number; encoding: 'cl100k_base' },
+  sid: string
+): Chunk[] {
+  if (params.encoding !== 'cl100k_base') {
+    throw new Error(`unsupported token encoding: ${params.encoding}`)
+  }
+  return chunkTokenSpans(text, params.size, params.overlap).map((span) =>
+    makeChunk(
+      sid,
+      spineHref,
+      text.slice(span.start, span.end),
+      span.start,
+      span.end,
+      span.tokenCount
+    )
+  )
 }
 
 function chunkFixed(
@@ -344,6 +368,9 @@ export async function runChunking(
   for (const item of spine) {
     const text = htmlToPlainText(item.rawHtml)
     switch (params.kind) {
+      case 'fixed-token':
+        chunks.push(...chunkFixedTokens(item.href, text, params, sid))
+        break
       case 'fixed':
         chunks.push(...chunkFixed(item.href, text, params, sid))
         break
