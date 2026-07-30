@@ -5,7 +5,9 @@ import { join } from 'node:path'
 import test from 'node:test'
 import {
   planDraftGeneration,
+  retryDraftFailures,
   runDraftGeneration,
+  validateDraft,
   type DraftModel
 } from '../src/headless/draftGeneration'
 import { compileApprovedDrafts } from '../src/headless/draftCompilation'
@@ -145,6 +147,40 @@ test('plans, validates, meters, and resumes canonical draft generation', async (
   assert.equal(resumed.drafts.length, 1)
   assert.equal(resumed.ledger.requests, 2)
 
+  const failedRun = JSON.parse(await fs.readFile(run.plan.runPath, 'utf8')) as {
+    status: string
+    attempts: Array<{ validationError?: string }>
+    drafts: unknown[]
+    failures: Array<{ candidateId: string; error: string }>
+  }
+  failedRun.status = 'completed_with_failures'
+  failedRun.drafts = []
+  failedRun.failures = [{ candidateId: 'candidate-1', error: 'simulated exhausted validation' }]
+  for (const attempt of failedRun.attempts) {
+    attempt.validationError = 'simulated exhausted validation'
+  }
+  await fs.writeFile(run.plan.runPath, JSON.stringify(failedRun), 'utf8')
+  let recoveryCalls = 0
+  const recovered = await retryDraftFailures(run.plan.runPath, 1, 1, {
+    model: {
+      async generate() {
+        recoveryCalls += 1
+        return {
+          draft: responses[1].draft,
+          resolvedModel: 'fake-model-1-snapshot',
+          inputTokens: 105,
+          outputTokens: 21
+        }
+      }
+    }
+  })
+  assert.equal(recoveryCalls, 1)
+  assert.equal(recovered.status, 'completed')
+  assert.equal(recovered.drafts.length, 1)
+  assert.equal(recovered.failures.length, 0)
+  assert.equal(recovered.recoveryEvents?.length, 1)
+  assert.equal(recovered.recoveryEvents?.[0].additionalAttempts, 1)
+
   const compiledDir = join(root, 'compiled')
   await assert.rejects(
     () => compileApprovedDrafts(run.plan.runPath, compiledDir, 'Reviewer One'),
@@ -169,4 +205,37 @@ test('plans, validates, meters, and resumes canonical draft generation', async (
   assert.equal(evalSet.cases.length, 1)
   assert.equal(evalSet.cases[0].provenance.reviewedBy, 'Reviewer One')
   assert.equal(evalSet.cases[0].goldEvidence[0].textStart, 100)
+})
+
+test('allows short exact spans for image metadata evidence', () => {
+  const record = validateDraft(
+    {
+      id: 'image-candidate',
+      bookId: 'book-1',
+      sourceHash: 'source-1',
+      nodeId: 'image-1',
+      kind: 'image',
+      spineHref: 'chapter.xhtml',
+      textStart: 0,
+      textEnd: 5,
+      headingPath: ['Figures'],
+      excerpt: 'Chart',
+      assets: ['chart.png'],
+      reviewStatus: 'pending'
+    },
+    {
+      question: 'What kind of visual is identified?',
+      searchQuery: 'type of depicted visual',
+      answerSpan: 'Chart',
+      referenceAnswer: 'It is identified as a chart.',
+      tags: ['image_metadata'],
+      difficulty: 'easy'
+    },
+    'model-snapshot',
+    'prompt-hash',
+    'packet-fingerprint'
+  )
+
+  assert.equal(record.evidenceKind, 'image')
+  assert.equal(record.answerSpan, 'Chart')
 })

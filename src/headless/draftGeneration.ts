@@ -140,6 +140,12 @@ export interface DraftGenerationRun {
   attempts: DraftAttempt[]
   drafts: EvalDraftRecord[]
   failures: Array<{ candidateId: string; error: string }>
+  recoveryEvents?: Array<{
+    startedAt: number
+    sourceControl: SourceControlState
+    additionalAttempts: number
+    startingFailures: number
+  }>
   error?: string
 }
 
@@ -311,6 +317,11 @@ export function validateDraft(
   packetFingerprint: string
 ): EvalDraftRecord {
   const draft = generatedEvalDraftSchema.parse(draftValue)
+  const evidenceKind =
+    candidate.kind === 'table' ? 'table' : candidate.kind === 'image' ? 'image' : 'text'
+  if (evidenceKind === 'text' && draft.answerSpan.trim().length < 8) {
+    throw new Error('answerSpan must contain at least 8 characters for text evidence')
+  }
   if (!draft.question.trim().endsWith('?')) {
     throw new Error('Question must end with a question mark')
   }
@@ -330,8 +341,6 @@ export function validateDraft(
     throw new Error(`searchQuery copies a four-word phrase: "${leakingPhrase}"`)
   }
 
-  const evidenceKind =
-    candidate.kind === 'table' ? 'table' : candidate.kind === 'image' ? 'image' : 'text'
   const tags = new Set(draft.tags)
   if (evidenceKind === 'table') tags.add('table')
   if (evidenceKind === 'image') tags.add('image_metadata')
@@ -385,6 +394,14 @@ async function readExistingRun(
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') return null
     throw error
   }
+}
+
+async function readDraftRun(path: string): Promise<DraftGenerationRun> {
+  const run = JSON.parse(await fs.readFile(path, 'utf8')) as DraftGenerationRun
+  if (run.schemaVersion !== EVAL_DRAFT_RUN_SCHEMA_VERSION) {
+    throw new Error(`Draft run at ${path} uses an unsupported schema`)
+  }
+  return run
 }
 
 async function createOpenAiDraftModel(config: DraftGenerationConfig): Promise<DraftModel> {
@@ -464,19 +481,40 @@ function recordAttemptCost(
 export async function runDraftGeneration(
   configPath: string,
   maxUsd: number,
-  options: { resume?: boolean; model?: DraftModel } = {}
+  options: {
+    resume?: boolean
+    model?: DraftModel
+    existingRunPath?: string
+    failuresOnly?: boolean
+    additionalAttempts?: number
+  } = {}
 ): Promise<DraftGenerationRun> {
   if (!Number.isFinite(maxUsd) || maxUsd < 0) {
     throw new Error('--max-usd must be non-negative')
   }
+  const additionalAttempts = options.additionalAttempts ?? 0
+  if (!Number.isInteger(additionalAttempts) || additionalAttempts < 0) {
+    throw new Error('additionalAttempts must be a non-negative integer')
+  }
   const loaded = await loadDraftConfig(configPath)
-  const plan = await planDraftGeneration(configPath)
+  const planned = await planDraftGeneration(configPath)
+  const overriddenRunPath = options.existingRunPath ? resolve(options.existingRunPath) : undefined
+  const overriddenRun = overriddenRunPath ? await readDraftRun(overriddenRunPath) : null
+  const plan = overriddenRun?.plan ?? planned
+  if (
+    overriddenRun &&
+    (plan.corpusFingerprint !== loaded.packet.corpusFingerprint ||
+      plan.model.name !== loaded.config.model.name)
+  ) {
+    throw new Error('Existing draft run no longer matches its packet or model configuration')
+  }
   if (plan.estimatedCostUsd > maxUsd) {
     throw new Error(
       `Planned one-attempt cost $${plan.estimatedCostUsd.toFixed(6)} exceeds --max-usd $${maxUsd.toFixed(6)}`
     )
   }
-  const existing = options.resume ? await readExistingRun(plan.runPath, plan.fingerprint) : null
+  const existing =
+    overriddenRun ?? (options.resume ? await readExistingRun(plan.runPath, plan.fingerprint) : null)
   if (!options.resume && (await readExistingRun(plan.runPath, plan.fingerprint))) {
     throw new Error(`Draft run already exists at ${plan.runPath}; use resume-drafts`)
   }
@@ -500,17 +538,33 @@ export async function runDraftGeneration(
   run.status = 'running'
   run.maxUsd = maxUsd
   delete run.error
+  const failureIdsAtStart = new Set(run.failures.map((failure) => failure.candidateId))
+  if (options.failuresOnly) {
+    if (additionalAttempts === 0) {
+      throw new Error('Retrying failures requires at least one additional attempt')
+    }
+    run.recoveryEvents ??= []
+    run.recoveryEvents.push({
+      startedAt: Date.now(),
+      sourceControl: await readSourceControlState(),
+      additionalAttempts,
+      startingFailures: failureIdsAtStart.size
+    })
+  }
   await writeJsonAtomic(plan.runPath, run)
 
   try {
     let model = options.model
     for (const candidate of loaded.candidates) {
+      if (options.failuresOnly && !failureIdsAtStart.has(candidate.id)) continue
       if (run.drafts.some((draft) => draft.candidateId === candidate.id)) continue
       const previousAttempts = run.attempts.filter(
         (attempt) => attempt.candidateId === candidate.id
       )
+      const maximumAttempts =
+        loaded.config.maxAttemptsPerCandidate + (options.failuresOnly ? additionalAttempts : 0)
       if (
-        previousAttempts.length >= loaded.config.maxAttemptsPerCandidate &&
+        previousAttempts.length >= maximumAttempts &&
         run.failures.some((failure) => failure.candidateId === candidate.id)
       ) {
         continue
@@ -529,6 +583,7 @@ export async function runDraftGeneration(
               loaded.packet.corpusFingerprint
             )
           )
+          run.failures = run.failures.filter((failure) => failure.candidateId !== candidate.id)
           run.updatedAt = Date.now()
           await writeJsonAtomic(plan.runPath, run)
           continue
@@ -538,10 +593,11 @@ export async function runDraftGeneration(
         }
       }
 
-      let lastValidationError = 'No valid model response'
+      let lastValidationError =
+        previousAttempts.at(-1)?.validationError ?? 'No valid model response'
       for (
         let attemptNumber = previousAttempts.length + 1;
-        attemptNumber <= loaded.config.maxAttemptsPerCandidate;
+        attemptNumber <= maximumAttempts;
         attemptNumber++
       ) {
         const userPrompt = userPromptFor(loaded.packet, candidate)
@@ -589,6 +645,7 @@ export async function runDraftGeneration(
               loaded.packet.corpusFingerprint
             )
           )
+          run.failures = run.failures.filter((failure) => failure.candidateId !== candidate.id)
           await writeJsonAtomic(plan.runPath, run)
           break
         } catch (error) {
@@ -598,9 +655,9 @@ export async function runDraftGeneration(
         }
       }
       if (!run.drafts.some((draft) => draft.candidateId === candidate.id)) {
-        if (!run.failures.some((failure) => failure.candidateId === candidate.id)) {
-          run.failures.push({ candidateId: candidate.id, error: lastValidationError })
-        }
+        const existingFailure = run.failures.find((failure) => failure.candidateId === candidate.id)
+        if (existingFailure) existingFailure.error = lastValidationError
+        else run.failures.push({ candidateId: candidate.id, error: lastValidationError })
         await writeJsonAtomic(plan.runPath, run)
       }
     }
@@ -616,4 +673,21 @@ export async function runDraftGeneration(
     await writeJsonAtomic(plan.runPath, run)
     throw error
   }
+}
+
+export async function retryDraftFailures(
+  runPath: string,
+  maxUsd: number,
+  additionalAttempts: number,
+  options: { model?: DraftModel } = {}
+): Promise<DraftGenerationRun> {
+  const absoluteRunPath = resolve(runPath)
+  const run = await readDraftRun(absoluteRunPath)
+  return runDraftGeneration(run.plan.configPath, maxUsd, {
+    resume: true,
+    existingRunPath: absoluteRunPath,
+    failuresOnly: true,
+    additionalAttempts,
+    model: options.model
+  })
 }

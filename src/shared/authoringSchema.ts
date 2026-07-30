@@ -51,7 +51,7 @@ const evidenceReviewPacketSchema = z.object({
 export const generatedEvalDraftSchema = z.object({
   question: z.string().min(10),
   searchQuery: z.string().min(3),
-  answerSpan: z.string().min(8),
+  answerSpan: z.string().min(1),
   referenceAnswer: z.string().min(1),
   tags: z.array(z.string().min(1)).min(1),
   difficulty: z.enum(['easy', 'medium', 'hard'])

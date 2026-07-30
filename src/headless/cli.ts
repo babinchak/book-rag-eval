@@ -3,7 +3,7 @@ import { exportRun, planExperiment, runExperiment } from './experimentRunner'
 import { exportEvalSetFile } from './benchmarkData'
 import { createEvidenceReviewPacket } from './evidenceSampler'
 import { writeRunReport } from './report'
-import { planDraftGeneration, runDraftGeneration } from './draftGeneration'
+import { planDraftGeneration, retryDraftFailures, runDraftGeneration } from './draftGeneration'
 import { compileApprovedDrafts } from './draftCompilation'
 
 interface ParsedArgs {
@@ -54,6 +54,7 @@ function usage(): string {
     '  npm run rag-eval -- plan-drafts <draft-generation.yaml>',
     '  npm run rag-eval -- run-drafts <draft-generation.yaml> --max-usd <amount>',
     '  npm run rag-eval -- resume-drafts <draft-generation.yaml> --max-usd <amount>',
+    '  npm run rag-eval -- retry-draft-failures <draft-run.json> --max-usd <amount> --additional-attempts <count>',
     '  npm run rag-eval -- compile-drafts <draft-run.json> <output-dir> --reviewed-by <name>'
   ].join('\n')
 }
@@ -176,6 +177,29 @@ async function main(): Promise<void> {
     if (!outputDir || !reviewedBy) throw new Error(usage())
     const compiled = await compileApprovedDrafts(target, outputDir, reviewedBy)
     process.stdout.write(`${JSON.stringify(compiled, null, 2)}\n`)
+    return
+  }
+
+  if (command === 'retry-draft-failures') {
+    const rawMaxUsd = optionString(args, '--max-usd')
+    const rawAdditionalAttempts = optionString(args, '--additional-attempts')
+    if (rawMaxUsd === undefined || rawAdditionalAttempts === undefined) {
+      throw new Error(usage())
+    }
+    const run = await retryDraftFailures(target, Number(rawMaxUsd), Number(rawAdditionalAttempts))
+    process.stdout.write(
+      `${JSON.stringify(
+        {
+          status: run.status,
+          runPath: run.plan.runPath,
+          drafts: run.drafts.length,
+          failures: run.failures.length,
+          actualCostUsd: run.ledger.actualCostUsd
+        },
+        null,
+        2
+      )}\n`
+    )
     return
   }
 
