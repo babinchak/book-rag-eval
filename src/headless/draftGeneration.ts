@@ -309,6 +309,57 @@ function phraseSet(text: string, size: number): Set<string> {
   return phrases
 }
 
+function locateCanonicalAnswerSpan(
+  excerpt: string,
+  proposedSpan: string
+): { offset: number; span: string; repaired: boolean } | null {
+  const exactOffset = excerpt.indexOf(proposedSpan)
+  if (exactOffset >= 0) {
+    return { offset: exactOffset, span: proposedSpan, repaired: false }
+  }
+
+  const lowerExcerpt = excerpt.toLocaleLowerCase()
+  const lowerProposed = proposedSpan.toLocaleLowerCase()
+  const caseInsensitiveOffset = lowerExcerpt.indexOf(lowerProposed)
+  if (caseInsensitiveOffset >= 0) {
+    return {
+      offset: caseInsensitiveOffset,
+      span: excerpt.slice(caseInsensitiveOffset, caseInsensitiveOffset + proposedSpan.length),
+      repaired: true
+    }
+  }
+
+  let previous = new Uint16Array(lowerProposed.length + 1)
+  let bestLength = 0
+  let bestExcerptEnd = 0
+  for (let excerptIndex = 1; excerptIndex <= lowerExcerpt.length; excerptIndex++) {
+    const current = new Uint16Array(lowerProposed.length + 1)
+    for (let proposedIndex = 1; proposedIndex <= lowerProposed.length; proposedIndex++) {
+      if (lowerExcerpt[excerptIndex - 1] === lowerProposed[proposedIndex - 1]) {
+        current[proposedIndex] = previous[proposedIndex - 1] + 1
+        if (current[proposedIndex] > bestLength) {
+          bestLength = current[proposedIndex]
+          bestExcerptEnd = excerptIndex
+        }
+      }
+    }
+    previous = current
+  }
+
+  const minimumLength = Math.max(8, Math.min(32, Math.ceil(proposedSpan.trim().length * 0.5)))
+  if (bestLength < minimumLength) return null
+  const rawStart = bestExcerptEnd - bestLength
+  const rawSpan = excerpt.slice(rawStart, bestExcerptEnd)
+  const leadingWhitespace = rawSpan.length - rawSpan.trimStart().length
+  const canonicalSpan = rawSpan.trim()
+  if ((canonicalSpan.match(/[\p{L}\p{N}]+/gu) ?? []).length < 3) return null
+  return {
+    offset: rawStart + leadingWhitespace,
+    span: canonicalSpan,
+    repaired: true
+  }
+}
+
 export function validateDraft(
   candidate: EvidenceCandidate,
   draftValue: unknown,
@@ -325,8 +376,8 @@ export function validateDraft(
   if (!draft.question.trim().endsWith('?')) {
     throw new Error('Question must end with a question mark')
   }
-  const answerOffset = candidate.excerpt.indexOf(draft.answerSpan)
-  if (answerOffset < 0) {
+  const locatedAnswer = locateCanonicalAnswerSpan(candidate.excerpt, draft.answerSpan)
+  if (!locatedAnswer) {
     throw new Error('answerSpan is not an exact contiguous substring of the canonical excerpt')
   }
   const queryWords = draft.searchQuery.match(/[\p{L}\p{N}]+/gu) ?? []
@@ -342,6 +393,7 @@ export function validateDraft(
   }
 
   const tags = new Set(draft.tags)
+  if (locatedAnswer.repaired) tags.add('answer_span_repaired')
   if (evidenceKind === 'table') tags.add('table')
   if (evidenceKind === 'image') tags.add('image_metadata')
   return {
@@ -353,13 +405,13 @@ export function validateDraft(
     evidenceKind,
     ...(evidenceKind === 'text'
       ? {
-          evidenceTextStart: candidate.textStart + answerOffset,
-          evidenceTextEnd: candidate.textStart + answerOffset + draft.answerSpan.length
+          evidenceTextStart: candidate.textStart + locatedAnswer.offset,
+          evidenceTextEnd: candidate.textStart + locatedAnswer.offset + locatedAnswer.span.length
         }
       : {}),
     question: draft.question.trim(),
     canonicalSearchQuery: draft.searchQuery.trim(),
-    answerSpan: draft.answerSpan,
+    answerSpan: locatedAnswer.span,
     referenceAnswer: draft.referenceAnswer.trim(),
     tags: [...tags],
     difficulty: draft.difficulty,

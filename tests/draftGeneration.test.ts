@@ -239,3 +239,66 @@ test('allows short exact spans for image metadata evidence', () => {
   assert.equal(record.evidenceKind, 'image')
   assert.equal(record.answerSpan, 'Chart')
 })
+
+test('snaps a long near-exact model span back to canonical book text', () => {
+  const candidate = {
+    id: 'text-candidate',
+    bookId: 'book-1',
+    sourceHash: 'source-1',
+    nodeId: 'paragraph-1',
+    kind: 'paragraph' as const,
+    spineHref: 'chapter.xhtml',
+    textStart: 50,
+    textEnd: 180,
+    headingPath: ['Experiments'],
+    excerpt:
+      'He now admits that in the shortest reactions there is neither apperception nor will, but only a practiced reflex.',
+    assets: [],
+    reviewStatus: 'pending' as const
+  }
+  const record = validateDraft(
+    candidate,
+    {
+      question: 'What does the author now admit about the shortest reactions?',
+      searchQuery: 'author concession about rapid reactions',
+      answerSpan: 'he admits that in the shortest reactions there is neither apperception nor will',
+      referenceAnswer: 'They contain neither apperception nor will.',
+      tags: ['direct_fact'],
+      difficulty: 'medium'
+    },
+    'model-snapshot',
+    'prompt-hash',
+    'packet-fingerprint'
+  )
+
+  assert.equal(
+    record.answerSpan,
+    'admits that in the shortest reactions there is neither apperception nor will'
+  )
+  assert.ok(record.tags.includes('answer_span_repaired'))
+  assert.equal(
+    candidate.excerpt.slice(
+      record.evidenceTextStart! - candidate.textStart,
+      record.evidenceTextEnd! - candidate.textStart
+    ),
+    record.answerSpan
+  )
+  assert.throws(
+    () =>
+      validateDraft(
+        candidate,
+        {
+          question: 'What does the author say?',
+          searchQuery: 'author statement in experiment',
+          answerSpan: 'an unrelated invented answer',
+          referenceAnswer: 'Nothing supported.',
+          tags: ['direct_fact'],
+          difficulty: 'easy'
+        },
+        'model-snapshot',
+        'prompt-hash',
+        'packet-fingerprint'
+      ),
+    /exact contiguous substring/
+  )
+})
