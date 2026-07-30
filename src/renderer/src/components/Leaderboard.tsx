@@ -218,8 +218,8 @@ function Leaderboard({ runs, onSelectRun }: LeaderboardProps): React.JSX.Element
               <HeaderCell active={sortKey === 'mode'} dir={sortDir} onClick={() => toggleSort('mode')} align="left">
                 Mode
               </HeaderCell>
-              <HeaderCell active={sortKey === 'meanRecallAtK'} dir={sortDir} onClick={() => toggleSort('meanRecallAtK')} align="right" title="Mean recall at k">
-                R@k
+              <HeaderCell active={sortKey === 'meanRecallAtK'} dir={sortDir} onClick={() => toggleSort('meanRecallAtK')} align="right" title="Mean Hit@k">
+                Hit@k
               </HeaderCell>
               <HeaderCell active={sortKey === 'meanMRR'} dir={sortDir} onClick={() => toggleSort('meanMRR')} align="right" title="Mean reciprocal rank">
                 MRR

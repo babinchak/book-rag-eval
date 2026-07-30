@@ -320,6 +320,7 @@ export interface RetrievedDetail {
   hit: boolean
   overlap: number
   rank: number
+  matchedRequirementIds?: string[]
 }
 
 export interface EvalCaseResult {
@@ -327,6 +328,15 @@ export interface EvalCaseResult {
   question: string
   searchQuery?: string
   retrieved: RetrievedDetail[]
+  hitAtK?: number | null
+  evidenceRecall?: number | null
+  fullEvidenceSuccess?: number | null
+  ndcgAtK?: number | null
+  contextPrecision?: number | null
+  goldSpanCoverage?: number | null
+  tokensBeforeFirstEvidence?: number | null
+  correctBookRecall?: number | null
+  // Legacy alias: historical runs labeled binary Hit@k as recallAtK.
   recallAtK: number
   mrr: number
   hitRank: number | null
@@ -356,6 +366,15 @@ export interface EvalRunResult {
   k: number
   ranAt: number
   mode?: EvalMode
+  meanHitAtK?: number
+  meanEvidenceRecall?: number
+  meanFullEvidenceSuccess?: number
+  meanNdcgAtK?: number
+  meanContextPrecision?: number
+  meanGoldSpanCoverage?: number
+  meanTokensBeforeFirstEvidence?: number
+  meanCorrectBookRecall?: number
+  // Legacy alias retained for historical run compatibility.
   meanRecallAtK: number
   meanMRR: number
   meanCitationPrecision?: number
@@ -376,6 +395,14 @@ export interface EvalRunSummary {
   k: number
   ranAt: number
   mode?: EvalMode
+  meanHitAtK?: number
+  meanEvidenceRecall?: number
+  meanFullEvidenceSuccess?: number
+  meanNdcgAtK?: number
+  meanContextPrecision?: number
+  meanGoldSpanCoverage?: number
+  meanTokensBeforeFirstEvidence?: number
+  meanCorrectBookRecall?: number
   meanRecallAtK: number
   meanMRR: number
   meanCitationPrecision?: number

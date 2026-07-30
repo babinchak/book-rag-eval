@@ -66,7 +66,7 @@ function EvalCompareModal({ bookId, evalSet, runIds, onClose }: EvalCompareModal
                     <th style={th(cv)}>Retriever</th>
                     <th style={th(cv)}>Mode</th>
                     <th style={th(cv)}>k</th>
-                    <th style={th(cv)}>R@k</th>
+                    <th style={th(cv)}>Hit@k</th>
                     <th style={th(cv)}>MRR</th>
                     <th style={th(cv)}>Cit P</th>
                     <th style={th(cv)}>Cit R</th>

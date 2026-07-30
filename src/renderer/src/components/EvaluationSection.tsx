@@ -448,7 +448,7 @@ function EvaluationSection({
                       {last && (
                         <>
                           <div style={{ marginTop: 4, color: '#444', fontSize: 11 }}>
-                            R@{last.k}={last.meanRecallAtK.toFixed(2)} · MRR=
+                            Hit@{last.k}={last.meanRecallAtK.toFixed(2)} · MRR=
                             {last.meanMRR.toFixed(2)}
                             {last.meanCitationPrecision !== undefined && (
                               <>

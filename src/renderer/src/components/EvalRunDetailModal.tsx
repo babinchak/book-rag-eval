@@ -65,7 +65,10 @@ function buildTraceMarkdown(
   }
   const hit = caseResult.recallAtK > 0
   const bits: string[] = [hit ? `HIT @ rank ${caseResult.hitRank}` : 'MISS']
-  bits.push(`R@${run.k}=${caseResult.recallAtK.toFixed(2)}`)
+  bits.push(`Hit@${run.k}=${caseResult.recallAtK.toFixed(2)}`)
+  if (caseResult.evidenceRecall !== undefined && caseResult.evidenceRecall !== null) {
+    bits.push(`Evidence recall=${caseResult.evidenceRecall.toFixed(2)}`)
+  }
   bits.push(`MRR=${caseResult.mrr.toFixed(2)}`)
   if (margin !== null) bits.push(`margin=${margin.toFixed(2)}`)
   if (caseResult.citationPrecision !== undefined) {
@@ -229,7 +232,13 @@ function EvalRunDetailModal({ bookId, runId, evalSet, onClose, onSelectChunk }: 
         {run && (
           <>
             <div style={{ padding: '12px 20px', background: cv.surface2, borderBottom: `1px solid ${cv.border}`, display: 'flex', gap: 24, fontSize: 12 }}>
-              <Metric label={`R@${run.k}`} value={run.meanRecallAtK.toFixed(2)} />
+              <Metric label={`Hit@${run.k}`} value={run.meanRecallAtK.toFixed(2)} />
+              {run.meanEvidenceRecall !== undefined && (
+                <Metric label="Evidence recall" value={run.meanEvidenceRecall.toFixed(2)} />
+              )}
+              {run.meanNdcgAtK !== undefined && (
+                <Metric label={`nDCG@${run.k}`} value={run.meanNdcgAtK.toFixed(2)} />
+              )}
               <Metric label="MRR" value={run.meanMRR.toFixed(2)} />
               {run.meanCitationPrecision !== undefined && <Metric label="Cit. precision" value={run.meanCitationPrecision.toFixed(2)} />}
               {run.meanCitationRecall !== undefined && <Metric label="Cit. recall" value={run.meanCitationRecall.toFixed(2)} />}

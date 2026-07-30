@@ -691,7 +691,7 @@ function EvalRunnerPanel({
                         {last && (
                           <div>
                             <div style={{ display: 'flex', gap: 16, marginBottom: 6 }}>
-                              <Metric label={`R@${last.k}`} value={last.meanRecallAtK.toFixed(2)} />
+                              <Metric label={`Hit@${last.k}`} value={last.meanRecallAtK.toFixed(2)} />
                               <Metric label="MRR" value={last.meanMRR.toFixed(2)} />
                               {last.meanCitationPrecision !== undefined && (
                                 <>
@@ -867,7 +867,7 @@ function EvalRunnerPanel({
                         {last && (
                           <>
                             <div style={{ marginTop: 4, color: cv.text2, fontSize: 11 }}>
-                              R@{last.k}={last.meanRecallAtK.toFixed(2)} · MRR={last.meanMRR.toFixed(2)}
+                              Hit@{last.k}={last.meanRecallAtK.toFixed(2)} · MRR={last.meanMRR.toFixed(2)}
                               {last.meanCitationPrecision !== undefined && <> · CitP={last.meanCitationPrecision.toFixed(2)} · CitR={last.meanCitationRecall?.toFixed(2)}</>}
                               {last.agentModel && last.totalPromptTokens !== undefined && last.totalCompletionTokens !== undefined && (
                                 <> · {formatUsd(chatCostUsd(last.agentModel, last.totalPromptTokens, last.totalCompletionTokens))}</>

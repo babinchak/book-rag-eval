@@ -101,7 +101,9 @@ Each strategy is a small module that conforms to a common interface and is regis
 
 The eval harness is independent of the desktop app and runs headless. For each (book, strategy, query set) it reports:
 
-- **Retrieval metrics** — recall@k, MRR, nDCG against gold passage spans.
+- **Retrieval metrics** — Hit@k, MRR, coverage-aware nDCG, required-evidence
+  recall, full-evidence success, context precision, exact span coverage, and
+  tokens before the first relevant result.
 - **Answer metrics** — faithfulness and answer relevance via LLM-judge, with the judging prompt and model versioned alongside results.
 - **Operational metrics** — latency, token cost, index size.
 

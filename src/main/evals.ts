@@ -12,8 +12,14 @@ import { ask, retrieve } from './retrieval'
 import { getChunkSet } from './chunking'
 import { getOpenaiKey } from './settings'
 import { captureIpcError } from './ipcContext'
+import { countChunkTokens } from './tokenChunking'
 import { retrieverIdOf, type RetrieverParams } from '../shared/retriever'
 import type { CanonicalBookDocument } from '../shared/canonicalDocument'
+import {
+  computeRetrievalMetrics,
+  type RankedEvidenceCandidate,
+  type RetrievalMetrics
+} from '../shared/evalMetrics'
 import {
   EVAL_SCHEMA_VERSION,
   goldEvidenceFromSpans,
@@ -314,36 +320,79 @@ export async function locateQuote(
   return null
 }
 
-interface ChunkLite {
-  id: string
-  spineHref: string
-  textStart: number
-  textEnd: number
-}
-
 const HIT_OVERLAP_RATIO = 0.3
 
-function computeOverlap(chunk: ChunkLite, goldSpans: GoldSpan[]): number {
-  let total = 0
-  for (const gold of goldSpans) {
-    if (chunk.spineHref !== gold.spineHref) continue
-    const overlapStart = Math.max(chunk.textStart, gold.textStart)
-    const overlapEnd = Math.min(chunk.textEnd, gold.textEnd)
-    if (overlapEnd > overlapStart) total += overlapEnd - overlapStart
-  }
-  return total
+function metricCandidates(
+  bookId: string,
+  retrieved: RetrievedChunkPayload[]
+): RankedEvidenceCandidate[] {
+  return retrieved.map(({ chunk }) => ({
+    id: chunk.id,
+    bookId,
+    spineHref: chunk.spineHref,
+    textStart: chunk.textStart,
+    textEnd: chunk.textEnd,
+    canonicalNodeIds: chunk.canonicalNodeIds ?? [],
+    tokenCount: chunk.tokenCount ?? countChunkTokens(chunk.text)
+  }))
 }
 
-function isHit(chunk: ChunkLite, goldSpans: GoldSpan[]): boolean {
-  for (const gold of goldSpans) {
-    if (chunk.spineHref !== gold.spineHref) continue
-    const overlapStart = Math.max(chunk.textStart, gold.textStart)
-    const overlapEnd = Math.min(chunk.textEnd, gold.textEnd)
-    const overlap = Math.max(0, overlapEnd - overlapStart)
-    const goldLen = gold.textEnd - gold.textStart
-    if (goldLen > 0 && overlap / goldLen >= HIT_OVERLAP_RATIO) return true
+function metricsFor(
+  bookId: string,
+  retrieved: RetrievedChunkPayload[],
+  evalCase: EvalCase
+): RetrievalMetrics {
+  return computeRetrievalMetrics(metricCandidates(bookId, retrieved), evalCase.goldEvidence, {
+    textHitOverlapRatio: HIT_OVERLAP_RATIO
+  })
+}
+
+function detailsFor(
+  retrieved: RetrievedChunkPayload[],
+  metrics: RetrievalMetrics
+): RetrievedDetail[] {
+  return retrieved.map((result, index) => {
+    const relevance = metrics.candidateRelevance[index]
+    return {
+      chunkId: result.chunk.id,
+      distance: result.distance,
+      hit: relevance.relevant,
+      overlap: relevance.overlapChars,
+      rank: result.rank,
+      matchedRequirementIds: relevance.matchedRequirementIds
+    }
+  })
+}
+
+function metricFields(
+  metrics: RetrievalMetrics
+): Pick<
+  EvalCaseResult,
+  | 'hitAtK'
+  | 'evidenceRecall'
+  | 'fullEvidenceSuccess'
+  | 'ndcgAtK'
+  | 'contextPrecision'
+  | 'goldSpanCoverage'
+  | 'tokensBeforeFirstEvidence'
+  | 'correctBookRecall'
+  | 'recallAtK'
+  | 'mrr'
+  | 'hitRank'
+> {
+  return {
+    hitAtK: metrics.hitAtK,
+    evidenceRecall: metrics.evidenceRecall,
+    fullEvidenceSuccess: metrics.fullEvidenceSuccess,
+    ndcgAtK: metrics.ndcgAtK,
+    contextPrecision: metrics.contextPrecision,
+    goldSpanCoverage: metrics.goldSpanCoverage,
+    tokensBeforeFirstEvidence: metrics.tokensBeforeFirstEvidence,
+    correctBookRecall: metrics.correctBookRecall,
+    recallAtK: metrics.hitAtK ?? 0,
+    mrr: metrics.mrr ?? 0,
+    hitRank: metrics.firstHitRank
   }
-  return false
 }
 
 function parseCitations(answer: string): number[] {
@@ -382,6 +431,14 @@ export async function runEval(
   const caseResults: EvalCaseResult[] = []
   let totalRecall = 0
   let totalMRR = 0
+  let totalEvidenceRecall = 0
+  let totalFullEvidenceSuccess = 0
+  let totalNdcg = 0
+  let totalContextPrecision = 0
+  let totalGoldSpanCoverage = 0
+  let totalTokensBeforeFirstEvidence = 0
+  let totalCorrectBookRecall = 0
+  let answerableCaseCount = 0
   let totalCitPrec = 0
   let totalCitRec = 0
   let totalPromptTokens = 0
@@ -396,41 +453,35 @@ export async function runEval(
         )
       }
       const retrieved = await retrieve(bookId, strategyId, retriever, c.searchQuery, k)
-      let firstHitRank: number | null = null
-      const details: RetrievedDetail[] = retrieved.map((r) => {
-        const overlap = computeOverlap(r.chunk, c.goldSpans)
-        const hit = isHit(r.chunk, c.goldSpans)
-        if (hit && firstHitRank === null) firstHitRank = r.rank
-        return { chunkId: r.chunk.id, distance: r.distance, hit, overlap, rank: r.rank }
-      })
-      const recallAtK = firstHitRank !== null ? 1 : 0
-      const mrr = firstHitRank !== null ? 1 / firstHitRank : 0
+      const metrics = metricsFor(bookId, retrieved, c)
+      const details = detailsFor(retrieved, metrics)
 
       caseResults.push({
         caseId: c.id,
         question: c.question,
         searchQuery: c.searchQuery,
         retrieved: details,
-        recallAtK,
-        mrr,
-        hitRank: firstHitRank
+        ...metricFields(metrics)
       })
 
-      totalRecall += recallAtK
-      totalMRR += mrr
+      if (metrics.hitAtK !== null) {
+        answerableCaseCount += 1
+        totalRecall += metrics.hitAtK
+        totalMRR += metrics.mrr!
+        totalEvidenceRecall += metrics.evidenceRecall!
+        totalFullEvidenceSuccess += metrics.fullEvidenceSuccess!
+        totalNdcg += metrics.ndcgAtK!
+        totalContextPrecision += metrics.contextPrecision!
+        totalGoldSpanCoverage += metrics.goldSpanCoverage!
+        totalTokensBeforeFirstEvidence += metrics.tokensBeforeFirstEvidence!
+        totalCorrectBookRecall += metrics.correctBookRecall!
+      }
     } else {
       const agentResult = await ask(bookId, strategyId, retriever, c.question, k)
       const retrieved = agentResult.retrieved
 
-      let firstHitRank: number | null = null
-      const details: RetrievedDetail[] = retrieved.map((r) => {
-        const overlap = computeOverlap(r.chunk, c.goldSpans)
-        const hit = isHit(r.chunk, c.goldSpans)
-        if (hit && firstHitRank === null) firstHitRank = r.rank
-        return { chunkId: r.chunk.id, distance: r.distance, hit, overlap, rank: r.rank }
-      })
-      const recallAtK = firstHitRank !== null ? 1 : 0
-      const mrr = firstHitRank !== null ? 1 / firstHitRank : 0
+      const metrics = metricsFor(bookId, retrieved, c)
+      const details = detailsFor(retrieved, metrics)
 
       const citedRanks = parseCitations(agentResult.answer)
       const byRank = new Map<number, RetrievedChunkPayload>()
@@ -441,20 +492,17 @@ export async function runEval(
         if (r) citedDetails.push(r)
       }
       const citedChunkIds = citedDetails.map((r) => r.chunk.id)
-      const citedHits = citedDetails.filter((r) => isHit(r.chunk, c.goldSpans))
-      const totalGoldOverlapping = retrieved.filter((r) => isHit(r.chunk, c.goldSpans)).length
+      const citedMetrics = metricsFor(bookId, citedDetails, c)
+      const citedHits = citedMetrics.candidateRelevance.filter((item) => item.relevant)
       const citationPrecision =
         citedDetails.length === 0 ? 0 : citedHits.length / citedDetails.length
-      const citationRecall =
-        totalGoldOverlapping === 0 ? 0 : citedHits.length / totalGoldOverlapping
+      const citationRecall = citedMetrics.evidenceRecall ?? 0
 
       caseResults.push({
         caseId: c.id,
         question: c.question,
         retrieved: details,
-        recallAtK,
-        mrr,
-        hitRank: firstHitRank,
+        ...metricFields(metrics),
         answer: agentResult.answer,
         citedRanks,
         citedChunkIds,
@@ -467,8 +515,18 @@ export async function runEval(
         langsmithRunUrl: agentResult.langsmithRunUrl
       })
 
-      totalRecall += recallAtK
-      totalMRR += mrr
+      if (metrics.hitAtK !== null) {
+        answerableCaseCount += 1
+        totalRecall += metrics.hitAtK
+        totalMRR += metrics.mrr!
+        totalEvidenceRecall += metrics.evidenceRecall!
+        totalFullEvidenceSuccess += metrics.fullEvidenceSuccess!
+        totalNdcg += metrics.ndcgAtK!
+        totalContextPrecision += metrics.contextPrecision!
+        totalGoldSpanCoverage += metrics.goldSpanCoverage!
+        totalTokensBeforeFirstEvidence += metrics.tokensBeforeFirstEvidence!
+        totalCorrectBookRecall += metrics.correctBookRecall!
+      }
       totalCitPrec += citationPrecision
       totalCitRec += citationRecall
       totalPromptTokens += agentResult.promptTokens
@@ -478,6 +536,7 @@ export async function runEval(
   }
 
   const n = casesToRun.length
+  const scoredN = Math.max(1, answerableCaseCount)
   const result: EvalRunResult = {
     id: randomUUID(),
     bookId,
@@ -487,8 +546,16 @@ export async function runEval(
     k,
     ranAt: Date.now(),
     mode,
-    meanRecallAtK: totalRecall / n,
-    meanMRR: totalMRR / n,
+    meanHitAtK: totalRecall / scoredN,
+    meanEvidenceRecall: totalEvidenceRecall / scoredN,
+    meanFullEvidenceSuccess: totalFullEvidenceSuccess / scoredN,
+    meanNdcgAtK: totalNdcg / scoredN,
+    meanContextPrecision: totalContextPrecision / scoredN,
+    meanGoldSpanCoverage: totalGoldSpanCoverage / scoredN,
+    meanTokensBeforeFirstEvidence: totalTokensBeforeFirstEvidence / scoredN,
+    meanCorrectBookRecall: totalCorrectBookRecall / scoredN,
+    meanRecallAtK: totalRecall / scoredN,
+    meanMRR: totalMRR / scoredN,
     cases: caseResults
   }
   if (mode === 'agentic') {
@@ -941,6 +1008,14 @@ export async function listEvalRuns(bookId: string): Promise<EvalRunSummary[]> {
         k: run.k,
         ranAt: run.ranAt,
         mode: run.mode ?? 'agentic',
+        meanHitAtK: run.meanHitAtK ?? run.meanRecallAtK,
+        meanEvidenceRecall: run.meanEvidenceRecall,
+        meanFullEvidenceSuccess: run.meanFullEvidenceSuccess,
+        meanNdcgAtK: run.meanNdcgAtK,
+        meanContextPrecision: run.meanContextPrecision,
+        meanGoldSpanCoverage: run.meanGoldSpanCoverage,
+        meanTokensBeforeFirstEvidence: run.meanTokensBeforeFirstEvidence,
+        meanCorrectBookRecall: run.meanCorrectBookRecall,
         meanRecallAtK: run.meanRecallAtK,
         meanMRR: run.meanMRR,
         meanCitationPrecision: run.meanCitationPrecision,
