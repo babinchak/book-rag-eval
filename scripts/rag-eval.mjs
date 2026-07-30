@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process'
+import { existsSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import electronPath from 'electron'
@@ -6,6 +7,8 @@ import electronPath from 'electron'
 const scriptDir = dirname(fileURLToPath(import.meta.url))
 const projectDir = resolve(scriptDir, '..')
 const cliPath = resolve(projectDir, 'src', 'headless', 'cli.ts')
+const envPath = resolve(projectDir, '.env')
+if (existsSync(envPath)) process.loadEnvFile(envPath)
 const child = spawn(electronPath, ['--import', 'tsx', cliPath, ...process.argv.slice(2)], {
   cwd: process.cwd(),
   env: {

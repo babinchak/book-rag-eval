@@ -175,8 +175,8 @@ requests. CSV export is also supported.
 
 Set `libraryDir` in the experiment or use
 `BOOK_RAG_EVAL_LIBRARY_DIR`/`--library-dir`. For headless paid retrieval, set
-`OPENAI_API_KEY`; the key is read from the environment and never written by the
-runner.
+`OPENAI_API_KEY` in the environment or copy `.env.example` to the ignored
+project-root `.env`; the key is never written to run artifacts.
 
 For portable benchmarks, use `evalSetPath` in experiment YAML and commit the
 canonical eval JSON. `evalSetId` remains available for draft sets stored inside
