@@ -1,6 +1,6 @@
 import { app, dialog } from 'electron'
 import { promises as fs, createReadStream } from 'node:fs'
-import { join } from 'node:path'
+import { join, resolve } from 'node:path'
 import { createHash } from 'node:crypto'
 import AdmZip from 'adm-zip'
 import { runReadiumManifest, extractSpineHtml } from './epub'
@@ -55,7 +55,15 @@ const MIME_BY_EXT: Record<string, string> = {
   svg: 'image/svg+xml'
 }
 
-function libraryDir(): string {
+let libraryDirOverride: string | null = null
+
+export function configureLibraryDir(path: string | null): void {
+  libraryDirOverride = path ? resolve(path) : null
+}
+
+export function libraryDir(): string {
+  const configured = libraryDirOverride ?? process.env.BOOK_RAG_EVAL_LIBRARY_DIR
+  if (configured) return resolve(configured)
   return join(app.getPath('userData'), 'library')
 }
 

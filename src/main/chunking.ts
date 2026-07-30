@@ -6,15 +6,16 @@ import { sidecar } from './sidecar'
 import { getOpenaiKey } from './settings'
 import { chunkTokenSpans } from './tokenChunking'
 import { normalizeParams, strategyIdOf } from '../shared/strategy'
-import { createArtifactIdentity } from '../shared/artifactIdentity'
+import {
+  SEMANTIC_CHUNK_EMBEDDING_MODEL,
+  chunkArtifactIdentity
+} from './artifactConfig'
 import type { CanonicalSpineDocument } from '../shared/canonicalDocument'
 import type { Chunk, ChunkParams, ChunkSet, ChunkSetSummary } from '../preload/types'
 
 // Use a cheaper model than the retrieval-time embeddings — we only need a
 // similarity signal between adjacent sentence windows, not high-quality vectors.
-const SEMANTIC_EMBED_MODEL = 'text-embedding-3-small'
 const SEMANTIC_EMBED_BATCH = 256
-const CHUNKER_IMPLEMENTATION_VERSION = 'chunkers-v2'
 
 function chunksDir(bookId: string): string {
   return join(bookDir(bookId), 'chunks')
@@ -206,7 +207,7 @@ async function embedAll(texts: string[]): Promise<number[][]> {
   const out: number[][] = []
   for (let i = 0; i < texts.length; i += SEMANTIC_EMBED_BATCH) {
     const batch = texts.slice(i, i + SEMANTIC_EMBED_BATCH)
-    const result = await sidecar.embed(batch, SEMANTIC_EMBED_MODEL)
+    const result = await sidecar.embed(batch, SEMANTIC_CHUNK_EMBEDDING_MODEL)
     if (result.embeddings.length !== batch.length) {
       throw new Error(
         `semantic chunker: embedding count mismatch (expected ${batch.length}, got ${result.embeddings.length})`
@@ -303,22 +304,7 @@ export async function runChunking(
   const params = normalizeParams(paramsRaw)
   const sid = strategyIdOf(params)
   const document = await loadCanonicalBookDocument(bookId)
-  const artifactIdentity = createArtifactIdentity(
-    'chunks',
-    {
-      bookId,
-      implementation: CHUNKER_IMPLEMENTATION_VERSION,
-      chunker: params,
-      ...(params.kind === 'semantic'
-        ? { semanticEmbeddingModel: SEMANTIC_EMBED_MODEL }
-        : {})
-    },
-    {
-      canonicalSource: document.sourceHash,
-      parser: document.parserVersion,
-      schema: String(document.schemaVersion)
-    }
-  )
+  const artifactIdentity = chunkArtifactIdentity(bookId, params, document)
 
   if (params.kind === 'semantic') {
     const apiKey = await getOpenaiKey()

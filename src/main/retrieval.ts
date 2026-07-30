@@ -7,12 +7,17 @@ import { getChunkSet } from './chunking'
 import { sidecar } from './sidecar'
 import { getOpenaiKey } from './settings'
 import { queryBm25 } from './bm25'
-import { embeddingArtifactIdentity } from './artifactConfig'
+import { embeddingArtifactIdentity, embeddingDimensions } from './artifactConfig'
 import { RRF_DEFAULT_K, type RetrieverParams } from '../shared/retriever'
-import type { AskResultPayload, Chunk, ChunkSet, RetrievedChunkPayload } from '../preload/types'
+import type {
+  AskResultPayload,
+  Chunk,
+  ChunkSet,
+  EmbeddingModel,
+  RetrievedChunkPayload
+} from '../preload/types'
 
-const EMBEDDING_MODEL = 'text-embedding-3-large'
-const EMBEDDING_DIMS = 3072
+const DEFAULT_EMBEDDING_MODEL: EmbeddingModel = 'text-embedding-3-large'
 
 // Pool size pulled from each leg before RRF fusion. Larger gives RRF more
 // material to work with; we still truncate to k after fusion.
@@ -28,18 +33,26 @@ interface ScoredHit {
   rank: number
 }
 
+export type RetrievalEmbeddingUsageSink = (model: EmbeddingModel, tokens: number) => void
+
 async function queryVector(
   bookId: string,
   set: ChunkSet,
   query: string,
-  k: number
+  k: number,
+  embeddingModel: EmbeddingModel,
+  onEmbeddingUsage?: RetrievalEmbeddingUsageSink
 ): Promise<ScoredHit[]> {
   const apiKey = await getOpenaiKey()
   if (!apiKey) {
     throw new Error('OpenAI API key is not set. Add it in Settings before retrieving.')
   }
 
-  const artifact = embeddingArtifactIdentity(set, EMBEDDING_MODEL, EMBEDDING_DIMS)
+  const artifact = embeddingArtifactIdentity(
+    set,
+    embeddingModel,
+    embeddingDimensions(embeddingModel)
+  )
   const dbPath = vectorsDbPath(bookId, artifact.id)
   try {
     await fs.access(dbPath)
@@ -50,7 +63,8 @@ async function queryVector(
   }
 
   await sidecar.ensureStarted(apiKey)
-  const queryResult = await sidecar.embed([query], EMBEDDING_MODEL)
+  const queryResult = await sidecar.embed([query], embeddingModel)
+  onEmbeddingUsage?.(embeddingModel, queryResult.tokens)
   const queryVec = queryResult.embeddings[0]
 
   const db = new Database(dbPath)
@@ -102,12 +116,14 @@ export async function retrieve(
   strategyId: string,
   retriever: RetrieverParams,
   query: string,
-  k: number
+  k: number,
+  embeddingModel: EmbeddingModel = DEFAULT_EMBEDDING_MODEL,
+  onEmbeddingUsage?: RetrievalEmbeddingUsageSink
 ): Promise<RetrievedChunkPayload[]> {
   const set = await getChunkSet(bookId, strategyId)
   let hits: ScoredHit[]
   if (retriever.kind === 'vector') {
-    hits = await queryVector(bookId, set, query, k)
+    hits = await queryVector(bookId, set, query, k, embeddingModel, onEmbeddingUsage)
   } else if (retriever.kind === 'bm25') {
     hits = (await queryBm25(bookId, strategyId, query, k, set)).map((h) => ({
       id: h.id,
@@ -117,7 +133,7 @@ export async function retrieve(
   } else {
     const pool = Math.max(k, HYBRID_POOL_PER_LEG)
     const [vec, bm] = await Promise.all([
-      queryVector(bookId, set, query, pool),
+      queryVector(bookId, set, query, pool, embeddingModel, onEmbeddingUsage),
       queryBm25(bookId, strategyId, query, pool, set).then((arr) =>
         arr.map((h) => ({ id: h.id, score: h.score, rank: h.rank }))
       )

@@ -144,6 +144,31 @@ Tests:
 npm test
 ```
 
+## Headless experiments
+
+Experiment matrices are YAML files validated before any work begins. Start
+from [`experiments/smoke.template.yaml`](experiments/smoke.template.yaml), then
+run:
+
+```bash
+npm run rag-eval -- plan experiments/smoke.yaml
+npm run rag-eval -- run experiments/smoke.yaml --max-usd 10
+npm run rag-eval -- resume experiments/smoke.yaml --max-usd 10
+npm run rag-eval -- export .rag-eval/runs/<run>.json --format jsonl
+```
+
+`plan` reports selected books/cases, missing content-addressed artifacts,
+expected query/result counts, embedding tokens, cost, warnings, and the run
+fingerprint without creating paid artifacts. `run` refuses unknown prices or a
+plan above the dollar ceiling. It journals query results and each experiment
+cell atomically, allowing `resume` to continue without repeating completed API
+requests. CSV export is also supported.
+
+Set `libraryDir` in the experiment or use
+`BOOK_RAG_EVAL_LIBRARY_DIR`/`--library-dir`. For headless paid retrieval, set
+`OPENAI_API_KEY`; the key is read from the environment and never written by the
+runner.
+
 Python sidecar setup will be documented once it lands.
 
 ## License

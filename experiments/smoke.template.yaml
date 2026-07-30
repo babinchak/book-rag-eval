@@ -1,0 +1,47 @@
+# Copy this file, replace the book/eval IDs with IDs from your local library,
+# and fill in the pinned embedding prices before running paid retrievers.
+schemaVersion: 1
+name: six-book-smoke
+libraryDir: ../path/to/book-rag-eval-library
+outputDir: ../.rag-eval/runs
+
+books:
+  - bookId: REPLACE_WITH_BOOK_ID
+    evalSetId: reviewed-v1
+
+chunkers:
+  - kind: fixed-token
+    size: 256
+    overlap: 32
+    encoding: cl100k_base
+  - kind: fixed-token
+    size: 512
+    overlap: 64
+    encoding: cl100k_base
+  - kind: fixed-token
+    size: 1024
+    overlap: 128
+    encoding: cl100k_base
+  - kind: structural
+    maxSize: 4096
+
+retrievers:
+  - kind: bm25
+  - kind: vector
+    embeddingModel: text-embedding-3-small
+  - kind: vector
+    embeddingModel: text-embedding-3-large
+  - kind: hybrid-rrf
+    embeddingModel: text-embedding-3-small
+    rrfK: 60
+
+contextBudgets: [2048, 4096, 8192]
+candidatePoolSize: 50
+splits: [dev]
+
+# The runner deliberately has no silent price defaults. Pin the rates you want
+# the cost ledger and --max-usd guard to use.
+pricing:
+  embeddingUsdPerMillion:
+    # text-embedding-3-small: REPLACE_WITH_CURRENT_RATE
+    # text-embedding-3-large: REPLACE_WITH_CURRENT_RATE

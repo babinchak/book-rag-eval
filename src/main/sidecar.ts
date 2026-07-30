@@ -41,15 +41,19 @@ class Sidecar {
   private startPromise: Promise<void> | null = null
   private currentApiKey: string | null = null
 
+  private appPath(): string {
+    return app?.getAppPath?.() ?? process.env.BOOK_RAG_EVAL_APP_DIR ?? process.cwd()
+  }
+
   private scriptPath(): string {
-    return join(app.getAppPath(), 'python', 'sidecar.py')
+    return join(this.appPath(), 'python', 'sidecar.py')
   }
 
   private pythonBin(): string {
     if (process.env.PYTHON_BIN) return process.env.PYTHON_BIN
     const isWin = process.platform === 'win32'
     const venvPython = join(
-      app.getAppPath(),
+      this.appPath(),
       'python',
       '.venv',
       isWin ? 'Scripts' : 'bin',
@@ -191,4 +195,4 @@ class Sidecar {
 
 export const sidecar = new Sidecar()
 
-app.on('before-quit', () => sidecar.stop())
+app?.on?.('before-quit', () => sidecar.stop())

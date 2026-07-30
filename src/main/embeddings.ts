@@ -6,11 +6,14 @@ import { bookDir } from './library'
 import { getChunkSet } from './chunking'
 import { sidecar } from './sidecar'
 import { getOpenaiKey } from './settings'
-import { embeddingArtifactIdentity, resolvedChunkArtifactId } from './artifactConfig'
-import type { EmbeddingSetSummary } from '../preload/types'
+import {
+  embeddingArtifactIdentity,
+  embeddingDimensions,
+  resolvedChunkArtifactId
+} from './artifactConfig'
+import type { EmbeddingModel, EmbeddingSetSummary } from '../preload/types'
 
-const EMBEDDING_MODEL = 'text-embedding-3-large'
-const EMBEDDING_DIMS = 3072
+const DEFAULT_EMBEDDING_MODEL: EmbeddingModel = 'text-embedding-3-large'
 const EMBED_BATCH = 64
 
 function vectorsDir(bookId: string): string {
@@ -21,13 +24,13 @@ function vectorsDbPath(bookId: string, artifactId: string): string {
   return join(vectorsDir(bookId), `${artifactId}.db`)
 }
 
-function openDb(path: string): Database.Database {
+function openDb(path: string, dimensions: number): Database.Database {
   const db = new Database(path)
   sqliteVec.load(db)
   db.exec(`
     CREATE VIRTUAL TABLE IF NOT EXISTS vec_chunks USING vec0(
       id TEXT PRIMARY KEY,
-      embedding FLOAT[${EMBEDDING_DIMS}]
+      embedding FLOAT[${dimensions}]
     );
     CREATE TABLE IF NOT EXISTS meta (
       key TEXT PRIMARY KEY,
@@ -59,19 +62,18 @@ export interface EmbedResult {
   model: string
 }
 
-export async function runEmbedding(bookId: string, strategyId: string): Promise<EmbedResult> {
-  const apiKey = await getOpenaiKey()
-  if (!apiKey) {
-    throw new Error('OpenAI API key is not set. Add it in Settings before embedding.')
-  }
-  await sidecar.ensureStarted(apiKey)
-
+export async function runEmbedding(
+  bookId: string,
+  strategyId: string,
+  model: EmbeddingModel = DEFAULT_EMBEDDING_MODEL
+): Promise<EmbedResult> {
   const set = await getChunkSet(bookId, strategyId)
-  const artifact = embeddingArtifactIdentity(set, EMBEDDING_MODEL, EMBEDDING_DIMS)
+  const dimensions = embeddingDimensions(model)
+  const artifact = embeddingArtifactIdentity(set, model, dimensions)
   const chunkArtifactId = resolvedChunkArtifactId(set)
   await fs.mkdir(vectorsDir(bookId), { recursive: true })
 
-  const db = openDb(vectorsDbPath(bookId, artifact.id))
+  const db = openDb(vectorsDbPath(bookId, artifact.id), dimensions)
   try {
     const existingIds = new Set(
       db
@@ -80,7 +82,7 @@ export async function runEmbedding(bookId: string, strategyId: string): Promise<
         .map((r: unknown) => (r as { id: string }).id)
     )
 
-    db.prepare('INSERT OR REPLACE INTO meta(key, value) VALUES (?, ?)').run('model', EMBEDDING_MODEL)
+    db.prepare('INSERT OR REPLACE INTO meta(key, value) VALUES (?, ?)').run('model', model)
     db.prepare('INSERT OR REPLACE INTO meta(key, value) VALUES (?, ?)').run(
       'artifact_id',
       artifact.id
@@ -95,7 +97,7 @@ export async function runEmbedding(bookId: string, strategyId: string): Promise<
     )
     db.prepare('INSERT OR REPLACE INTO meta(key, value) VALUES (?, ?)').run(
       'dims',
-      String(EMBEDDING_DIMS)
+      String(dimensions)
     )
 
     const toEmbed = set.chunks.filter((c) => !existingIds.has(c.id))
@@ -108,9 +110,15 @@ export async function runEmbedding(bookId: string, strategyId: string): Promise<
         embedded: 0,
         skipped,
         totalTokens: 0,
-        model: EMBEDDING_MODEL
+        model
       }
     }
+
+    const apiKey = await getOpenaiKey()
+    if (!apiKey) {
+      throw new Error('OpenAI API key is not set. Add it in Settings before embedding.')
+    }
+    await sidecar.ensureStarted(apiKey)
 
     let totalTokens = 0
     const insert = db.prepare('INSERT OR REPLACE INTO vec_chunks(id, embedding) VALUES (?, ?)')
@@ -119,7 +127,7 @@ export async function runEmbedding(bookId: string, strategyId: string): Promise<
       const batch = toEmbed.slice(i, i + EMBED_BATCH)
       const result = await sidecar.embed(
         batch.map((c) => c.text),
-        EMBEDDING_MODEL
+        model
       )
       if (result.embeddings.length !== batch.length) {
         throw new Error(
@@ -147,7 +155,7 @@ export async function runEmbedding(bookId: string, strategyId: string): Promise<
       embedded: toEmbed.length,
       skipped,
       totalTokens,
-      model: EMBEDDING_MODEL
+      model
     }
   } finally {
     db.close()
@@ -168,7 +176,7 @@ export async function listEmbeddingSets(bookId: string): Promise<EmbeddingSetSum
     const filenameId = name.slice(0, -3)
     const path = join(vectorsDir(bookId), name)
     try {
-      const db = openDb(path)
+      const db = openDb(path, 3072)
       const countRow = db.prepare('SELECT COUNT(*) AS c FROM vec_chunks').get() as { c: number }
       const modelRow = db.prepare("SELECT value FROM meta WHERE key = 'model'").get() as
         | { value: string }
@@ -218,7 +226,7 @@ export async function removeEmbeddings(bookId: string, strategyId: string): Prom
     let matches = name === `${strategyId}.db`
     if (!matches) {
       try {
-        const db = openDb(path)
+        const db = openDb(path, 3072)
         const row = db.prepare("SELECT value FROM meta WHERE key = 'strategy_id'").get() as
           | { value: string }
           | undefined

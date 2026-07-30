@@ -41,6 +41,17 @@ export async function runBm25Indexing(bookId: string, strategyId: string): Promi
 
   const db = openDb(bm25DbPath(bookId, artifact.id))
   try {
+    const existingCount = (
+      db.prepare('SELECT COUNT(*) AS c FROM fts_chunks').get() as { c: number }
+    ).c
+    if (existingCount === set.chunks.length) {
+      return {
+        artifactId: artifact.id,
+        chunkArtifactId,
+        indexed: 0,
+        skipped: existingCount
+      }
+    }
     // Rebuild from scratch. FTS5 upserts are awkward (id is UNINDEXED so we
     // can't WHERE on it cheaply), indexing is fast (~1s for a book), and a
     // rebuild guarantees the index reflects the current chunk set exactly.

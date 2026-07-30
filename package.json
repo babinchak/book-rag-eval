@@ -13,6 +13,7 @@
     "typecheck:web": "tsc --noEmit -p tsconfig.web.json --composite false",
     "typecheck": "npm run typecheck:node && npm run typecheck:web",
     "test": "tsx --test tests/**/*.test.ts",
+    "rag-eval": "node scripts/rag-eval.mjs",
     "start": "electron-vite preview",
     "dev": "electron-vite dev",
     "build": "npm run typecheck && electron-vite build",
@@ -33,6 +34,7 @@
     "js-tiktoken": "^1.0.21",
     "parse5": "^8.0.0",
     "sqlite-vec": "^0.1.9",
+    "yaml": "^2.8.1",
     "zod": "^4.4.3"
   },
   "devDependencies": {

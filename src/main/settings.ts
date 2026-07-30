@@ -43,6 +43,8 @@ export async function setOpenaiKey(key: string): Promise<void> {
 }
 
 export async function getOpenaiKey(): Promise<string | null> {
+  const environmentKey = process.env.OPENAI_API_KEY?.trim()
+  if (environmentKey) return environmentKey
   const blob = await read()
   if (!blob.openaiKeyEncrypted) return null
   if (!safeStorage.isEncryptionAvailable()) return null
@@ -80,6 +82,8 @@ export async function setLangsmithKey(key: string): Promise<void> {
 }
 
 export async function getLangsmithKey(): Promise<string | null> {
+  const environmentKey = process.env.LANGSMITH_API_KEY?.trim()
+  if (environmentKey) return environmentKey
   const blob = await read()
   if (!blob.langsmithKeyEncrypted) return null
   if (!safeStorage.isEncryptionAvailable()) return null
@@ -110,6 +114,8 @@ export async function setLangsmithProject(name: string): Promise<void> {
 }
 
 export async function getLangsmithProject(): Promise<string | null> {
+  const environmentProject = process.env.LANGSMITH_PROJECT?.trim()
+  if (environmentProject) return environmentProject
   const blob = await read()
   return blob.langsmithProject ?? null
 }
