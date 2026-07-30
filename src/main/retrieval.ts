@@ -8,7 +8,8 @@ import { sidecar } from './sidecar'
 import { getOpenaiKey } from './settings'
 import { queryBm25 } from './bm25'
 import { embeddingArtifactIdentity, embeddingDimensions } from './artifactConfig'
-import { RRF_DEFAULT_K, type RetrieverParams } from '../shared/retriever'
+import { contentHash } from '../shared/artifactIdentity'
+import { RANDOM_DEFAULT_SEED, RRF_DEFAULT_K, type RetrieverParams } from '../shared/retriever'
 import type {
   AskResultPayload,
   Chunk,
@@ -27,10 +28,31 @@ function vectorsDbPath(bookId: string, artifactId: string): string {
   return join(bookDir(bookId), 'vectors', `${artifactId}.db`)
 }
 
-interface ScoredHit {
+export interface ScoredHit {
   id: string
   score: number // lower = better (distance convention)
   rank: number
+}
+
+export function rankRandomChunks(
+  chunks: Array<Pick<Chunk, 'id'>>,
+  query: string,
+  k: number,
+  seed = RANDOM_DEFAULT_SEED
+): ScoredHit[] {
+  if (!Number.isInteger(k) || k < 0) throw new Error('Random retrieval k must be non-negative')
+  const ranked = chunks
+    .map((chunk) => ({
+      id: chunk.id,
+      hash: contentHash({ seed, query, chunkId: chunk.id })
+    }))
+    .sort((left, right) => left.hash.localeCompare(right.hash) || left.id.localeCompare(right.id))
+    .slice(0, k)
+  return ranked.map((hit, index) => ({
+    id: hit.id,
+    score: Number.parseInt(hit.hash.slice(0, 12), 16) / 0xffffffffffff,
+    rank: index + 1
+  }))
 }
 
 export type RetrievalEmbeddingUsageSink = (model: EmbeddingModel, tokens: number) => void
@@ -99,10 +121,7 @@ function fuseRrf(lists: ScoredHit[][], rrfK: number): ScoredHit[] {
   return sorted.map(([id, score], i) => ({ id, score: -score, rank: i + 1 }))
 }
 
-function resolveChunks(
-  hits: ScoredHit[],
-  chunkById: Map<string, Chunk>
-): RetrievedChunkPayload[] {
+function resolveChunks(hits: ScoredHit[], chunkById: Map<string, Chunk>): RetrievedChunkPayload[] {
   const out: RetrievedChunkPayload[] = []
   hits.forEach((h, i) => {
     const chunk = chunkById.get(h.id)
@@ -122,7 +141,9 @@ export async function retrieve(
 ): Promise<RetrievedChunkPayload[]> {
   const set = await getChunkSet(bookId, strategyId)
   let hits: ScoredHit[]
-  if (retriever.kind === 'vector') {
+  if (retriever.kind === 'random') {
+    hits = rankRandomChunks(set.chunks, query, k, retriever.seed)
+  } else if (retriever.kind === 'vector') {
     hits = await queryVector(bookId, set, query, k, embeddingModel, onEmbeddingUsage)
   } else if (retriever.kind === 'bm25') {
     hits = (await queryBm25(bookId, strategyId, query, k, set)).map((h) => ({

@@ -1,12 +1,16 @@
 export type RetrieverParams =
+  | { kind: 'random'; seed?: number }
   | { kind: 'vector' }
   | { kind: 'bm25' }
   | { kind: 'hybrid-rrf'; rrfK?: number }
 
 export const RRF_DEFAULT_K = 60
+export const RANDOM_DEFAULT_SEED = 42
 
 export function retrieverIdOf(params: RetrieverParams): string {
   switch (params.kind) {
+    case 'random':
+      return `random-${params.seed ?? RANDOM_DEFAULT_SEED}`
     case 'vector':
       return 'vector'
     case 'bm25':
@@ -18,6 +22,8 @@ export function retrieverIdOf(params: RetrieverParams): string {
 
 export function retrieverLabel(params: RetrieverParams): string {
   switch (params.kind) {
+    case 'random':
+      return `Random (seed=${params.seed ?? RANDOM_DEFAULT_SEED})`
     case 'vector':
       return 'Vector'
     case 'bm25':
@@ -28,6 +34,7 @@ export function retrieverLabel(params: RetrieverParams): string {
 }
 
 export const DEFAULT_RETRIEVERS: RetrieverParams[] = [
+  { kind: 'random' },
   { kind: 'vector' },
   { kind: 'bm25' },
   { kind: 'hybrid-rrf' }
@@ -37,6 +44,13 @@ export const DEFAULT_RETRIEVERS: RetrieverParams[] = [
 export function normalizeRetrieverParams(p: unknown): RetrieverParams {
   if (p && typeof p === 'object' && 'kind' in p) {
     const kind = (p as { kind: unknown }).kind
+    if (kind === 'random') {
+      const seed = (p as { seed?: number }).seed
+      return {
+        kind: 'random',
+        seed: typeof seed === 'number' && Number.isInteger(seed) ? seed : RANDOM_DEFAULT_SEED
+      }
+    }
     if (kind === 'vector') return { kind: 'vector' }
     if (kind === 'bm25') return { kind: 'bm25' }
     if (kind === 'hybrid-rrf') {
@@ -52,6 +66,8 @@ export function normalizeRetrieverParams(p: unknown): RetrieverParams {
 export function parseRetrieverId(id: string | undefined | null): RetrieverParams {
   if (!id || id === 'vector') return { kind: 'vector' }
   if (id === 'bm25') return { kind: 'bm25' }
+  const random = id.match(/^random-(-?\d+)$/)
+  if (random) return { kind: 'random', seed: parseInt(random[1], 10) }
   const m = id.match(/^hybrid-rrf-(\d+)$/)
   if (m) return { kind: 'hybrid-rrf', rrfK: parseInt(m[1], 10) }
   return { kind: 'vector' }

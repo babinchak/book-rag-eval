@@ -245,10 +245,18 @@ function embeddingModels(config: LoadedExperiment): EmbeddingModel[] {
   return [
     ...new Set(
       config.retrievers.flatMap((retriever) =>
-        retriever.kind === 'bm25' ? [] : [retriever.embeddingModel]
+        retriever.kind === 'vector' || retriever.kind === 'hybrid-rrf'
+          ? [retriever.embeddingModel]
+          : []
       )
     )
   ]
+}
+
+function retrieverNeedsEmbedding(
+  retriever: ExperimentRetriever
+): retriever is Extract<ExperimentRetriever, { kind: 'vector' | 'hybrid-rrf' }> {
+  return retriever.kind === 'vector' || retriever.kind === 'hybrid-rrf'
 }
 
 function retrieverNeedsBm25(retriever: ExperimentRetriever): boolean {
@@ -257,6 +265,8 @@ function retrieverNeedsBm25(retriever: ExperimentRetriever): boolean {
 
 function retrieverParams(retriever: ExperimentRetriever): RetrieverParams {
   switch (retriever.kind) {
+    case 'random':
+      return { kind: 'random', seed: retriever.seed }
     case 'bm25':
       return { kind: 'bm25' }
     case 'vector':
@@ -351,7 +361,7 @@ export async function planExperiment(
       })
 
       for (const retriever of config.retrievers) {
-        if (retriever.kind === 'bm25') continue
+        if (!retrieverNeedsEmbedding(retriever)) continue
         const queryTokens = book.cases
           .filter((evalCase) => evalCase.scope === 'within_book')
           .reduce((total, evalCase) => total + countChunkTokens(evalCase.canonicalSearchQuery), 0)
@@ -583,7 +593,7 @@ export async function runExperiment(
           if (retrieverNeedsBm25(retriever)) {
             await runBm25Indexing(book.bookId, set.strategyId)
           }
-          if (retriever.kind !== 'bm25') {
+          if (retrieverNeedsEmbedding(retriever)) {
             const exactTokens = set.chunks.reduce(
               (total, chunk) => total + (chunk.tokenCount ?? countChunkTokens(chunk.text)),
               0
@@ -627,7 +637,7 @@ export async function runExperiment(
             if (cached) {
               hits = reconstructHits(cached, set)
             } else {
-              if (retriever.kind !== 'bm25') {
+              if (retrieverNeedsEmbedding(retriever)) {
                 assertAffordable(
                   run,
                   prepared.config,
@@ -641,7 +651,7 @@ export async function runExperiment(
                 retrieverParams(retriever),
                 evalCase.canonicalSearchQuery,
                 prepared.config.candidatePoolSize,
-                retriever.kind === 'bm25' ? undefined : retriever.embeddingModel,
+                retrieverNeedsEmbedding(retriever) ? retriever.embeddingModel : undefined,
                 (model, tokens) => recordCost(run, prepared.config, model, 'query', tokens)
               )
               run.queryCache[queryId] = {

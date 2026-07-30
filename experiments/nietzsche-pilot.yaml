@@ -27,6 +27,8 @@ chunkers:
     encoding: cl100k_base
 
 retrievers:
+  - kind: random
+    seed: 42
   - kind: bm25
 
 contextBudgets: [2048, 4096, 8192]

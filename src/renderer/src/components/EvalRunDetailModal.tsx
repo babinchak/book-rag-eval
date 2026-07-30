@@ -28,7 +28,9 @@ function buildTraceMarkdown(
 ): string {
   const byId = new Map(chunks.map((c) => [c.id, c]))
   const goldChunks = chunks.filter((c) =>
-    goldSpans.some((g) => c.spineHref === g.spineHref && c.textStart < g.textEnd && c.textEnd > g.textStart)
+    goldSpans.some(
+      (g) => c.spineHref === g.spineHref && c.textStart < g.textEnd && c.textEnd > g.textStart
+    )
   )
   const cited = new Set(caseResult.citedChunkIds ?? [])
   const retrievedByChunkId = new Map(caseResult.retrieved.map((r) => [r.chunkId, r]))
@@ -37,9 +39,8 @@ function buildTraceMarkdown(
 
   const corpusSize = chunks.length
   const goldHrefs = new Set(goldSpans.map((g) => g.spineHref))
-  const chunksInGoldDoc = goldHrefs.size === 0
-    ? 0
-    : chunks.filter((c) => goldHrefs.has(c.spineHref)).length
+  const chunksInGoldDoc =
+    goldHrefs.size === 0 ? 0 : chunks.filter((c) => goldHrefs.has(c.spineHref)).length
 
   const r0 = caseResult.retrieved[0]
   const r1 = caseResult.retrieved[1]
@@ -48,11 +49,21 @@ function buildTraceMarkdown(
   const out: string[] = []
   out.push(`# Eval trace`)
   out.push('')
-  out.push(`**Strategy**: \`${run.strategyId}\` · retriever=\`${run.retrieverId ?? 'vector'}\` · k=${run.k} · mode=${run.mode ?? 'agentic'}`)
-  out.push(`**Score** (\`d\` column): for vector = L2 distance over text-embedding-3-large (lower better); for bm25 = FTS5 bm25() (more negative better); for hybrid-rrf = negated RRF score (lower better)`)
+  out.push(
+    `**Strategy**: \`${run.strategyId}\` · retriever=\`${run.retrieverId ?? 'vector'}\` · k=${run.k} · mode=${run.mode ?? 'agentic'}`
+  )
+  out.push(
+    `**Score** (\`d\` column): for random = deterministic seeded hash score; for vector = L2 distance over text-embedding-3-large (lower better); for bm25 = FTS5 bm25() (more negative better); for hybrid-rrf = negated RRF score (lower better)`
+  )
   const goldDocSuffix =
-    goldHrefs.size === 1 ? ` (\`${Array.from(goldHrefs)[0]}\`)` : goldHrefs.size > 1 ? ` (across ${goldHrefs.size} files)` : ''
-  out.push(`**Corpus**: ${corpusSize.toLocaleString()} chunks · ${chunksInGoldDoc.toLocaleString()} in gold doc${goldDocSuffix}`)
+    goldHrefs.size === 1
+      ? ` (\`${Array.from(goldHrefs)[0]}\`)`
+      : goldHrefs.size > 1
+        ? ` (across ${goldHrefs.size} files)`
+        : ''
+  out.push(
+    `**Corpus**: ${corpusSize.toLocaleString()} chunks · ${chunksInGoldDoc.toLocaleString()} in gold doc${goldDocSuffix}`
+  )
   out.push(`**Question**: ${caseResult.question}`)
   if (caseResult.searchQuery && caseResult.searchQuery !== caseResult.question) {
     out.push(`**Search query**: ${caseResult.searchQuery}`)
@@ -94,7 +105,10 @@ function buildTraceMarkdown(
   if (goldChunks.length === 0) {
     out.push(`*None — no chunk in this strategy overlaps the gold span.*`)
   } else {
-    const goldInfo = goldChunks.map((c) => ({ chunk: c, retrieved: retrievedByChunkId.get(c.id) ?? null }))
+    const goldInfo = goldChunks.map((c) => ({
+      chunk: c,
+      retrieved: retrievedByChunkId.get(c.id) ?? null
+    }))
     const allHit = goldInfo.every((g) => g.retrieved?.hit)
     if (allHit) {
       for (const { chunk, retrieved } of goldInfo) {
@@ -139,7 +153,9 @@ function buildTraceMarkdown(
     }
     if (cited.has(r.chunkId)) tags.push('CITED')
     const sizeTag = chunkSize !== null ? ` · ${chunkSize}c` : ''
-    out.push(`### #${r.rank} · d=${r.distance.toFixed(2)}${sizeTag}${tags.length ? ` · ${tags.join(' · ')}` : ''}`)
+    out.push(
+      `### #${r.rank} · d=${r.distance.toFixed(2)}${sizeTag}${tags.length ? ` · ${tags.join(' · ')}` : ''}`
+    )
     out.push(`\`${r.chunkId}\``)
     if (chunk) {
       out.push('```')
@@ -153,7 +169,13 @@ function buildTraceMarkdown(
   return out.join('\n').trim()
 }
 
-function EvalRunDetailModal({ bookId, runId, evalSet, onClose, onSelectChunk }: EvalRunDetailModalProps): React.JSX.Element {
+function EvalRunDetailModal({
+  bookId,
+  runId,
+  evalSet,
+  onClose,
+  onSelectChunk
+}: EvalRunDetailModalProps): React.JSX.Element {
   const [run, setRun] = useState<EvalRunResult | null>(null)
   const [error, setError] = useState<IpcError | null>(null)
   const [expandedCaseId, setExpandedCaseId] = useState<string | null>(null)
@@ -163,10 +185,14 @@ function EvalRunDetailModal({ bookId, runId, evalSet, onClose, onSelectChunk }: 
     let cancelled = false
     void window.api.evals.getRun(bookId, runId).then((r) => {
       if (cancelled) return
-      if (r.ok) { setRun(r.data); if (r.data.cases[0]) setExpandedCaseId(r.data.cases[0].caseId) }
-      else setError(r.error)
+      if (r.ok) {
+        setRun(r.data)
+        if (r.data.cases[0]) setExpandedCaseId(r.data.cases[0].caseId)
+      } else setError(r.error)
     })
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [bookId, runId])
 
   function caseGoldSpans(caseId: string): GoldSpan[] {
@@ -180,8 +206,17 @@ function EvalRunDetailModal({ bookId, runId, evalSet, onClose, onSelectChunk }: 
   async function handleCopyTrace(caseResult: EvalCaseResult): Promise<void> {
     if (!run) return
     const r = await window.api.chunks.get(bookId, run.strategyId)
-    if (!r.ok) { setError(r.error); return }
-    const md = buildTraceMarkdown(run, caseResult, caseGoldSpans(caseResult.caseId), r.data.chunks, caseNotes(caseResult.caseId))
+    if (!r.ok) {
+      setError(r.error)
+      return
+    }
+    const md = buildTraceMarkdown(
+      run,
+      caseResult,
+      caseGoldSpans(caseResult.caseId),
+      r.data.chunks,
+      caseNotes(caseResult.caseId)
+    )
     await navigator.clipboard.writeText(md)
     setCopiedCaseId(caseResult.caseId)
     setTimeout(() => setCopiedCaseId((c) => (c === caseResult.caseId ? null : c)), 1500)
@@ -190,17 +225,46 @@ function EvalRunDetailModal({ bookId, runId, evalSet, onClose, onSelectChunk }: 
   return (
     <div
       onClick={onClose}
-      style={{ position: 'fixed', inset: 0, background: cv.overlay, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: cv.overlay,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 100
+      }}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        style={{ background: cv.bg, borderRadius: 8, padding: 0, width: 900, maxWidth: '95vw', maxHeight: '90vh', display: 'flex', flexDirection: 'column', boxShadow: '0 10px 40px rgba(0,0,0,0.3)', overflow: 'hidden', border: `1px solid ${cv.border}` }}
+        style={{
+          background: cv.bg,
+          borderRadius: 8,
+          padding: 0,
+          width: 900,
+          maxWidth: '95vw',
+          maxHeight: '90vh',
+          display: 'flex',
+          flexDirection: 'column',
+          boxShadow: '0 10px 40px rgba(0,0,0,0.3)',
+          overflow: 'hidden',
+          border: `1px solid ${cv.border}`
+        }}
       >
-        <header style={{ padding: '16px 20px', borderBottom: `1px solid ${cv.border}`, display: 'flex', alignItems: 'baseline', gap: 16 }}>
+        <header
+          style={{
+            padding: '16px 20px',
+            borderBottom: `1px solid ${cv.border}`,
+            display: 'flex',
+            alignItems: 'baseline',
+            gap: 16
+          }}
+        >
           <h2 style={{ margin: 0, fontSize: 16, color: cv.text1 }}>Run detail</h2>
           {run && (
             <span style={{ fontSize: 12, color: cv.text3, fontFamily: 'monospace' }}>
-              {run.strategyId} · {run.retrieverId ?? 'vector'} · k={run.k} · {new Date(run.ranAt).toLocaleString()}
+              {run.strategyId} · {run.retrieverId ?? 'vector'} · k={run.k} ·{' '}
+              {new Date(run.ranAt).toLocaleString()}
             </span>
           )}
           {run && (
@@ -220,7 +284,19 @@ function EvalRunDetailModal({ bookId, runId, evalSet, onClose, onSelectChunk }: 
               {run.mode ?? 'agentic'}
             </span>
           )}
-          <button onClick={onClose} style={{ marginLeft: 'auto', border: 'none', background: 'transparent', fontSize: 18, cursor: 'pointer', color: cv.text3 }}>×</button>
+          <button
+            onClick={onClose}
+            style={{
+              marginLeft: 'auto',
+              border: 'none',
+              background: 'transparent',
+              fontSize: 18,
+              cursor: 'pointer',
+              color: cv.text3
+            }}
+          >
+            ×
+          </button>
         </header>
 
         {error && (
@@ -231,7 +307,16 @@ function EvalRunDetailModal({ bookId, runId, evalSet, onClose, onSelectChunk }: 
 
         {run && (
           <>
-            <div style={{ padding: '12px 20px', background: cv.surface2, borderBottom: `1px solid ${cv.border}`, display: 'flex', gap: 24, fontSize: 12 }}>
+            <div
+              style={{
+                padding: '12px 20px',
+                background: cv.surface2,
+                borderBottom: `1px solid ${cv.border}`,
+                display: 'flex',
+                gap: 24,
+                fontSize: 12
+              }}
+            >
               <Metric label={`Hit@${run.k}`} value={run.meanRecallAtK.toFixed(2)} />
               {run.meanEvidenceRecall !== undefined && (
                 <Metric label="Evidence recall" value={run.meanEvidenceRecall.toFixed(2)} />
@@ -240,17 +325,25 @@ function EvalRunDetailModal({ bookId, runId, evalSet, onClose, onSelectChunk }: 
                 <Metric label={`nDCG@${run.k}`} value={run.meanNdcgAtK.toFixed(2)} />
               )}
               <Metric label="MRR" value={run.meanMRR.toFixed(2)} />
-              {run.meanCitationPrecision !== undefined && <Metric label="Cit. precision" value={run.meanCitationPrecision.toFixed(2)} />}
-              {run.meanCitationRecall !== undefined && <Metric label="Cit. recall" value={run.meanCitationRecall.toFixed(2)} />}
-              {run.totalTokens !== undefined && <Metric label="Tokens" value={run.totalTokens.toLocaleString()} />}
-              {run.agentModel && run.totalPromptTokens !== undefined && run.totalCompletionTokens !== undefined && (
-                <Metric
-                  label="Cost"
-                  value={formatUsd(
-                    chatCostUsd(run.agentModel, run.totalPromptTokens, run.totalCompletionTokens)
-                  )}
-                />
+              {run.meanCitationPrecision !== undefined && (
+                <Metric label="Cit. precision" value={run.meanCitationPrecision.toFixed(2)} />
               )}
+              {run.meanCitationRecall !== undefined && (
+                <Metric label="Cit. recall" value={run.meanCitationRecall.toFixed(2)} />
+              )}
+              {run.totalTokens !== undefined && (
+                <Metric label="Tokens" value={run.totalTokens.toLocaleString()} />
+              )}
+              {run.agentModel &&
+                run.totalPromptTokens !== undefined &&
+                run.totalCompletionTokens !== undefined && (
+                  <Metric
+                    label="Cost"
+                    value={formatUsd(
+                      chatCostUsd(run.agentModel, run.totalPromptTokens, run.totalCompletionTokens)
+                    )}
+                  />
+                )}
             </div>
 
             <div style={{ flex: 1, overflowY: 'auto', padding: '12px 20px' }}>
@@ -259,10 +352,21 @@ function EvalRunDetailModal({ bookId, runId, evalSet, onClose, onSelectChunk }: 
                   key={caseResult.caseId}
                   caseResult={caseResult}
                   expanded={expandedCaseId === caseResult.caseId}
-                  onToggle={() => setExpandedCaseId(expandedCaseId === caseResult.caseId ? null : caseResult.caseId)}
+                  onToggle={() =>
+                    setExpandedCaseId(
+                      expandedCaseId === caseResult.caseId ? null : caseResult.caseId
+                    )
+                  }
                   goldSpans={caseGoldSpans(caseResult.caseId)}
                   strategyId={run.strategyId}
-                  onSelectChunk={onSelectChunk ? (chunkId) => { onSelectChunk(run.strategyId, chunkId); onClose() } : undefined}
+                  onSelectChunk={
+                    onSelectChunk
+                      ? (chunkId) => {
+                          onSelectChunk(run.strategyId, chunkId)
+                          onClose()
+                        }
+                      : undefined
+                  }
                   onCopyTrace={() => handleCopyTrace(caseResult)}
                   copied={copiedCaseId === caseResult.caseId}
                 />
@@ -295,25 +399,66 @@ interface CaseCardProps {
   copied: boolean
 }
 
-function CaseCard({ caseResult, expanded, onToggle, goldSpans, onSelectChunk, onCopyTrace, copied }: CaseCardProps): React.JSX.Element {
+function CaseCard({
+  caseResult,
+  expanded,
+  onToggle,
+  goldSpans,
+  onSelectChunk,
+  onCopyTrace,
+  copied
+}: CaseCardProps): React.JSX.Element {
   const r = caseResult
   const recallColor = r.recallAtK ? cv.successStrong : cv.danger
   const citedSet = new Set(r.citedChunkIds ?? [])
 
   return (
-    <div style={{ border: `1px solid ${cv.border}`, borderRadius: 6, marginBottom: 10, overflow: 'hidden' }}>
+    <div
+      style={{
+        border: `1px solid ${cv.border}`,
+        borderRadius: 6,
+        marginBottom: 10,
+        overflow: 'hidden'
+      }}
+    >
       <div
         onClick={onToggle}
-        style={{ padding: '10px 14px', background: expanded ? cv.surface2 : cv.bg, cursor: 'pointer', display: 'flex', gap: 10, alignItems: 'center' }}
+        style={{
+          padding: '10px 14px',
+          background: expanded ? cv.surface2 : cv.bg,
+          cursor: 'pointer',
+          display: 'flex',
+          gap: 10,
+          alignItems: 'center'
+        }}
       >
-        <span style={{ fontSize: 12, color: cv.text4, fontFamily: 'monospace' }}>{expanded ? '▼' : '▶'}</span>
-        <span style={{ flex: 1, fontSize: 13, lineHeight: 1.4, color: cv.text1 }}>{r.question}</span>
+        <span style={{ fontSize: 12, color: cv.text4, fontFamily: 'monospace' }}>
+          {expanded ? '▼' : '▶'}
+        </span>
+        <span style={{ flex: 1, fontSize: 13, lineHeight: 1.4, color: cv.text1 }}>
+          {r.question}
+        </span>
         {r.langsmithRunUrl && (
-          <a href={r.langsmithRunUrl} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} style={{ fontSize: 10, color: cv.accent, textDecoration: 'underline' }} title="Open LangSmith trace">
+          <a
+            href={r.langsmithRunUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            style={{ fontSize: 10, color: cv.accent, textDecoration: 'underline' }}
+            title="Open LangSmith trace"
+          >
             trace ↗
           </a>
         )}
-        <span style={{ fontSize: 11, background: recallColor, color: '#fff', padding: '2px 6px', borderRadius: 3 }}>
+        <span
+          style={{
+            fontSize: 11,
+            background: recallColor,
+            color: '#fff',
+            padding: '2px 6px',
+            borderRadius: 3
+          }}
+        >
           {r.recallAtK ? `hit @ ${r.hitRank}` : 'miss'}
         </span>
         {r.citationPrecision !== undefined && (
@@ -332,10 +477,15 @@ function CaseCard({ caseResult, expanded, onToggle, goldSpans, onSelectChunk, on
       </div>
 
       {expanded && (
-        <div style={{ padding: '12px 14px', background: cv.bg, borderTop: `1px solid ${cv.border}` }}>
+        <div
+          style={{ padding: '12px 14px', background: cv.bg, borderTop: `1px solid ${cv.border}` }}
+        >
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 10 }}>
             <button
-              onClick={(e) => { e.stopPropagation(); void onCopyTrace() }}
+              onClick={(e) => {
+                e.stopPropagation()
+                void onCopyTrace()
+              }}
               title="Copy a markdown trace of this case (question, gold, retrieved chunks with text)"
               style={{
                 padding: '4px 10px',
@@ -353,11 +503,24 @@ function CaseCard({ caseResult, expanded, onToggle, goldSpans, onSelectChunk, on
           {r.answer && (
             <section style={{ marginBottom: 14 }}>
               <SectionLabel>Answer</SectionLabel>
-              <div style={{ fontSize: 12, lineHeight: 1.5, background: cv.surface2, border: `1px solid ${cv.border}`, borderRadius: 4, padding: 10, whiteSpace: 'pre-wrap', color: cv.text1 }}>
+              <div
+                style={{
+                  fontSize: 12,
+                  lineHeight: 1.5,
+                  background: cv.surface2,
+                  border: `1px solid ${cv.border}`,
+                  borderRadius: 4,
+                  padding: 10,
+                  whiteSpace: 'pre-wrap',
+                  color: cv.text1
+                }}
+              >
                 {r.answer}
               </div>
               {r.citedRanks && r.citedRanks.length > 0 && (
-                <div style={{ fontSize: 11, color: cv.text4, marginTop: 4 }}>cited: [{r.citedRanks.join(', ')}]</div>
+                <div style={{ fontSize: 11, color: cv.text4, marginTop: 4 }}>
+                  cited: [{r.citedRanks.join(', ')}]
+                </div>
               )}
             </section>
           )}
@@ -367,7 +530,18 @@ function CaseCard({ caseResult, expanded, onToggle, goldSpans, onSelectChunk, on
               <SectionLabel>Gold spans</SectionLabel>
               <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'grid', gap: 4 }}>
                 {goldSpans.map((g, i) => (
-                  <li key={i} style={{ fontSize: 11, fontFamily: 'monospace', background: cv.goldBg, border: `1px solid ${cv.goldBorder}`, borderRadius: 4, padding: '4px 8px', color: cv.text2 }}>
+                  <li
+                    key={i}
+                    style={{
+                      fontSize: 11,
+                      fontFamily: 'monospace',
+                      background: cv.goldBg,
+                      border: `1px solid ${cv.goldBorder}`,
+                      borderRadius: 4,
+                      padding: '4px 8px',
+                      color: cv.text2
+                    }}
+                  >
                     {g.spineHref} : {g.textStart}–{g.textEnd}
                   </li>
                 ))}
@@ -397,20 +571,48 @@ function CaseCard({ caseResult, expanded, onToggle, goldSpans, onSelectChunk, on
                     }}
                   >
                     <span style={{ fontWeight: 600, color: cv.text2 }}>#{d.rank}</span>
-                    <span style={{ color: d.hit ? cv.successText : cv.text4, fontFamily: 'monospace' }}>
+                    <span
+                      style={{ color: d.hit ? cv.successText : cv.text4, fontFamily: 'monospace' }}
+                    >
                       d={d.distance.toFixed(2)}
                     </span>
                     {d.hit && (
-                      <span style={{ fontSize: 10, background: cv.successStrong, color: '#fff', padding: '1px 5px', borderRadius: 2 }}>
+                      <span
+                        style={{
+                          fontSize: 10,
+                          background: cv.successStrong,
+                          color: '#fff',
+                          padding: '1px 5px',
+                          borderRadius: 2
+                        }}
+                      >
                         hit · {d.overlap}c
                       </span>
                     )}
                     {isCited && (
-                      <span style={{ fontSize: 10, background: cv.accent, color: '#fff', padding: '1px 5px', borderRadius: 2 }}>
+                      <span
+                        style={{
+                          fontSize: 10,
+                          background: cv.accent,
+                          color: '#fff',
+                          padding: '1px 5px',
+                          borderRadius: 2
+                        }}
+                      >
                         cited
                       </span>
                     )}
-                    <span style={{ flex: 1, color: cv.text2, fontFamily: 'monospace', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={d.chunkId}>
+                    <span
+                      style={{
+                        flex: 1,
+                        color: cv.text2,
+                        fontFamily: 'monospace',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis'
+                      }}
+                      title={d.chunkId}
+                    >
                       {d.chunkId.split('::')[1] ?? d.chunkId}
                     </span>
                   </li>
@@ -418,7 +620,9 @@ function CaseCard({ caseResult, expanded, onToggle, goldSpans, onSelectChunk, on
               })}
             </ul>
             {onSelectChunk && r.retrieved.length > 0 && (
-              <div style={{ fontSize: 10, color: cv.text4, marginTop: 4 }}>Click a chunk to highlight it in the book.</div>
+              <div style={{ fontSize: 10, color: cv.text4, marginTop: 4 }}>
+                Click a chunk to highlight it in the book.
+              </div>
             )}
           </section>
         </div>
@@ -429,7 +633,16 @@ function CaseCard({ caseResult, expanded, onToggle, goldSpans, onSelectChunk, on
 
 function SectionLabel({ children }: { children: React.ReactNode }): React.JSX.Element {
   return (
-    <div style={{ fontSize: 10, fontWeight: 600, color: cv.text3, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>
+    <div
+      style={{
+        fontSize: 10,
+        fontWeight: 600,
+        color: cv.text3,
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
+        marginBottom: 4
+      }}
+    >
       {children}
     </div>
   )

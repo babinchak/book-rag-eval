@@ -36,6 +36,10 @@ const chunkerSchema = z.discriminatedUnion('kind', [
 const embeddingModelSchema = z.enum(['text-embedding-3-small', 'text-embedding-3-large'])
 
 const retrievalPipelineSchema = z.discriminatedUnion('kind', [
+  z.object({
+    kind: z.literal('random'),
+    seed: z.number().int().default(42)
+  }),
   z.object({ kind: z.literal('bm25') }),
   z.object({
     kind: z.literal('vector'),
@@ -74,7 +78,10 @@ const experimentSchema = z
     retrievers: z.array(retrievalPipelineSchema).min(1),
     contextBudgets: z.array(positiveInteger).min(1),
     candidatePoolSize: positiveInteger.default(50),
-    splits: z.array(z.enum(['dev', 'test'])).min(1).default(['dev']),
+    splits: z
+      .array(z.enum(['dev', 'test']))
+      .min(1)
+      .default(['dev']),
     maxCasesPerBook: positiveInteger.optional(),
     pricing: z
       .object({

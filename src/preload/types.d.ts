@@ -1,9 +1,5 @@
 import type { ArtifactIdentity } from '../shared/artifactIdentity'
-import type {
-  BenchmarkEvalCase,
-  BenchmarkEvalSet,
-  LegacyGoldSpan
-} from '../shared/evalSchema'
+import type { BenchmarkEvalCase, BenchmarkEvalSet, LegacyGoldSpan } from '../shared/evalSchema'
 
 export interface ReadiumManifestLink {
   href: string
@@ -240,6 +236,7 @@ export type Bm25ListIpcResult =
 export type Bm25RemoveIpcResult = { ok: true } | { ok: false; error: IpcError }
 
 export type RetrieverParams =
+  | { kind: 'random'; seed?: number }
   | { kind: 'vector' }
   | { kind: 'bm25' }
   | { kind: 'hybrid-rrf'; rrfK?: number }

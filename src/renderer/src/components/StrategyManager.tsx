@@ -27,7 +27,7 @@ const CHUNKER_KINDS: ChunkParams['kind'][] = [
   'structural',
   'semantic'
 ]
-const RETRIEVER_KINDS: RetrieverParams['kind'][] = ['vector', 'bm25', 'hybrid-rrf']
+const RETRIEVER_KINDS: RetrieverParams['kind'][] = ['random', 'vector', 'bm25', 'hybrid-rrf']
 
 function defaultChunkerOf(kind: ChunkParams['kind']): ChunkParams {
   switch (kind) {
@@ -54,6 +54,7 @@ function defaultChunkerOf(kind: ChunkParams['kind']): ChunkParams {
 }
 
 function defaultRetrieverOf(kind: RetrieverParams['kind']): RetrieverParams {
+  if (kind === 'random') return { kind: 'random', seed: 42 }
   if (kind === 'hybrid-rrf') return { kind: 'hybrid-rrf', rrfK: 60 }
   return { kind }
 }
@@ -354,6 +355,7 @@ function describeChunker(c: ChunkParams): string {
 }
 
 function describeRetriever(r: RetrieverParams): string {
+  if (r.kind === 'random') return `random seed=${r.seed ?? 42}`
   if (r.kind === 'hybrid-rrf') return `hybrid k=${r.rrfK ?? 60}`
   return r.kind
 }
@@ -593,6 +595,16 @@ function StrategyEditorModal({
               onChange={(v) => patchRetriever({ rrfK: v })}
               min={1}
               max={1000}
+            />
+          </Field>
+        )}
+        {config.retriever.kind === 'random' && (
+          <Field label="Seed">
+            <NumberInput
+              value={config.retriever.seed ?? 42}
+              onChange={(v) => patchRetriever({ seed: v })}
+              min={0}
+              max={2147483647}
             />
           </Field>
         )}

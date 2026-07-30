@@ -95,6 +95,9 @@ Strategies are independent and composable. The current axes:
 - **Augmentation** — chapter summaries, hierarchical summaries, propositions, HyDE.
 - **Retrieval** — top-k, MMR, reranking, parent-document expansion, query rewriting.
 
+Headless experiments also include a deterministic seeded random retriever as
+the required lower-bound control; it needs no index or API calls.
+
 Each strategy is a small module that conforms to a common interface and is registered so the UI and the eval harness can discover it.
 
 ## Evaluation

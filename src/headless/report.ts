@@ -56,6 +56,8 @@ export interface ExperimentReport {
 
 function retrieverLabel(retriever: ExperimentRetriever): string {
   switch (retriever.kind) {
+    case 'random':
+      return `random:seed${retriever.seed}`
     case 'bm25':
       return 'bm25'
     case 'vector':
@@ -128,10 +130,7 @@ function numericMetric(row: HeadlessResultRow, metric: ReportMetric): number | n
   return typeof value === 'number' && Number.isFinite(value) ? value : null
 }
 
-export function summarizeRun(
-  run: HeadlessRun,
-  bootstrapIterations = 2000
-): ExperimentReport {
+export function summarizeRun(run: HeadlessRun, bootstrapIterations = 2000): ExperimentReport {
   if (!Number.isInteger(bootstrapIterations) || bootstrapIterations < 0) {
     throw new Error('bootstrapIterations must be a non-negative integer')
   }
@@ -254,9 +253,7 @@ export async function writeRunReport(
   const absoluteRunPath = resolve(runPath)
   const run = JSON.parse(await fs.readFile(absoluteRunPath, 'utf8')) as HeadlessRun
   const report = summarizeRun(run, bootstrapIterations)
-  const markdownPath = resolve(
-    outputPath ?? absoluteRunPath.replace(/\.json$/i, '.report.md')
-  )
+  const markdownPath = resolve(outputPath ?? absoluteRunPath.replace(/\.json$/i, '.report.md'))
   const summaryPath = markdownPath.replace(/\.md$/i, '.json')
   await fs.mkdir(dirname(markdownPath), { recursive: true })
   await Promise.all([

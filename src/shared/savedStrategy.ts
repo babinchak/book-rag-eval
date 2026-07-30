@@ -138,6 +138,8 @@ function strategyLabelShort(p: ChunkParams): string {
 
 function retrieverLabelShort(r: RetrieverParams): string {
   switch (r.kind) {
+    case 'random':
+      return 'Random'
     case 'vector':
       return 'Vector'
     case 'bm25':
