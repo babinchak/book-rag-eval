@@ -7,12 +7,13 @@ import { BaseCallbackHandler } from '@langchain/core/callbacks/base'
 import type { LLMResult } from '@langchain/core/outputs'
 import { z } from 'zod'
 import { bookDir, listLibrary } from './library'
-import { readSpineRaw } from './epub'
+import { loadCanonicalBookDocument } from './canonicalStore'
 import { ask, retrieve } from './retrieval'
 import { getChunkSet } from './chunking'
 import { getOpenaiKey } from './settings'
 import { captureIpcError } from './ipcContext'
 import { retrieverIdOf, type RetrieverParams } from '../shared/retriever'
+import type { CanonicalBookDocument } from '../shared/canonicalDocument'
 import type {
   AutoGenerateProgress,
   Chunk,
@@ -25,7 +26,6 @@ import type {
   EvalSetSummary,
   GoldSpan,
   LocateQuoteHit,
-  ReadiumManifest,
   RetrievedChunkPayload,
   RetrievedDetail
 } from '../preload/types'
@@ -46,29 +46,46 @@ function evalRunPath(bookId: string, runId: string): string {
   return join(evalRunsDir(bookId), `${runId}.json`)
 }
 
-function htmlToPlainText(html: string): string {
-  return html
-    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, ' ')
-    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, ' ')
-    .replace(/<!--[\s\S]*?-->/g, ' ')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;|&apos;|&#x27;/g, "'")
-    .replace(/\s+/g, ' ')
-    .trim()
-}
-
 function normalizeWhitespace(s: string): string {
   return s.replace(/\s+/g, ' ').trim()
 }
 
-async function readManifest(bookId: string): Promise<ReadiumManifest> {
-  const raw = await fs.readFile(join(bookDir(bookId), 'manifest.json'), 'utf8')
-  return JSON.parse(raw) as ReadiumManifest
+function enrichGoldSpans(
+  bookId: string,
+  document: CanonicalBookDocument,
+  spans: GoldSpan[]
+): GoldSpan[] {
+  return spans.map((span) => {
+    if (span.bookId && span.bookId !== bookId) {
+      throw new Error(`Gold span book ${span.bookId} does not match eval book ${bookId}`)
+    }
+    const spine = document.spine.find((item) => item.href === span.spineHref)
+    if (!spine) throw new Error(`Gold span spine item not found: ${span.spineHref}`)
+    if (
+      !Number.isInteger(span.textStart) ||
+      !Number.isInteger(span.textEnd) ||
+      span.textStart < 0 ||
+      span.textEnd <= span.textStart ||
+      span.textEnd > spine.text.length
+    ) {
+      throw new Error(
+        `Invalid gold span offsets for ${span.spineHref}: ${span.textStart}-${span.textEnd}`
+      )
+    }
+    const node = spine.nodes
+      .map((candidate) => ({
+        candidate,
+        overlap: Math.min(span.textEnd, candidate.textEnd) - Math.max(span.textStart, candidate.textStart)
+      }))
+      .filter(({ overlap }) => overlap > 0)
+      .sort((a, b) => b.overlap - a.overlap)[0]?.candidate
+    if (!node) {
+      throw new Error(
+        `Gold span ${span.spineHref}:${span.textStart}-${span.textEnd} does not overlap a canonical node`
+      )
+    }
+    return { ...span, bookId, nodeId: node.id }
+  })
 }
 
 async function writeJsonAtomic(path: string, value: unknown): Promise<void> {
@@ -153,11 +170,12 @@ export async function addCase(
   if (!trimmedSQ) throw new Error('Search query is required')
   if (goldSpans.length === 0) throw new Error('At least one gold span is required')
   const set = await getEvalSet(bookId, setId)
+  const document = await loadCanonicalBookDocument(bookId)
   const newCase: EvalCase = {
     id: randomUUID(),
     question: trimmedQ,
     searchQuery: trimmedSQ,
-    goldSpans,
+    goldSpans: enrichGoldSpans(bookId, document, goldSpans),
     notes
   }
   set.cases.push(newCase)
@@ -205,7 +223,8 @@ export async function updateCase(
   let goldSpans = existing.goldSpans
   if (updates.goldSpans !== undefined) {
     if (updates.goldSpans.length === 0) throw new Error('At least one gold span is required')
-    goldSpans = updates.goldSpans
+    const document = await loadCanonicalBookDocument(bookId)
+    goldSpans = enrichGoldSpans(bookId, document, updates.goldSpans)
   }
 
   const updated: EvalCase = {
@@ -227,22 +246,23 @@ export async function locateQuote(
 ): Promise<LocateQuoteHit | null> {
   const needle = normalizeWhitespace(quote)
   if (!needle) return null
-  const manifest = await readManifest(bookId)
-  const epubPath = join(bookDir(bookId), 'book.epub')
-  const spine = readSpineRaw(epubPath, manifest)
-  for (const item of spine) {
-    const haystack = htmlToPlainText(item.rawHtml)
+  const document = await loadCanonicalBookDocument(bookId)
+  for (const item of document.spine) {
+    const haystack = item.text
     const idx = haystack.indexOf(needle)
     if (idx >= 0) {
       const previewStart = Math.max(0, idx - 30)
       const previewEnd = Math.min(haystack.length, idx + needle.length + 30)
       const preview = haystack.slice(previewStart, previewEnd)
-      return {
-        goldSpan: {
+      const [goldSpan] = enrichGoldSpans(bookId, document, [
+        {
           spineHref: item.href,
           textStart: idx,
           textEnd: idx + needle.length
-        },
+        }
+      ])
+      return {
+        goldSpan,
         preview: (previewStart > 0 ? '…' : '') + preview + (previewEnd < haystack.length ? '…' : '')
       }
     }
@@ -595,10 +615,7 @@ function locateAnswerSpan(
 ): { offset: number; length: number } | null {
   const direct = chunkText.indexOf(answerSpan)
   if (direct >= 0) return { offset: direct, length: answerSpan.length }
-  const trimmed = answerSpan.replace(
-    /^[\s.,;:!?'"`\-—–()\[\]{}]+|[\s.,;:!?'"`\-—–()\[\]{}]+$/g,
-    ''
-  )
+  const trimmed = answerSpan.replace(/^[\s\p{P}]+|[\s\p{P}]+$/gu, '')
   if (trimmed.length < MIN_ANSWER_SPAN_CHARS) return null
   const fuzzy = chunkText.indexOf(trimmed)
   if (fuzzy >= 0) return { offset: fuzzy, length: trimmed.length }
@@ -787,10 +804,8 @@ export async function backfillSearchQueries(
   const progress: AutoGenerateProgress = { generated: 0, failed: 0, failures: [] }
   if (missing.length === 0) return progress
 
-  const manifest = await readManifest(bookId)
-  const epubPath = join(bookDir(bookId), 'book.epub')
-  const spine = readSpineRaw(epubPath, manifest)
-  const textByHref = new Map(spine.map((s) => [s.href, htmlToPlainText(s.rawHtml)]))
+  const document = await loadCanonicalBookDocument(bookId)
+  const textByHref = new Map(document.spine.map((item) => [item.href, item.text]))
 
   const library = await listLibrary()
   const book = library.find((b) => b.id === bookId)

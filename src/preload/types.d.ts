@@ -143,6 +143,13 @@ export interface Chunk {
   textEnd: number
   text: string
   tokenCount?: number
+  canonicalNodeIds?: string[]
+}
+
+export interface CanonicalArtifactIdentity {
+  schemaVersion: number
+  parserVersion: string
+  sourceHash: string
 }
 
 export interface ChunkSetSummary {
@@ -150,6 +157,7 @@ export interface ChunkSetSummary {
   params: ChunkParams
   count: number
   generatedAt: number
+  canonicalDocument?: CanonicalArtifactIdentity
 }
 
 export interface ChunkSet extends ChunkSetSummary {
@@ -280,6 +288,10 @@ export interface AskResultPayload {
 export type AskIpcResult = { ok: true; data: AskResultPayload } | { ok: false; error: IpcError }
 
 export interface GoldSpan {
+  // Optional for backward compatibility with pilot eval sets. New evidence
+  // locators are enriched with both fields when they are saved.
+  bookId?: string
+  nodeId?: string
   spineHref: string
   textStart: number
   textEnd: number

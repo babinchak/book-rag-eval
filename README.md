@@ -38,6 +38,19 @@ This project is a workbench for that question. It is built around two ideas:
 
 Core retrieval, chunking, and eval logic is intentionally kept free of Electron dependencies so it can be lifted into other environments unchanged.
 
+## Canonical document model
+
+EPUB XHTML is normalized once into a versioned, chunker-independent document
+artifact. Each spine item contains canonical plain text plus ordered semantic
+nodes for headings, paragraphs, lists, blockquotes, footnotes, tables, and
+images. Nodes have deterministic IDs, exact character offsets, heading
+ancestry, neighboring-node links, DOM source paths, and resolved asset
+references.
+
+Chunkers and eval evidence use these canonical offsets. New gold spans also
+record their canonical node and book IDs, so changing a chunking strategy does
+not redefine the benchmark's source of truth.
+
 ### Why Python in the loop
 
 Most useful retrieval components — embedding models, rerankers, vector indexes, evaluation tooling — have their canonical implementations in Python. Rather than reimplement or settle for whatever is available in JS, the app ships a Python sidecar that the Electron main process spawns and speaks to over a local transport. The TypeScript side stays in charge of orchestration, storage of locators and chunks, and rendering; Python handles the ML-heavy work and the eval runner.

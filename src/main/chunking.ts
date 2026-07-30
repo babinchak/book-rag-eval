@@ -1,18 +1,13 @@
 import { promises as fs } from 'node:fs'
 import { join } from 'node:path'
 import { bookDir } from './library'
-import { readSpineRaw } from './epub'
+import { loadCanonicalBookDocument } from './canonicalStore'
 import { sidecar } from './sidecar'
 import { getOpenaiKey } from './settings'
 import { chunkTokenSpans } from './tokenChunking'
 import { normalizeParams, strategyIdOf } from '../shared/strategy'
-import type {
-  Chunk,
-  ChunkParams,
-  ChunkSet,
-  ChunkSetSummary,
-  ReadiumManifest
-} from '../preload/types'
+import type { CanonicalSpineDocument } from '../shared/canonicalDocument'
+import type { Chunk, ChunkParams, ChunkSet, ChunkSetSummary } from '../preload/types'
 
 // Use a cheaper model than the retrieval-time embeddings — we only need a
 // similarity signal between adjacent sentence windows, not high-quality vectors.
@@ -27,51 +22,10 @@ function chunkSetPath(bookId: string, sid: string): string {
   return join(chunksDir(bookId), `${sid}.json`)
 }
 
-function htmlToPlainText(html: string): string {
-  return html
-    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, ' ')
-    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, ' ')
-    .replace(/<!--[\s\S]*?-->/g, ' ')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;|&apos;|&#x27;/g, "'")
-    .replace(/\s+/g, ' ')
-    .trim()
-}
-
-const BLOCK_CLOSE_RE = /<\/(?:p|div|h[1-6]|section|article|li|blockquote)>/gi
-
 interface Span {
   text: string
   start: number
   end: number
-}
-
-function findParagraphSpans(rawHtml: string): Span[] {
-  const fragments: string[] = []
-  let lastIdx = 0
-  let match: RegExpExecArray | null
-  const re = new RegExp(BLOCK_CLOSE_RE.source, 'gi')
-  while ((match = re.exec(rawHtml)) !== null) {
-    fragments.push(rawHtml.slice(lastIdx, match.index))
-    lastIdx = match.index + match[0].length
-  }
-  fragments.push(rawHtml.slice(lastIdx))
-
-  const paragraphs: Span[] = []
-  let pos = 0
-  for (const frag of fragments) {
-    const text = htmlToPlainText(frag)
-    if (text.length === 0) continue
-    if (paragraphs.length > 0) pos += 1
-    paragraphs.push({ text, start: pos, end: pos + text.length })
-    pos += text.length
-  }
-  return paragraphs
 }
 
 function makeChunk(
@@ -167,14 +121,15 @@ function groupSpansToChunks(
 }
 
 function chunkParagraphs(
-  spineHref: string,
-  rawHtml: string,
+  spine: CanonicalSpineDocument,
   params: { targetSize: number },
   sid: string
 ): Chunk[] {
-  const paragraphs = findParagraphSpans(rawHtml)
-  if (paragraphs.length === 0) return []
-  return groupSpansToChunks(spineHref, paragraphs, params.targetSize, sid, null)
+  const spans = spine.nodes
+    .filter((node) => node.textEnd > node.textStart)
+    .map((node) => ({ text: node.text, start: node.textStart, end: node.textEnd }))
+  if (spans.length === 0) return []
+  return groupSpansToChunks(spine.href, spans, params.targetSize, sid, spine.text)
 }
 
 function chunkSentences(
@@ -339,20 +294,13 @@ async function chunkSemantic(
   return chunks
 }
 
-async function readManifest(bookId: string): Promise<ReadiumManifest> {
-  const raw = await fs.readFile(join(bookDir(bookId), 'manifest.json'), 'utf8')
-  return JSON.parse(raw) as ReadiumManifest
-}
-
 export async function runChunking(
   bookId: string,
   paramsRaw: ChunkParams
 ): Promise<ChunkSetSummary> {
   const params = normalizeParams(paramsRaw)
   const sid = strategyIdOf(params)
-  const manifest = await readManifest(bookId)
-  const epubPath = join(bookDir(bookId), 'book.epub')
-  const spine = readSpineRaw(epubPath, manifest)
+  const document = await loadCanonicalBookDocument(bookId)
 
   if (params.kind === 'semantic') {
     const apiKey = await getOpenaiKey()
@@ -365,8 +313,8 @@ export async function runChunking(
   }
 
   const chunks: Chunk[] = []
-  for (const item of spine) {
-    const text = htmlToPlainText(item.rawHtml)
+  for (const item of document.spine) {
+    const text = item.text
     switch (params.kind) {
       case 'fixed-token':
         chunks.push(...chunkFixedTokens(item.href, text, params, sid))
@@ -375,7 +323,7 @@ export async function runChunking(
         chunks.push(...chunkFixed(item.href, text, params, sid))
         break
       case 'paragraph':
-        chunks.push(...chunkParagraphs(item.href, item.rawHtml, params, sid))
+        chunks.push(...chunkParagraphs(item, params, sid))
         break
       case 'sentence':
         chunks.push(...chunkSentences(item.href, text, params, sid))
@@ -389,12 +337,25 @@ export async function runChunking(
     }
   }
 
+  const nodesByHref = new Map(document.spine.map((item) => [item.href, item.nodes]))
+  for (const chunk of chunks) {
+    const nodes = nodesByHref.get(chunk.spineHref) ?? []
+    chunk.canonicalNodeIds = nodes
+      .filter((node) => node.textStart < chunk.textEnd && node.textEnd > chunk.textStart)
+      .map((node) => node.id)
+  }
+
   const set: ChunkSet = {
     bookId,
     strategyId: sid,
     params,
     count: chunks.length,
     generatedAt: Date.now(),
+    canonicalDocument: {
+      schemaVersion: document.schemaVersion,
+      parserVersion: document.parserVersion,
+      sourceHash: document.sourceHash
+    },
     chunks
   }
 
@@ -403,7 +364,13 @@ export async function runChunking(
   await fs.writeFile(tmp, JSON.stringify(set), 'utf8')
   await fs.rename(tmp, chunkSetPath(bookId, sid))
 
-  return { strategyId: sid, params, count: chunks.length, generatedAt: set.generatedAt }
+  return {
+    strategyId: sid,
+    params,
+    count: chunks.length,
+    generatedAt: set.generatedAt,
+    canonicalDocument: set.canonicalDocument
+  }
 }
 
 export async function listChunkSets(bookId: string): Promise<ChunkSetSummary[]> {
@@ -424,7 +391,8 @@ export async function listChunkSets(bookId: string): Promise<ChunkSetSummary[]> 
         strategyId: set.strategyId,
         params: normalizeParams(set.params),
         count: set.count,
-        generatedAt: set.generatedAt
+        generatedAt: set.generatedAt,
+        canonicalDocument: set.canonicalDocument
       })
     } catch {
       // skip unreadable/corrupt sets
