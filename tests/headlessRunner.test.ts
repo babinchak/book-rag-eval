@@ -117,18 +117,29 @@ test('plans, runs, resumes, and exports a zero-cost BM25 experiment', async (con
   )
 
   const plan = JSON.parse((await cli('plan', configPath)).stdout) as {
+    fingerprint: string
     books: Array<{ selectedCases: number }>
     retrievalQueries: number
     experimentCells: number
     estimatedCostUsd: number
     runPath: string
     artifacts: Array<{ chunkExists: boolean }>
+    sourceControl: {
+      gitCommit: string | null
+      workingTreeDiffHash: string | null
+    }
   }
   assert.equal(plan.books[0].selectedCases, 1)
   assert.equal(plan.retrievalQueries, 1)
   assert.equal(plan.experimentCells, 2)
   assert.equal(plan.estimatedCostUsd, 0)
   assert.equal(plan.artifacts[0].chunkExists, false)
+  assert.match(plan.sourceControl.gitCommit ?? '', /^[0-9a-f]{40}$/)
+  assert.equal(
+    JSON.parse((await cli('plan', configPath)).stdout).fingerprint,
+    plan.fingerprint,
+    'replanning identical inputs should retain the run fingerprint'
+  )
 
   await cli('run', configPath, '--max-usd', '0')
   const first = JSON.parse(await fs.readFile(plan.runPath, 'utf8')) as {

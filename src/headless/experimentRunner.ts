@@ -1,5 +1,7 @@
 import { promises as fs } from 'node:fs'
+import { execFile } from 'node:child_process'
 import { dirname, isAbsolute, join, resolve } from 'node:path'
+import { promisify } from 'node:util'
 import { parse as parseYaml } from 'yaml'
 import { configureLibraryDir } from '../main/library'
 import { loadCanonicalBookDocument } from '../main/canonicalStore'
@@ -36,6 +38,7 @@ import type {
 } from '../preload/types'
 
 export const HEADLESS_RUN_SCHEMA_VERSION = 1
+const execFileAsync = promisify(execFile)
 
 interface LoadedExperiment extends Omit<ExperimentConfig, 'libraryDir' | 'outputDir'> {
   libraryDir: string
@@ -65,6 +68,10 @@ export interface ExperimentPlan {
   libraryDir: string
   outputDir: string
   runPath: string
+  sourceControl: {
+    gitCommit: string | null
+    workingTreeDiffHash: string | null
+  }
   books: Array<{
     bookId: string
     evalSetId: string
@@ -146,6 +153,43 @@ export interface HeadlessRun {
 
 function resolveFrom(baseDir: string, path: string): string {
   return isAbsolute(path) ? path : resolve(baseDir, path)
+}
+
+async function sourceControlState(): Promise<ExperimentPlan['sourceControl']> {
+  const projectDir = process.env.BOOK_RAG_EVAL_APP_DIR ?? process.cwd()
+  try {
+    const [{ stdout: commit }, { stdout: diff }] = await Promise.all([
+      execFileAsync('git', ['-C', projectDir, 'rev-parse', 'HEAD'], {
+        encoding: 'utf8'
+      }),
+      execFileAsync('git', ['-C', projectDir, 'diff', '--binary', 'HEAD', '--'], {
+        encoding: 'utf8',
+        maxBuffer: 50 * 1024 * 1024
+      })
+    ])
+    return {
+      gitCommit: commit.trim(),
+      workingTreeDiffHash: diff.length > 0 ? contentHash(diff) : null
+    }
+  } catch {
+    return { gitCommit: null, workingTreeDiffHash: null }
+  }
+}
+
+function reproducibleConfig(config: LoadedExperiment): ExperimentConfig {
+  return {
+    schemaVersion: config.schemaVersion,
+    name: config.name,
+    books: config.books,
+    chunkers: config.chunkers,
+    retrievers: config.retrievers,
+    contextBudgets: config.contextBudgets,
+    candidatePoolSize: config.candidatePoolSize,
+    splits: config.splits,
+    maxCasesPerBook: config.maxCasesPerBook,
+    pricing: config.pricing,
+    outputDir: '.'
+  }
 }
 
 export async function loadExperiment(
@@ -252,6 +296,14 @@ export async function planExperiment(
   const models = embeddingModels(config)
   const artifacts: PlannedArtifact[] = []
   const warnings: string[] = []
+  const sourceControl = await sourceControlState()
+  if (sourceControl.gitCommit === null) {
+    warnings.push('Git commit could not be resolved; this run is not tied to a source revision.')
+  } else if (sourceControl.workingTreeDiffHash !== null) {
+    warnings.push(
+      `Tracked source changes are present (diff ${sourceControl.workingTreeDiffHash.slice(0, 12)}); commit before a portfolio run.`
+    )
+  }
   let estimatedEmbeddingTokens = 0
   let estimatedCostUsd = 0
   const unknownCostModels = new Set<EmbeddingModel>()
@@ -332,7 +384,8 @@ export async function planExperiment(
   }
 
   const fingerprint = contentHash({
-    config,
+    config: reproducibleConfig(config),
+    sourceControl,
     books: prepared.books.map((book) => ({
       bookId: book.bookId,
       sourceHash: book.sourceHash,
@@ -358,6 +411,7 @@ export async function planExperiment(
     libraryDir: config.libraryDir,
     outputDir: config.outputDir,
     runPath,
+    sourceControl,
     books: prepared.books.map((book) => ({
       bookId: book.bookId,
       evalSetId: book.evalSetId,

@@ -5,6 +5,7 @@ out
 .eslintcache
 *.log*
 /reference/
+/.rag-eval/
 
 # Python sidecar
 python/.venv/
