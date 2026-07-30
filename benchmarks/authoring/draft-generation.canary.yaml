@@ -1,5 +1,5 @@
 schemaVersion: 1
-name: six-book-smoke-drafts-gpt4omini-v1
+name: six-book-canary-drafts-gpt4omini-v1
 packetPath: ./six-book-smoke-candidates-v1.json
 outputDir: ../../.rag-eval/eval-drafts
 
@@ -8,11 +8,10 @@ model:
   name: gpt-4o-mini-2024-07-18
   maxOutputTokensPerCandidate: 500
 
-# Pinned alongside the model snapshot. Recheck before a paid run:
 # https://developers.openai.com/api/docs/models/gpt-4o-mini
 pricing:
   inputUsdPerMillion: 0.15
   outputUsdPerMillion: 0.6
 
-maxCandidatesPerBook: 25
-maxAttemptsPerCandidate: 3
+maxCandidatesPerBook: 1
+maxAttemptsPerCandidate: 2
