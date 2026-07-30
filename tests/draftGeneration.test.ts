@@ -11,6 +11,7 @@ import {
   type DraftModel
 } from '../src/headless/draftGeneration'
 import { compileApprovedDrafts } from '../src/headless/draftCompilation'
+import { writeDraftAudit } from '../src/headless/draftAudit'
 import { parseEvalSet } from '../src/shared/evalSchema'
 
 test('plans, validates, meters, and resumes canonical draft generation', async (context) => {
@@ -180,6 +181,15 @@ test('plans, validates, meters, and resumes canonical draft generation', async (
   assert.equal(recovered.failures.length, 0)
   assert.equal(recovered.recoveryEvents?.length, 1)
   assert.equal(recovered.recoveryEvents?.[0].additionalAttempts, 1)
+
+  const auditPath = join(root, 'draft-review')
+  const audit = await writeDraftAudit(run.plan.runPath, auditPath)
+  assert.equal(audit.audit.totalDrafts, 1)
+  assert.equal(audit.audit.flaggedDrafts, 0)
+  assert.equal(audit.audit.pendingHumanReview, 1)
+  assert.equal(audit.markdownPath, auditPath)
+  assert.equal(audit.jsonPath, `${auditPath}.json`)
+  assert.match(await fs.readFile(audit.markdownPath, 'utf8'), /Pending human review: 1/)
 
   const compiledDir = join(root, 'compiled')
   await assert.rejects(

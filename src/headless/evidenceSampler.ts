@@ -21,9 +21,28 @@ function sampleEvenly<T>(items: T[], count: number): T[] {
   return selected
 }
 
+export function isLikelyCorpusBoilerplate(text: string): boolean {
+  return [
+    /project\s+gutenberg/i,
+    /\belectronic works?\b/i,
+    /\brefund\b/i,
+    /\bwarrant(?:y|ies)\b/i,
+    /\btrademark\b/i,
+    /\bterms of this agreement\b/i,
+    /\bwww\.gutenberg\.org\b/i,
+    /\bdonation(?:s)?\b.*\bfoundation\b/i,
+    /\bcopyright laws?\b/i
+  ].some((pattern) => pattern.test(text))
+}
+
 function isUsefulText(node: CanonicalDocumentNode): boolean {
   if (node.text.length < 120) return false
-  if (/project\s+gutenberg|\*\*\*\s*(?:start|end)\s+of\s+the/i.test(node.text)) return false
+  if (
+    isLikelyCorpusBoilerplate(node.text) ||
+    /\*\*\*\s*(?:start|end)\s+of\s+the/i.test(node.text)
+  ) {
+    return false
+  }
   const letters = (node.text.match(/\p{L}/gu) ?? []).length
   const words = node.text.match(/[\p{L}\p{N}]+/gu) ?? []
   return letters / node.text.length >= 0.55 && words.length >= 20

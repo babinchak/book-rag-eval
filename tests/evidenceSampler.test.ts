@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { buildCanonicalBookDocument } from '../src/shared/canonicalDocument'
-import { sampleEvidenceCandidates } from '../src/headless/evidenceSampler'
+import {
+  isLikelyCorpusBoilerplate,
+  sampleEvidenceCandidates
+} from '../src/headless/evidenceSampler'
 
 test('samples deterministic strategy-independent evidence with special content coverage', () => {
   const paragraphs = Array.from(
@@ -29,4 +32,19 @@ test('samples deterministic strategy-independent evidence with special content c
   assert.ok(first.some((candidate) => candidate.kind === 'image'))
   assert.ok(first.some((candidate) => candidate.kind === 'blockquote'))
   assert.ok(first.every((candidate) => candidate.nodeId && candidate.spineHref))
+})
+
+test('identifies distribution boilerplate without rejecting book prose', () => {
+  assert.equal(
+    isLikelyCorpusBoilerplate(
+      'If you received this electronic work and do not agree to the terms, you may obtain a refund.'
+    ),
+    true
+  )
+  assert.equal(
+    isLikelyCorpusBoilerplate(
+      'Freedom requires responsibility and careful judgment in every deliberate action.'
+    ),
+    false
+  )
 })

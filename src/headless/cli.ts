@@ -5,6 +5,7 @@ import { createEvidenceReviewPacket } from './evidenceSampler'
 import { writeRunReport } from './report'
 import { planDraftGeneration, retryDraftFailures, runDraftGeneration } from './draftGeneration'
 import { compileApprovedDrafts } from './draftCompilation'
+import { writeDraftAudit } from './draftAudit'
 
 interface ParsedArgs {
   positional: string[]
@@ -55,6 +56,7 @@ function usage(): string {
     '  npm run rag-eval -- run-drafts <draft-generation.yaml> --max-usd <amount>',
     '  npm run rag-eval -- resume-drafts <draft-generation.yaml> --max-usd <amount>',
     '  npm run rag-eval -- retry-draft-failures <draft-run.json> --max-usd <amount> --additional-attempts <count>',
+    '  npm run rag-eval -- audit-drafts <draft-run.json> [--output <audit.md>]',
     '  npm run rag-eval -- compile-drafts <draft-run.json> <output-dir> --reviewed-by <name>'
   ].join('\n')
 }
@@ -195,6 +197,25 @@ async function main(): Promise<void> {
           drafts: run.drafts.length,
           failures: run.failures.length,
           actualCostUsd: run.ledger.actualCostUsd
+        },
+        null,
+        2
+      )}\n`
+    )
+    return
+  }
+
+  if (command === 'audit-drafts') {
+    const result = await writeDraftAudit(target, optionString(args, '--output'))
+    process.stdout.write(
+      `${JSON.stringify(
+        {
+          markdownPath: result.markdownPath,
+          jsonPath: result.jsonPath,
+          totalDrafts: result.audit.totalDrafts,
+          flaggedDrafts: result.audit.flaggedDrafts,
+          recommendedRejects: result.audit.recommendedRejects,
+          recommendedRevisions: result.audit.recommendedRevisions
         },
         null,
         2

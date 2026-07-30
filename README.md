@@ -164,6 +164,7 @@ npm run rag-eval -- report .rag-eval/runs/<run>.json
 npm run rag-eval -- plan-drafts .rag-eval/draft-generation.yaml
 npm run rag-eval -- run-drafts .rag-eval/draft-generation.yaml -- --max-usd 5
 npm run rag-eval -- retry-draft-failures .rag-eval/eval-drafts/<run>.json -- --max-usd 5 --additional-attempts 2
+npm run rag-eval -- audit-drafts .rag-eval/eval-drafts/<run>.json
 npm run rag-eval -- compile-drafts .rag-eval/eval-drafts/<run>.json benchmarks/evals/smoke-v1 -- --reviewed-by <name>
 ```
 
