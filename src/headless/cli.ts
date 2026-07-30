@@ -2,6 +2,7 @@ import { resolve } from 'node:path'
 import { exportRun, planExperiment, runExperiment } from './experimentRunner'
 import { exportEvalSetFile } from './benchmarkData'
 import { createEvidenceReviewPacket } from './evidenceSampler'
+import { writeRunReport } from './report'
 
 interface ParsedArgs {
   positional: string[]
@@ -46,7 +47,8 @@ function usage(): string {
     '  npm run rag-eval -- resume <experiment.yaml> --max-usd <amount> [--library-dir <path>]',
     '  npm run rag-eval -- export <run.json> --format jsonl|csv',
     '  npm run rag-eval -- export-eval <book-id> <eval-set-id> <output.json> [--library-dir <path>]',
-    '  npm run rag-eval -- sample-evidence <corpus.json> <output.json> --per-book <count> [--library-dir <path>]'
+    '  npm run rag-eval -- sample-evidence <corpus.json> <output.json> --per-book <count> [--library-dir <path>]',
+    '  npm run rag-eval -- report <run.json> [--output <report.md>] [--bootstrap <iterations>]'
   ].join('\n')
 }
 
@@ -120,6 +122,17 @@ async function main(): Promise<void> {
       optionString(args, '--library-dir')
     )
     process.stdout.write(`${sampledPath}\n`)
+    return
+  }
+
+  if (command === 'report') {
+    const rawBootstrap = optionString(args, '--bootstrap')
+    const paths = await writeRunReport(
+      target,
+      optionString(args, '--output'),
+      rawBootstrap === undefined ? 2000 : Number(rawBootstrap)
+    )
+    process.stdout.write(`${JSON.stringify(paths, null, 2)}\n`)
     return
   }
 

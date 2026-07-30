@@ -1,0 +1,267 @@
+import { promises as fs } from 'node:fs'
+import { dirname, resolve } from 'node:path'
+import { contentHash } from '../shared/artifactIdentity'
+import type { ExperimentRetriever } from '../shared/experimentSchema'
+import type { HeadlessResultRow, HeadlessRun } from './experimentRunner'
+
+type ReportMetric =
+  | 'hitAtK'
+  | 'mrr'
+  | 'ndcgAtK'
+  | 'evidenceRecall'
+  | 'contextPrecision'
+  | 'goldSpanCoverage'
+  | 'tokensBeforeFirstEvidence'
+
+const REPORT_METRICS: ReportMetric[] = [
+  'hitAtK',
+  'mrr',
+  'ndcgAtK',
+  'evidenceRecall',
+  'contextPrecision',
+  'goldSpanCoverage',
+  'tokensBeforeFirstEvidence'
+]
+
+export interface ConfidenceEstimate {
+  mean: number | null
+  lower95: number | null
+  upper95: number | null
+  samples: number
+}
+
+export interface ReportGroup {
+  id: string
+  strategyId: string
+  retriever: string
+  contextBudget: number
+  cases: number
+  isBaseline: boolean
+  metrics: Record<ReportMetric, ConfidenceEstimate>
+  evidenceRecallDeltaFromBaseline: ConfidenceEstimate
+}
+
+export interface ExperimentReport {
+  schemaVersion: 1
+  runFingerprint: string
+  runStatus: HeadlessRun['status']
+  gitCommit: string | null
+  workingTreeDiffHash: string | null
+  actualCostUsd: number
+  resultCells: number
+  uniqueCases: number
+  bootstrapIterations: number
+  groups: ReportGroup[]
+}
+
+function retrieverLabel(retriever: ExperimentRetriever): string {
+  switch (retriever.kind) {
+    case 'bm25':
+      return 'bm25'
+    case 'vector':
+      return `vector:${retriever.embeddingModel}`
+    case 'hybrid-rrf':
+      return `hybrid-rrf:${retriever.embeddingModel}:k${retriever.rrfK}`
+  }
+}
+
+function groupId(row: HeadlessResultRow): string {
+  return `${row.strategyId}|${retrieverLabel(row.retriever)}|${row.contextBudget}`
+}
+
+function caseId(row: HeadlessResultRow): string {
+  return `${row.bookId}|${row.caseId}`
+}
+
+function mean(values: number[]): number | null {
+  if (values.length === 0) return null
+  return values.reduce((total, value) => total + value, 0) / values.length
+}
+
+function seededRandom(seedText: string): () => number {
+  let state = Number.parseInt(contentHash(seedText).slice(0, 8), 16) || 1
+  return () => {
+    state ^= state << 13
+    state ^= state >>> 17
+    state ^= state << 5
+    return (state >>> 0) / 0x1_0000_0000
+  }
+}
+
+function percentile(sorted: number[], fraction: number): number {
+  const index = Math.min(sorted.length - 1, Math.max(0, Math.floor(fraction * sorted.length)))
+  return sorted[index]
+}
+
+export function bootstrapMean(
+  values: number[],
+  iterations: number,
+  seed: string
+): ConfidenceEstimate {
+  const point = mean(values)
+  if (point === null) {
+    return { mean: null, lower95: null, upper95: null, samples: 0 }
+  }
+  if (values.length === 1 || iterations === 0) {
+    return { mean: point, lower95: point, upper95: point, samples: values.length }
+  }
+  const random = seededRandom(seed)
+  const estimates: number[] = []
+  for (let iteration = 0; iteration < iterations; iteration++) {
+    let total = 0
+    for (let sample = 0; sample < values.length; sample++) {
+      total += values[Math.floor(random() * values.length)]
+    }
+    estimates.push(total / values.length)
+  }
+  estimates.sort((left, right) => left - right)
+  return {
+    mean: point,
+    lower95: percentile(estimates, 0.025),
+    upper95: percentile(estimates, 0.975),
+    samples: values.length
+  }
+}
+
+function numericMetric(row: HeadlessResultRow, metric: ReportMetric): number | null {
+  const value = row.metrics[metric]
+  return typeof value === 'number' && Number.isFinite(value) ? value : null
+}
+
+export function summarizeRun(
+  run: HeadlessRun,
+  bootstrapIterations = 2000
+): ExperimentReport {
+  if (!Number.isInteger(bootstrapIterations) || bootstrapIterations < 0) {
+    throw new Error('bootstrapIterations must be a non-negative integer')
+  }
+  const rowsByGroup = new Map<string, HeadlessResultRow[]>()
+  for (const row of run.results) {
+    const id = groupId(row)
+    const rows = rowsByGroup.get(id) ?? []
+    rows.push(row)
+    rowsByGroup.set(id, rows)
+  }
+
+  const baselineByBudget = new Map<number, HeadlessResultRow[]>()
+  for (const row of run.results) {
+    if (!baselineByBudget.has(row.contextBudget)) {
+      baselineByBudget.set(row.contextBudget, rowsByGroup.get(groupId(row))!)
+    }
+  }
+
+  const groups: ReportGroup[] = []
+  for (const [id, rows] of rowsByGroup) {
+    const first = rows[0]
+    const metrics = Object.fromEntries(
+      REPORT_METRICS.map((metric) => {
+        const values = rows
+          .map((row) => numericMetric(row, metric))
+          .filter((value): value is number => value !== null)
+        return [
+          metric,
+          bootstrapMean(values, bootstrapIterations, `${run.fingerprint}|${id}|${metric}`)
+        ]
+      })
+    ) as Record<ReportMetric, ConfidenceEstimate>
+
+    const baseline = new Map(
+      (baselineByBudget.get(first.contextBudget) ?? []).flatMap((row) => {
+        const value = numericMetric(row, 'evidenceRecall')
+        return value === null ? [] : ([[caseId(row), value]] as const)
+      })
+    )
+    const pairedDeltas = rows.flatMap((row) => {
+      const value = numericMetric(row, 'evidenceRecall')
+      const baselineValue = baseline.get(caseId(row))
+      return value === null || baselineValue === undefined ? [] : [value - baselineValue]
+    })
+
+    groups.push({
+      id,
+      strategyId: first.strategyId,
+      retriever: retrieverLabel(first.retriever),
+      contextBudget: first.contextBudget,
+      cases: new Set(rows.map(caseId)).size,
+      isBaseline: groupId(first) === groupId(baselineByBudget.get(first.contextBudget)![0]),
+      metrics,
+      evidenceRecallDeltaFromBaseline: bootstrapMean(
+        pairedDeltas,
+        bootstrapIterations,
+        `${run.fingerprint}|${id}|paired-evidence-recall`
+      )
+    })
+  }
+
+  return {
+    schemaVersion: 1,
+    runFingerprint: run.fingerprint,
+    runStatus: run.status,
+    gitCommit: run.plan.sourceControl.gitCommit,
+    workingTreeDiffHash: run.plan.sourceControl.workingTreeDiffHash,
+    actualCostUsd: run.ledger.actualCostUsd,
+    resultCells: run.results.length,
+    uniqueCases: new Set(run.results.map(caseId)).size,
+    bootstrapIterations,
+    groups: groups.sort(
+      (left, right) =>
+        left.contextBudget - right.contextBudget ||
+        left.retriever.localeCompare(right.retriever) ||
+        left.strategyId.localeCompare(right.strategyId)
+    )
+  }
+}
+
+function fixed(value: number | null, digits = 3): string {
+  return value === null ? 'N/A' : value.toFixed(digits)
+}
+
+function estimateCell(estimate: ConfidenceEstimate): string {
+  if (estimate.mean === null) return 'N/A'
+  return `${fixed(estimate.mean)} [${fixed(estimate.lower95)}, ${fixed(estimate.upper95)}]`
+}
+
+export function reportMarkdown(report: ExperimentReport): string {
+  const lines = [
+    '# Retrieval experiment report',
+    '',
+    `- Run: \`${report.runFingerprint}\` (${report.runStatus})`,
+    `- Git commit: ${report.gitCommit ? `\`${report.gitCommit}\`` : 'unavailable'}`,
+    `- Tracked diff: ${report.workingTreeDiffHash ? `\`${report.workingTreeDiffHash}\`` : 'none'}`,
+    `- Cases: ${report.uniqueCases}; result cells: ${report.resultCells}`,
+    `- Actual API cost: $${report.actualCostUsd.toFixed(6)}`,
+    `- Intervals: deterministic paired/nonparametric bootstrap, ${report.bootstrapIterations} iterations`,
+    '',
+    'Values are means with 95% bootstrap intervals. Δ recall is paired against the first configured strategy at the same context budget.',
+    '',
+    '| Budget | Strategy | Retriever | Hit | MRR | nDCG | Evidence recall | Δ recall | Context precision | Tokens before evidence |',
+    '| ---: | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |'
+  ]
+  for (const group of report.groups) {
+    const strategy = group.isBaseline ? `${group.strategyId} (baseline)` : group.strategyId
+    lines.push(
+      `| ${group.contextBudget} | \`${strategy}\` | \`${group.retriever}\` | ${estimateCell(group.metrics.hitAtK)} | ${estimateCell(group.metrics.mrr)} | ${estimateCell(group.metrics.ndcgAtK)} | ${estimateCell(group.metrics.evidenceRecall)} | ${estimateCell(group.evidenceRecallDeltaFromBaseline)} | ${estimateCell(group.metrics.contextPrecision)} | ${estimateCell(group.metrics.tokensBeforeFirstEvidence)} |`
+    )
+  }
+  return `${lines.join('\n')}\n`
+}
+
+export async function writeRunReport(
+  runPath: string,
+  outputPath?: string,
+  bootstrapIterations = 2000
+): Promise<{ markdownPath: string; summaryPath: string }> {
+  const absoluteRunPath = resolve(runPath)
+  const run = JSON.parse(await fs.readFile(absoluteRunPath, 'utf8')) as HeadlessRun
+  const report = summarizeRun(run, bootstrapIterations)
+  const markdownPath = resolve(
+    outputPath ?? absoluteRunPath.replace(/\.json$/i, '.report.md')
+  )
+  const summaryPath = markdownPath.replace(/\.md$/i, '.json')
+  await fs.mkdir(dirname(markdownPath), { recursive: true })
+  await Promise.all([
+    fs.writeFile(markdownPath, reportMarkdown(report), 'utf8'),
+    fs.writeFile(summaryPath, `${JSON.stringify(report, null, 2)}\n`, 'utf8')
+  ])
+  return { markdownPath, summaryPath }
+}

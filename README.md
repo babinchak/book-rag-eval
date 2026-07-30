@@ -157,6 +157,7 @@ npm run rag-eval -- resume experiments/smoke.yaml -- --max-usd 10
 npm run rag-eval -- export .rag-eval/runs/<run>.json -- --format jsonl
 npm run rag-eval -- export-eval <book-id> <set-id> benchmarks/evals/<set>.json
 npm run rag-eval -- sample-evidence benchmarks/corpora/six-book-smoke.json .rag-eval/review.json -- --per-book 25
+npm run rag-eval -- report .rag-eval/runs/<run>.json
 ```
 
 `plan` reports selected books/cases, missing content-addressed artifacts,
@@ -180,6 +181,10 @@ from canonical EPUB nodes. It samples across each book and reserves slots for
 tables, images, footnotes, lists, and blockquotes when those node types exist.
 The first 150-candidate packet is versioned at
 `benchmarks/authoring/six-book-smoke-candidates-v1.json`.
+
+`report` writes Markdown and JSON summaries with deterministic 95% bootstrap
+intervals plus paired evidence-recall deltas against the first configured
+strategy at each context budget.
 
 Python sidecar setup will be documented once it lands.
 
