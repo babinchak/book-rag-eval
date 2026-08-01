@@ -59,6 +59,27 @@ export interface ReportGroup {
   evidenceRecallDeltaFromBaseline: ConfidenceEstimate
 }
 
+export interface DistributionSummary {
+  mean: number | null
+  p50: number | null
+  p95: number | null
+}
+
+export interface QueryPerformanceGroup {
+  id: string
+  strategyId: string
+  retriever: string
+  queryMode: ExperimentQueryMode
+  queries: number
+  retrievalLatencyMs: DistributionSummary
+  rerankLatencyMs: DistributionSummary
+  totalLatencyMs: DistributionSummary
+  nominalEmbeddingQueryCostUsd: number
+  nominalRerankCostUsd: number
+  nominalTotalQueryCostUsd: number
+  meanNominalCostPerQueryUsd: number
+}
+
 export interface ExperimentReport {
   schemaVersion: 1
   runFingerprint: string
@@ -91,6 +112,7 @@ export interface ExperimentReport {
     costUsd: number
   }>
   localIndexes: HeadlessRun['ledger']['localIndexes']
+  queryPerformance: QueryPerformanceGroup[]
   groups: ReportGroup[]
 }
 
@@ -143,6 +165,24 @@ function seededRandom(seedText: string): () => number {
 function percentile(sorted: number[], fraction: number): number {
   const index = Math.min(sorted.length - 1, Math.max(0, Math.floor(fraction * sorted.length)))
   return sorted[index]
+}
+
+function distribution(values: number[]): DistributionSummary {
+  const sorted = values.filter(Number.isFinite).sort((left, right) => left - right)
+  if (sorted.length === 0) return { mean: null, p50: null, p95: null }
+  return {
+    mean: mean(sorted),
+    p50: percentile(sorted, 0.5),
+    p95: percentile(sorted, 0.95)
+  }
+}
+
+function queryIdOf(row: HeadlessResultRow): string {
+  return row.key.split(':', 1)[0]
+}
+
+function queryPerformanceGroupId(row: HeadlessResultRow): string {
+  return `${row.strategyId}|${retrieverLabel(row.retriever)}|${row.queryMode ?? 'reference'}`
 }
 
 export function bootstrapMean(
@@ -281,6 +321,55 @@ export function summarizeRun(run: HeadlessRun, bootstrapIterations = 2000): Expe
     tokens: usage!.tokens,
     costUsd: usage!.costUsd
   }))
+  const queryRowsByGroup = new Map<string, Map<string, HeadlessResultRow>>()
+  for (const row of run.results) {
+    const id = queryPerformanceGroupId(row)
+    const queries = queryRowsByGroup.get(id) ?? new Map<string, HeadlessResultRow>()
+    queries.set(queryIdOf(row), row)
+    queryRowsByGroup.set(id, queries)
+  }
+  const queryPerformance = [...queryRowsByGroup.entries()].map(([id, queryRows]) => {
+    const first = [...queryRows.values()][0]
+    const traces = [...queryRows.keys()].flatMap((queryId) => {
+      const trace = run.queryCache[queryId]
+      return trace ? [trace] : []
+    })
+    const retrievalLatencies = traces.flatMap((trace) =>
+      trace.retrievalLatencyMs === undefined ? [] : [trace.retrievalLatencyMs]
+    )
+    const rerankLatencies = traces.flatMap((trace) =>
+      trace.rerankLatencyMs === undefined ? [] : [trace.rerankLatencyMs]
+    )
+    const totalLatencies = traces.flatMap((trace) => {
+      if (trace.retrievalLatencyMs === undefined && trace.rerankLatencyMs === undefined) return []
+      return [(trace.retrievalLatencyMs ?? 0) + (trace.rerankLatencyMs ?? 0)]
+    })
+    const nominalEmbeddingQueryCostUsd = traces.reduce(
+      (total, trace) => total + (trace.nominalEmbeddingQueryCostUsd ?? 0),
+      0
+    )
+    const nominalRerankCostUsd = traces.reduce(
+      (total, trace) => total + (trace.nominalRerankCostUsd ?? 0),
+      0
+    )
+    const nominalTotalQueryCostUsd =
+      nominalEmbeddingQueryCostUsd + nominalRerankCostUsd
+    return {
+      id,
+      strategyId: first.strategyId,
+      retriever: retrieverLabel(first.retriever),
+      queryMode: first.queryMode ?? 'reference',
+      queries: queryRows.size,
+      retrievalLatencyMs: distribution(retrievalLatencies),
+      rerankLatencyMs: distribution(rerankLatencies),
+      totalLatencyMs: distribution(totalLatencies),
+      nominalEmbeddingQueryCostUsd,
+      nominalRerankCostUsd,
+      nominalTotalQueryCostUsd,
+      meanNominalCostPerQueryUsd:
+        queryRows.size === 0 ? 0 : nominalTotalQueryCostUsd / queryRows.size
+    }
+  })
   return {
     schemaVersion: 1,
     runFingerprint: run.fingerprint,
@@ -295,6 +384,12 @@ export function summarizeRun(run: HeadlessRun, bootstrapIterations = 2000): Expe
     embeddingIndexCosts,
     rerankerCosts,
     localIndexes: run.ledger.localIndexes ?? [],
+    queryPerformance: queryPerformance.sort(
+      (left, right) =>
+        left.retriever.localeCompare(right.retriever) ||
+        left.strategyId.localeCompare(right.strategyId) ||
+        left.queryMode.localeCompare(right.queryMode)
+    ),
     groups: groups.sort(
       (left, right) =>
         left.contextBudget - right.contextBudget ||
@@ -377,6 +472,22 @@ export function reportMarkdown(report: ExperimentReport): string {
     for (const item of report.localIndexes) {
       lines.push(
         `| ${item.kind} | ${item.model} | ${item.bookId} | ${item.strategyId} | ${(item.indexingLatencyMs / 1000).toFixed(2)}s | ${(item.storageBytes / 1024 / 1024).toFixed(2)} MiB |`
+      )
+    }
+    lines.push('')
+  }
+  if (report.queryPerformance.length > 0) {
+    lines.push(
+      '## Online query performance',
+      '',
+      'Latencies are wall-clock measurements from this machine. Cached executions retain the original measurement; API prices are nominal pinned rates.',
+      '',
+      '| Chunking strategy | Retriever | Query | Queries | Retrieval p50 | Retrieval p95 | Rerank p50 | Rerank p95 | Total p50 | Total p95 | Nominal query cost | Mean/query |',
+      '| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |'
+    )
+    for (const item of report.queryPerformance) {
+      lines.push(
+        `| ${item.strategyId} | ${item.retriever} | ${item.queryMode} | ${item.queries} | ${fixed(item.retrievalLatencyMs.p50, 1)} ms | ${fixed(item.retrievalLatencyMs.p95, 1)} ms | ${fixed(item.rerankLatencyMs.p50, 1)} ms | ${fixed(item.rerankLatencyMs.p95, 1)} ms | ${fixed(item.totalLatencyMs.p50, 1)} ms | ${fixed(item.totalLatencyMs.p95, 1)} ms | $${item.nominalTotalQueryCostUsd.toFixed(6)} | $${item.meanNominalCostPerQueryUsd.toFixed(8)} |`
       )
     }
     lines.push('')

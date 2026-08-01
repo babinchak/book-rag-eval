@@ -139,6 +139,9 @@ interface QueryCacheEntry {
   chunkArtifactId: string
   hits: Array<{ chunkId: string; distance: number; rank: number }>
   retrievalLatencyMs?: number
+  embeddingModel?: EmbeddingModel
+  embeddingQueryTokens?: number
+  nominalEmbeddingQueryCostUsd?: number
   rerankLatencyMs?: number
   rerankModel?: VoyageRerankModel
   rerankTokens?: number
@@ -746,12 +749,20 @@ async function resolveRetrievalTrace(
     ],
     retriever.rrfK
   ).slice(0, candidatePoolSize)
+  const fusionLatencyMs = performance.now() - startedAt
   return {
     synthesized: true,
     trace: {
       schemaVersion: 1,
       chunkArtifactId,
-      retrievalLatencyMs: performance.now() - startedAt,
+      retrievalLatencyMs:
+        Math.max(
+          vectorTrace.retrievalLatencyMs ?? 0,
+          bm25Trace.retrievalLatencyMs ?? 0
+        ) + fusionLatencyMs,
+      embeddingModel: vectorTrace.embeddingModel,
+      embeddingQueryTokens: vectorTrace.embeddingQueryTokens,
+      nominalEmbeddingQueryCostUsd: vectorTrace.nominalEmbeddingQueryCostUsd,
       createdAt: Date.now(),
       hits: hits.map((hit) => ({
         chunkId: hit.id,
@@ -790,7 +801,7 @@ function recordCost(
   kind: 'index' | 'query',
   tokens: number,
   indexContext?: IndexCostContext
-): void {
+): number {
   const price = priceOf(config, model)
   if (price === undefined) {
     throw new Error(`No embedding price configured for ${model}`)
@@ -828,6 +839,7 @@ function recordCost(
       `Cost ceiling exceeded: $${run.ledger.actualCostUsd.toFixed(6)} > $${run.maxUsd.toFixed(6)}`
     )
   }
+  return cost
 }
 
 function assertAffordable(
@@ -1262,9 +1274,16 @@ export async function runExperiment(
                   : null
                 let baseHits: RetrievedChunkPayload[]
                 let retrievalLatencyMs = 0
+                let embeddingModel: EmbeddingModel | undefined
+                let embeddingQueryTokens: number | undefined
+                let nominalEmbeddingQueryCostUsd: number | undefined
                 if (baseResolved) {
                   baseHits = reconstructHits(baseResolved.trace, set)
                   retrievalLatencyMs = baseResolved.trace.retrievalLatencyMs ?? 0
+                  embeddingModel = baseResolved.trace.embeddingModel
+                  embeddingQueryTokens = baseResolved.trace.embeddingQueryTokens
+                  nominalEmbeddingQueryCostUsd =
+                    baseResolved.trace.nominalEmbeddingQueryCostUsd
                   if (baseResolved.synthesized) {
                     await writeRetrievalTrace(
                       run.plan.outputDir,
@@ -1302,7 +1321,13 @@ export async function runExperiment(
                       retrieverNeedsEmbedding(baseRetriever)
                         ? baseRetriever.embeddingModel
                         : undefined,
-                      (model, tokens) => recordCost(run, prepared.config, model, 'query', tokens)
+                      (model, tokens) => {
+                        embeddingModel = model
+                        embeddingQueryTokens = (embeddingQueryTokens ?? 0) + tokens
+                        nominalEmbeddingQueryCostUsd =
+                          (nominalEmbeddingQueryCostUsd ?? 0) +
+                          recordCost(run, prepared.config, model, 'query', tokens)
+                      }
                     )
                     retrievalLatencyMs = performance.now() - retrievalStartedAt
                   }
@@ -1311,6 +1336,9 @@ export async function runExperiment(
                       schemaVersion: 1,
                       chunkArtifactId,
                       retrievalLatencyMs,
+                      embeddingModel,
+                      embeddingQueryTokens,
+                      nominalEmbeddingQueryCostUsd,
                       createdAt: Date.now(),
                       hits: baseHits.map((hit) => ({
                         chunkId: hit.chunk.id,
@@ -1354,6 +1382,9 @@ export async function runExperiment(
                   schemaVersion: 1,
                   chunkArtifactId,
                   retrievalLatencyMs,
+                  embeddingModel,
+                  embeddingQueryTokens,
+                  nominalEmbeddingQueryCostUsd,
                   rerankLatencyMs,
                   rerankModel: retriever.reranker?.model,
                   rerankTokens,

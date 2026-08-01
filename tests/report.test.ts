@@ -68,7 +68,34 @@ test('builds deterministic bootstrap estimates and paired strategy deltas', () =
         }
       ]
     },
-    queryCache: {},
+    queryCache: {
+      'baseline-case-1': {
+        chunkArtifactId: 'chunks-1',
+        hits: [],
+        retrievalLatencyMs: 10,
+        rerankLatencyMs: 20,
+        nominalRerankCostUsd: 0.001
+      },
+      'baseline-case-2': {
+        chunkArtifactId: 'chunks-1',
+        hits: [],
+        retrievalLatencyMs: 12,
+        rerankLatencyMs: 22,
+        nominalRerankCostUsd: 0.001
+      },
+      'candidate-case-1': {
+        chunkArtifactId: 'chunks-2',
+        hits: [],
+        retrievalLatencyMs: 5,
+        nominalEmbeddingQueryCostUsd: 0.0001
+      },
+      'candidate-case-2': {
+        chunkArtifactId: 'chunks-2',
+        hits: [],
+        retrievalLatencyMs: 7,
+        nominalEmbeddingQueryCostUsd: 0.0001
+      }
+    },
     results: [
       row('baseline', 'case-1', 0),
       row('baseline', 'case-2', 1),
@@ -91,7 +118,13 @@ test('builds deterministic bootstrap estimates and paired strategy deltas', () =
     (group) => group.strategyId === 'candidate' && group.retriever === 'random:seed42'
   )!
   assert.equal(randomCandidate.evidenceRecallDeltaFromBaseline.mean, 0)
+  const candidatePerformance = report.queryPerformance.find(
+    (group) => group.strategyId === 'candidate' && group.retriever === 'bm25'
+  )!
+  assert.equal(candidatePerformance.retrievalLatencyMs.p50, 7)
+  assert.equal(candidatePerformance.nominalTotalQueryCostUsd, 0.0002)
   assert.match(reportMarkdown(report), /Retrieval experiment report/)
+  assert.match(reportMarkdown(report), /Online query performance/)
   assert.match(reportMarkdown(report), /candidate/)
   assert.match(reportMarkdown(report), /Document embedding cost by artifact/)
   assert.match(reportMarkdown(report), /voyage-4-large/)
