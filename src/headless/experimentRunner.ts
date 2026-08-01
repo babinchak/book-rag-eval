@@ -1050,6 +1050,7 @@ export async function runExperiment(
                 let retrievalLatencyMs = 0
                 if (baseResolved) {
                   baseHits = reconstructHits(baseResolved.trace, set)
+                  retrievalLatencyMs = baseResolved.trace.retrievalLatencyMs ?? 0
                   if (baseResolved.synthesized) {
                     await writeRetrievalTrace(
                       run.plan.outputDir,
