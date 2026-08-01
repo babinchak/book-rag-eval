@@ -2,7 +2,7 @@ export type RetrieverParams =
   | { kind: 'random'; seed?: number }
   | { kind: 'vector' }
   | { kind: 'bm25' }
-  | { kind: 'hybrid-rrf'; rrfK?: number }
+  | { kind: 'hybrid-rrf'; rrfK?: number; vectorWeight?: number; bm25Weight?: number }
 
 export const RRF_DEFAULT_K = 60
 export const RANDOM_DEFAULT_SEED = 42
@@ -16,7 +16,7 @@ export function retrieverIdOf(params: RetrieverParams): string {
     case 'bm25':
       return 'bm25'
     case 'hybrid-rrf':
-      return `hybrid-rrf-${params.rrfK ?? RRF_DEFAULT_K}`
+      return hybridRetrieverId(params)
   }
 }
 
@@ -29,7 +29,7 @@ export function retrieverLabel(params: RetrieverParams): string {
     case 'bm25':
       return 'BM25'
     case 'hybrid-rrf':
-      return `Hybrid (RRF k=${params.rrfK ?? RRF_DEFAULT_K})`
+      return `Hybrid (RRF k=${params.rrfK ?? RRF_DEFAULT_K}, vector=${params.vectorWeight ?? 1}, BM25=${params.bm25Weight ?? 1})`
   }
 }
 
@@ -55,7 +55,14 @@ export function normalizeRetrieverParams(p: unknown): RetrieverParams {
     if (kind === 'bm25') return { kind: 'bm25' }
     if (kind === 'hybrid-rrf') {
       const rrfK = (p as { rrfK?: number }).rrfK
-      return { kind: 'hybrid-rrf', rrfK: typeof rrfK === 'number' ? rrfK : RRF_DEFAULT_K }
+      const vectorWeight = (p as { vectorWeight?: number }).vectorWeight
+      const bm25Weight = (p as { bm25Weight?: number }).bm25Weight
+      return {
+        kind: 'hybrid-rrf',
+        rrfK: typeof rrfK === 'number' ? rrfK : RRF_DEFAULT_K,
+        vectorWeight: typeof vectorWeight === 'number' ? vectorWeight : 1,
+        bm25Weight: typeof bm25Weight === 'number' ? bm25Weight : 1
+      }
     }
   }
   return { kind: 'vector' }
@@ -70,5 +77,25 @@ export function parseRetrieverId(id: string | undefined | null): RetrieverParams
   if (random) return { kind: 'random', seed: parseInt(random[1], 10) }
   const m = id.match(/^hybrid-rrf-(\d+)$/)
   if (m) return { kind: 'hybrid-rrf', rrfK: parseInt(m[1], 10) }
+  const weighted = id.match(/^hybrid-rrf-(\d+)-v([\d.]+)-b([\d.]+)$/)
+  if (weighted) {
+    return {
+      kind: 'hybrid-rrf',
+      rrfK: parseInt(weighted[1], 10),
+      vectorWeight: Number.parseFloat(weighted[2]),
+      bm25Weight: Number.parseFloat(weighted[3])
+    }
+  }
   return { kind: 'vector' }
+}
+
+function hybridRetrieverId(
+  params: Extract<RetrieverParams, { kind: 'hybrid-rrf' }>
+): string {
+  const rrfK = params.rrfK ?? RRF_DEFAULT_K
+  const vectorWeight = params.vectorWeight ?? 1
+  const bm25Weight = params.bm25Weight ?? 1
+  return vectorWeight === 1 && bm25Weight === 1
+    ? `hybrid-rrf-${rrfK}`
+    : `hybrid-rrf-${rrfK}-v${vectorWeight}-b${bm25Weight}`
 }

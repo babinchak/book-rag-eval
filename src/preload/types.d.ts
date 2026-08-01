@@ -269,7 +269,7 @@ export type RetrieverParams =
   | { kind: 'random'; seed?: number }
   | { kind: 'vector' }
   | { kind: 'bm25' }
-  | { kind: 'hybrid-rrf'; rrfK?: number }
+  | { kind: 'hybrid-rrf'; rrfK?: number; vectorWeight?: number; bm25Weight?: number }
 
 export type AugmentStep = { kind: 'breadcrumb' } | { kind: 'summary'; model: string }
 

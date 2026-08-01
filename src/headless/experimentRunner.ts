@@ -6,7 +6,7 @@ import { loadCanonicalBookDocument } from '../main/canonicalStore'
 import { getChunkSet, runChunking } from '../main/chunking'
 import { listEmbeddingSets, runEmbedding } from '../main/embeddings'
 import { listBm25Indexes, runBm25Indexing } from '../main/bm25'
-import { retrieve } from '../main/retrieval'
+import { fuseRrfHits, retrieve, type ScoredHit } from '../main/retrieval'
 import {
   bm25ArtifactIdentity,
   chunkArtifactIdentity,
@@ -302,7 +302,12 @@ function retrieverParams(retriever: ExperimentRetriever): RetrieverParams {
     case 'vector':
       return { kind: 'vector' }
     case 'hybrid-rrf':
-      return { kind: 'hybrid-rrf', rrfK: retriever.rrfK }
+      return {
+        kind: 'hybrid-rrf',
+        rrfK: retriever.rrfK,
+        vectorWeight: retriever.vectorWeight,
+        bm25Weight: retriever.bm25Weight
+      }
   }
 }
 
@@ -419,8 +424,18 @@ export async function planExperiment(
               retrievalQuery,
               config.candidatePoolSize
             )
-            const cached = await readRetrievalTrace(config.outputDir, queryId)
-            if (cached?.chunkArtifactId === chunkIdentity.id) {
+            const cached = await resolveRetrievalTrace(
+              config.outputDir,
+              queryId,
+              book.bookId,
+              chunkIdentity.id,
+              retriever,
+              evalCase,
+              queryMode,
+              retrievalQuery,
+              config.candidatePoolSize
+            )
+            if (cached) {
               cachedRetrievalQueries += 1
               continue
             }
@@ -517,6 +532,94 @@ async function writeRetrievalTrace(
   trace: QueryCacheEntry
 ): Promise<void> {
   await writeJsonAtomic(retrievalTracePath(outputDir, queryId), trace)
+}
+
+interface ResolvedRetrievalTrace {
+  trace: QueryCacheEntry
+  synthesized: boolean
+}
+
+function scoredHits(trace: QueryCacheEntry): ScoredHit[] {
+  return trace.hits.map((hit) => ({
+    id: hit.chunkId,
+    score: hit.distance,
+    rank: hit.rank
+  }))
+}
+
+async function resolveRetrievalTrace(
+  outputDir: string,
+  queryId: string,
+  bookId: string,
+  chunkArtifactId: string,
+  retriever: ExperimentRetriever,
+  evalCase: EvalCase,
+  queryMode: ExperimentQueryMode,
+  retrievalQuery: string,
+  candidatePoolSize: number
+): Promise<ResolvedRetrievalTrace | null> {
+  const direct = await readRetrievalTrace(outputDir, queryId)
+  if (direct?.chunkArtifactId === chunkArtifactId) {
+    return { trace: direct, synthesized: false }
+  }
+  if (retriever.kind !== 'hybrid-rrf') return null
+
+  const vectorRetriever: ExperimentRetriever = {
+    kind: 'vector',
+    embeddingModel: retriever.embeddingModel
+  }
+  const bm25Retriever: ExperimentRetriever = { kind: 'bm25' }
+  const vectorQueryId = queryKey(
+    bookId,
+    chunkArtifactId,
+    vectorRetriever,
+    evalCase,
+    queryMode,
+    retrievalQuery,
+    candidatePoolSize
+  )
+  const bm25QueryId = queryKey(
+    bookId,
+    chunkArtifactId,
+    bm25Retriever,
+    evalCase,
+    queryMode,
+    retrievalQuery,
+    candidatePoolSize
+  )
+  const [vectorTrace, bm25Trace] = await Promise.all([
+    readRetrievalTrace(outputDir, vectorQueryId),
+    readRetrievalTrace(outputDir, bm25QueryId)
+  ])
+  if (
+    vectorTrace?.chunkArtifactId !== chunkArtifactId ||
+    bm25Trace?.chunkArtifactId !== chunkArtifactId
+  ) {
+    return null
+  }
+
+  const startedAt = performance.now()
+  const hits = fuseRrfHits(
+    [
+      { hits: scoredHits(vectorTrace), weight: retriever.vectorWeight },
+      { hits: scoredHits(bm25Trace), weight: retriever.bm25Weight }
+    ],
+    retriever.rrfK
+  ).slice(0, candidatePoolSize)
+  return {
+    synthesized: true,
+    trace: {
+      schemaVersion: 1,
+      chunkArtifactId,
+      retrievalLatencyMs: performance.now() - startedAt,
+      createdAt: Date.now(),
+      hits: hits.map((hit) => ({
+        chunkId: hit.id,
+        distance: hit.score,
+        rank: hit.rank
+      }))
+    }
+  }
 }
 
 function emptyLedger(): CostLedger {
@@ -781,11 +884,26 @@ export async function runExperiment(
               if (missingBudgets.length === 0) continue
 
               let hits: RetrievedChunkPayload[]
-              const cached =
-                run.queryCache[queryId] ?? (await readRetrievalTrace(run.plan.outputDir, queryId))
-              if (cached) {
-                hits = reconstructHits(cached, set)
-                run.queryCache[queryId] = cached
+              const cachedFromRun = run.queryCache[queryId]
+              const resolvedTrace = cachedFromRun
+                ? { trace: cachedFromRun, synthesized: false }
+                : await resolveRetrievalTrace(
+                    run.plan.outputDir,
+                    queryId,
+                    book.bookId,
+                    chunkArtifactId,
+                    retriever,
+                    evalCase,
+                    queryMode,
+                    retrievalQuery,
+                    prepared.config.candidatePoolSize
+                  )
+              if (resolvedTrace) {
+                hits = reconstructHits(resolvedTrace.trace, set)
+                run.queryCache[queryId] = resolvedTrace.trace
+                if (resolvedTrace.synthesized) {
+                  await writeRetrievalTrace(run.plan.outputDir, queryId, resolvedTrace.trace)
+                }
               } else {
                 if (retrieverNeedsEmbedding(retriever)) {
                   assertAffordable(

@@ -15,11 +15,34 @@ test('parses a retrieval experiment and fills deterministic defaults', () => {
   assert.equal(config.chunkers[0].kind, 'fixed-token')
   assert.equal(config.retrievers[0].kind, 'hybrid-rrf')
   assert.equal(config.retrievers[0].rrfK, 60)
+  assert.equal(config.retrievers[0].vectorWeight, 1)
+  assert.equal(config.retrievers[0].bm25Weight, 1)
   assert.equal(config.candidatePoolSize, 50)
   assert.deepEqual(config.splits, ['dev'])
   assert.deepEqual(config.excludeEvidenceKinds, [])
   assert.equal(config.outputDir, '.rag-eval/runs')
   assert.deepEqual(config.queryModes, ['reference'])
+})
+
+test('parses weighted hybrid retrieval', () => {
+  const config = parseExperimentConfig({
+    schemaVersion: EXPERIMENT_SCHEMA_VERSION,
+    name: 'weighted-hybrid',
+    books: [{ bookId: 'book-1', evalSetId: 'reviewed' }],
+    chunkers: [{ kind: 'fixed-token', size: 256, overlap: 32 }],
+    retrievers: [
+      {
+        kind: 'hybrid-rrf',
+        embeddingModel: 'voyage-4-large',
+        vectorWeight: 0.75,
+        bm25Weight: 0.25
+      }
+    ],
+    contextBudgets: [8192]
+  })
+
+  assert.equal(config.retrievers[0].vectorWeight, 0.75)
+  assert.equal(config.retrievers[0].bm25Weight, 0.25)
 })
 
 test('supports excluding non-text evidence tracks from an experiment', () => {

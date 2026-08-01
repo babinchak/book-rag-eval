@@ -53,7 +53,9 @@ const retrievalPipelineSchema = z.discriminatedUnion('kind', [
   z.object({
     kind: z.literal('hybrid-rrf'),
     embeddingModel: embeddingModelSchema,
-    rrfK: positiveInteger.default(60)
+    rrfK: positiveInteger.default(60),
+    vectorWeight: z.number().positive().default(1),
+    bm25Weight: z.number().positive().default(1)
   })
 ])
 

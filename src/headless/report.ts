@@ -91,7 +91,7 @@ function retrieverLabel(retriever: ExperimentRetriever): string {
     case 'vector':
       return `vector:${retriever.embeddingModel}`
     case 'hybrid-rrf':
-      return `hybrid-rrf:${retriever.embeddingModel}:k${retriever.rrfK}`
+      return `hybrid-rrf:${retriever.embeddingModel}:k${retriever.rrfK}:v${retriever.vectorWeight ?? 1}:b${retriever.bm25Weight ?? 1}`
   }
 }
 

@@ -113,15 +113,20 @@ async function queryVector(
 // Reciprocal Rank Fusion: each result earns 1/(k+rank) from each ranked list
 // it appears in. Score-free across heterogeneous retrievers — works directly
 // on ranks without needing to normalize cosine distance against BM25 scores.
-function fuseRrf(lists: ScoredHit[][], rrfK: number): ScoredHit[] {
+export function fuseRrfHits(
+  lists: Array<{ hits: ScoredHit[]; weight?: number }>,
+  rrfK: number
+): ScoredHit[] {
   const fused = new Map<string, number>()
-  for (const list of lists) {
-    for (const hit of list) {
-      const contrib = 1 / (rrfK + hit.rank)
+  for (const { hits, weight = 1 } of lists) {
+    for (const hit of hits) {
+      const contrib = weight / (rrfK + hit.rank)
       fused.set(hit.id, (fused.get(hit.id) ?? 0) + contrib)
     }
   }
-  const sorted = Array.from(fused.entries()).sort((a, b) => b[1] - a[1])
+  const sorted = Array.from(fused.entries()).sort(
+    (a, b) => b[1] - a[1] || a[0].localeCompare(b[0])
+  )
   // Negate so the "distance" convention (lower = better) holds for callers
   // that just sort by score. Magnitude is the RRF score.
   return sorted.map(([id, score], i) => ({ id, score: -score, rank: i + 1 }))
@@ -165,7 +170,13 @@ export async function retrieve(
         arr.map((h) => ({ id: h.id, score: h.score, rank: h.rank }))
       )
     ])
-    hits = fuseRrf([vec, bm], retriever.rrfK ?? RRF_DEFAULT_K).slice(0, k)
+    hits = fuseRrfHits(
+      [
+        { hits: vec, weight: retriever.vectorWeight },
+        { hits: bm, weight: retriever.bm25Weight }
+      ],
+      retriever.rrfK ?? RRF_DEFAULT_K
+    ).slice(0, k)
   }
 
   if (hits.length === 0) return []
