@@ -71,6 +71,7 @@ test('parses a deterministic random retrieval control', () => {
 
   assert.deepEqual(config.retrievers, [{ kind: 'random', seed: 42 }])
   assert.deepEqual(config.pricing.embeddingUsdPerMillion, {})
+  assert.deepEqual(config.pricing.rerankingUsdPerMillion, {})
 })
 
 test('parses Voyage vector retrieval and pricing', () => {
@@ -85,6 +86,25 @@ test('parses Voyage vector retrieval and pricing', () => {
   })
   assert.equal(config.retrievers[0].embeddingModel, 'voyage-4-large')
   assert.equal(config.pricing.embeddingUsdPerMillion['voyage-4-large'], 0.12)
+})
+
+test('parses a Voyage reranking stage and pricing', () => {
+  const config = parseExperimentConfig({
+    schemaVersion: EXPERIMENT_SCHEMA_VERSION,
+    name: 'rerank',
+    books: [{ bookId: 'book-1', evalSetId: 'reviewed' }],
+    chunkers: [{ kind: 'fixed-token', size: 256, overlap: 32 }],
+    retrievers: [
+      {
+        kind: 'bm25',
+        reranker: { kind: 'voyage', model: 'rerank-2.5-lite' }
+      }
+    ],
+    contextBudgets: [8192],
+    pricing: { rerankingUsdPerMillion: { 'rerank-2.5-lite': 0.02 } }
+  })
+  assert.equal(config.retrievers[0].reranker?.model, 'rerank-2.5-lite')
+  assert.equal(config.pricing.rerankingUsdPerMillion['rerank-2.5-lite'], 0.02)
 })
 
 test('rejects invalid overlap and duplicate context budgets', () => {

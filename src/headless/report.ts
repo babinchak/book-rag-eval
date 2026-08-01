@@ -3,6 +3,7 @@ import { dirname, join, resolve } from 'node:path'
 import { contentHash } from '../shared/artifactIdentity'
 import type { ExperimentQueryMode, ExperimentRetriever } from '../shared/experimentSchema'
 import type { EmbeddingModel } from '../preload/types'
+import type { VoyageRerankModel } from '../main/reranking'
 import type { HeadlessResultRow, HeadlessRun } from './experimentRunner'
 
 type ReportMetric =
@@ -79,19 +80,25 @@ export interface ExperimentReport {
     tokens: number
     costUsd: number
   }>
+  rerankerCosts: Array<{
+    model: VoyageRerankModel
+    tokens: number
+    costUsd: number
+  }>
   groups: ReportGroup[]
 }
 
 function retrieverLabel(retriever: ExperimentRetriever): string {
+  const reranker = retriever.reranker ? `+${retriever.reranker.model}` : ''
   switch (retriever.kind) {
     case 'random':
-      return `random:seed${retriever.seed}`
+      return `random:seed${retriever.seed}${reranker}`
     case 'bm25':
-      return 'bm25'
+      return `bm25${reranker}`
     case 'vector':
-      return `vector:${retriever.embeddingModel}`
+      return `vector:${retriever.embeddingModel}${reranker}`
     case 'hybrid-rrf':
-      return `hybrid-rrf:${retriever.embeddingModel}:k${retriever.rrfK}:v${retriever.vectorWeight ?? 1}:b${retriever.bm25Weight ?? 1}`
+      return `hybrid-rrf:${retriever.embeddingModel}:k${retriever.rrfK}:v${retriever.vectorWeight ?? 1}:b${retriever.bm25Weight ?? 1}${reranker}`
   }
 }
 
@@ -253,6 +260,11 @@ export function summarizeRun(run: HeadlessRun, bootstrapIterations = 2000): Expe
       totalCostUsd: usage!.costUsd
     }
   })
+  const rerankerCosts = Object.entries(run.ledger.byReranker ?? {}).map(([model, usage]) => ({
+    model: model as VoyageRerankModel,
+    tokens: usage!.tokens,
+    costUsd: usage!.costUsd
+  }))
   return {
     schemaVersion: 1,
     runFingerprint: run.fingerprint,
@@ -265,6 +277,7 @@ export function summarizeRun(run: HeadlessRun, bootstrapIterations = 2000): Expe
     bootstrapIterations,
     embeddingModelCosts,
     embeddingIndexCosts,
+    rerankerCosts,
     groups: groups.sort(
       (left, right) =>
         left.contextBudget - right.contextBudget ||
@@ -318,6 +331,20 @@ export function reportMarkdown(report: ExperimentReport): string {
     for (const item of report.embeddingIndexCosts) {
       lines.push(
         `| ${item.bookTitle ?? item.bookId} | ${item.strategyId} | ${item.model} | ${item.tokens.toLocaleString('en-US')} | $${item.costUsd.toFixed(6)} |`
+      )
+    }
+    lines.push('')
+  }
+  if (report.rerankerCosts.length > 0) {
+    lines.push(
+      '## Reranking cost summary',
+      '',
+      '| Model | Processed tokens | Nominal cost |',
+      '| --- | ---: | ---: |'
+    )
+    for (const item of report.rerankerCosts) {
+      lines.push(
+        `| ${item.model} | ${item.tokens.toLocaleString('en-US')} | $${item.costUsd.toFixed(6)} |`
       )
     }
     lines.push('')

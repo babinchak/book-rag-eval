@@ -1,0 +1,34 @@
+# One-case provider integration check. Keep this tiny and run it before larger paid rerank sweeps.
+schemaVersion: 1
+name: voyage-rerank-api-smoke
+outputDir: ../.rag-eval/runs
+
+books:
+  - bookId: 89837bc58f2f7a00efba19501669db603e8a18d1f50e0f350b57f4e6220ae2e3
+    evalSetPath: ../.rag-eval/provisional-evals/six-book-smoke-v1/89837bc58f2f7a00efba19501669db603e8a18d1f50e0f350b57f4e6220ae2e3.json
+
+chunkers:
+  - kind: fixed-token
+    size: 256
+    overlap: 32
+    encoding: cl100k_base
+
+retrievers:
+  - kind: vector
+    embeddingModel: voyage-4-large
+    reranker:
+      kind: voyage
+      model: rerank-2.5-lite
+
+queryModes: [question]
+contextBudgets: [8192]
+candidatePoolSize: 50
+splits: [dev]
+excludeEvidenceKinds: [table, image]
+maxCasesPerBook: 1
+
+pricing:
+  embeddingUsdPerMillion:
+    voyage-4-large: 0.12
+  rerankingUsdPerMillion:
+    rerank-2.5-lite: 0.02

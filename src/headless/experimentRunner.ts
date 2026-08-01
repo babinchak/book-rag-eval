@@ -7,6 +7,7 @@ import { getChunkSet, runChunking } from '../main/chunking'
 import { listEmbeddingSets, runEmbedding } from '../main/embeddings'
 import { listBm25Indexes, runBm25Indexing } from '../main/bm25'
 import { fuseRrfHits, retrieve, type ScoredHit } from '../main/retrieval'
+import { rerankVoyage, type VoyageRerankModel } from '../main/reranking'
 import {
   bm25ArtifactIdentity,
   chunkArtifactIdentity,
@@ -85,8 +86,9 @@ export interface ExperimentPlan {
   cachedRetrievalQueries: number
   missingRetrievalQueries: number
   estimatedEmbeddingTokens: number
+  estimatedRerankTokens: number
   estimatedCostUsd: number | null
-  unknownCostModels: EmbeddingModel[]
+  unknownCostModels: Array<EmbeddingModel | VoyageRerankModel>
   warnings: string[]
 }
 
@@ -127,6 +129,10 @@ interface QueryCacheEntry {
   chunkArtifactId: string
   hits: Array<{ chunkId: string; distance: number; rank: number }>
   retrievalLatencyMs?: number
+  rerankLatencyMs?: number
+  rerankModel?: VoyageRerankModel
+  rerankTokens?: number
+  nominalRerankCostUsd?: number
   createdAt?: number
 }
 
@@ -134,6 +140,9 @@ export interface CostLedger {
   embeddingIndexTokens: number
   embeddingQueryTokens: number
   actualCostUsd: number
+  rerankTokens: number
+  rerankCostUsd: number
+  byReranker: Partial<Record<VoyageRerankModel, { tokens: number; costUsd: number }>>
   byModel: Partial<
     Record<EmbeddingModel, { indexTokens: number; queryTokens: number; costUsd: number }>
   >
@@ -311,8 +320,18 @@ function retrieverParams(retriever: ExperimentRetriever): RetrieverParams {
   }
 }
 
+function withoutReranker(retriever: ExperimentRetriever): ExperimentRetriever {
+  const { reranker: _reranker, ...base } = retriever
+  void _reranker
+  return base as ExperimentRetriever
+}
+
 function priceOf(config: LoadedExperiment, model: EmbeddingModel): number | undefined {
   return config.pricing.embeddingUsdPerMillion[model]
+}
+
+function rerankPriceOf(config: LoadedExperiment, model: VoyageRerankModel): number | undefined {
+  return config.pricing.rerankingUsdPerMillion[model]
 }
 
 export async function planExperiment(
@@ -333,10 +352,11 @@ export async function planExperiment(
     )
   }
   let estimatedEmbeddingTokens = 0
+  let estimatedRerankTokenCount = 0
   let estimatedCostUsd = 0
   let cachedRetrievalQueries = 0
   let missingRetrievalQueries = 0
-  const unknownCostModels = new Set<EmbeddingModel>()
+  const unknownCostModels = new Set<EmbeddingModel | VoyageRerankModel>()
 
   for (const book of prepared.books) {
     if (book.cases.some((evalCase) => evalCase.scope === 'library')) {
@@ -440,7 +460,47 @@ export async function planExperiment(
               continue
             }
             missingRetrievalQueries += 1
-            if (!retrieverNeedsEmbedding(retriever)) continue
+            const baseRetriever = withoutReranker(retriever)
+            const baseQueryId = queryKey(
+              book.bookId,
+              chunkIdentity.id,
+              baseRetriever,
+              evalCase,
+              queryMode,
+              retrievalQuery,
+              config.candidatePoolSize
+            )
+            const baseCached = retriever.reranker
+              ? await resolveRetrievalTrace(
+                  config.outputDir,
+                  baseQueryId,
+                  book.bookId,
+                  chunkIdentity.id,
+                  baseRetriever,
+                  evalCase,
+                  queryMode,
+                  retrievalQuery,
+                  config.candidatePoolSize
+                )
+              : null
+            if (retriever.reranker) {
+              const estimatedTokens =
+                baseCached && chunkSet
+                  ? estimatedRerankTokens(
+                      retrievalQuery,
+                      reconstructHits(baseCached.trace, chunkSet)
+                    )
+                  : countChunkTokens(retrievalQuery) * config.candidatePoolSize +
+                    Math.ceil(
+                      (estimatedChunkTokens / Math.max(chunkSet?.chunks.length ?? 1, 1)) *
+                        config.candidatePoolSize
+                    )
+              estimatedRerankTokenCount += estimatedTokens
+              const rerankPrice = rerankPriceOf(config, retriever.reranker.model)
+              if (rerankPrice === undefined) unknownCostModels.add(retriever.reranker.model)
+              else estimatedCostUsd += (estimatedTokens / 1_000_000) * rerankPrice
+            }
+            if (!retrieverNeedsEmbedding(retriever) || baseCached) continue
             const queryTokens = countChunkTokens(retrievalQuery)
             estimatedEmbeddingTokens += queryTokens
             const price = priceOf(config, retriever.embeddingModel)
@@ -494,6 +554,7 @@ export async function planExperiment(
     cachedRetrievalQueries,
     missingRetrievalQueries,
     estimatedEmbeddingTokens,
+    estimatedRerankTokens: estimatedRerankTokenCount,
     estimatedCostUsd: unknownCostModels.size === 0 ? estimatedCostUsd : null,
     unknownCostModels: [...unknownCostModels],
     warnings
@@ -562,6 +623,7 @@ async function resolveRetrievalTrace(
   if (direct?.chunkArtifactId === chunkArtifactId) {
     return { trace: direct, synthesized: false }
   }
+  if (retriever.reranker) return null
   if (retriever.kind !== 'hybrid-rrf') return null
 
   const vectorRetriever: ExperimentRetriever = {
@@ -627,6 +689,9 @@ function emptyLedger(): CostLedger {
     embeddingIndexTokens: 0,
     embeddingQueryTokens: 0,
     actualCostUsd: 0,
+    rerankTokens: 0,
+    rerankCostUsd: 0,
+    byReranker: {},
     byModel: {},
     indexingByArtifact: []
   }
@@ -700,6 +765,56 @@ function assertAffordable(
       `Cost ceiling would be exceeded: projected $${projected.toFixed(6)} > $${run.maxUsd.toFixed(6)}`
     )
   }
+}
+
+function recordRerankCost(
+  run: HeadlessRun,
+  config: LoadedExperiment,
+  model: VoyageRerankModel,
+  tokens: number
+): number {
+  const price = rerankPriceOf(config, model)
+  if (price === undefined) throw new Error(`No reranking price configured for ${model}`)
+  const cost = (tokens / 1_000_000) * price
+  const current = run.ledger.byReranker[model] ?? { tokens: 0, costUsd: 0 }
+  current.tokens += tokens
+  current.costUsd += cost
+  run.ledger.byReranker[model] = current
+  run.ledger.rerankTokens += tokens
+  run.ledger.rerankCostUsd += cost
+  run.ledger.actualCostUsd += cost
+  if (run.ledger.actualCostUsd > run.maxUsd + 1e-9) {
+    throw new Error(
+      `Cost ceiling exceeded: $${run.ledger.actualCostUsd.toFixed(6)} > $${run.maxUsd.toFixed(6)}`
+    )
+  }
+  return cost
+}
+
+function assertRerankAffordable(
+  run: HeadlessRun,
+  config: LoadedExperiment,
+  model: VoyageRerankModel,
+  estimatedTokens: number
+): void {
+  const price = rerankPriceOf(config, model)
+  if (price === undefined) throw new Error(`No reranking price configured for ${model}`)
+  const projected = run.ledger.actualCostUsd + (estimatedTokens / 1_000_000) * price
+  if (projected > run.maxUsd + 1e-9) {
+    throw new Error(
+      `Cost ceiling would be exceeded: projected $${projected.toFixed(6)} > $${run.maxUsd.toFixed(6)}`
+    )
+  }
+}
+
+function estimatedRerankTokens(query: string, hits: RetrievedChunkPayload[]): number {
+  return (
+    countChunkTokens(query) * hits.length +
+    hits.reduce(
+      (total, hit) => total + (hit.chunk.tokenCount ?? countChunkTokens(hit.chunk.text)),
+      0
+    )
+  )
 }
 
 function queryKey(
@@ -803,6 +918,9 @@ export async function runExperiment(
     results: []
   }
   run.ledger.indexingByArtifact ??= []
+  run.ledger.rerankTokens ??= 0
+  run.ledger.rerankCostUsd ??= 0
+  run.ledger.byReranker ??= {}
   if (run.ledger.actualCostUsd > maxUsd + 1e-9) {
     throw new Error(
       `Existing run has already spent $${run.ledger.actualCostUsd.toFixed(6)}, above the new --max-usd $${maxUsd.toFixed(6)}`
@@ -905,28 +1023,114 @@ export async function runExperiment(
                   await writeRetrievalTrace(run.plan.outputDir, queryId, resolvedTrace.trace)
                 }
               } else {
-                if (retrieverNeedsEmbedding(retriever)) {
-                  assertAffordable(
+                const baseRetriever = withoutReranker(retriever)
+                const baseQueryId = queryKey(
+                  book.bookId,
+                  chunkArtifactId,
+                  baseRetriever,
+                  evalCase,
+                  queryMode,
+                  retrievalQuery,
+                  prepared.config.candidatePoolSize
+                )
+                const baseResolved = retriever.reranker
+                  ? await resolveRetrievalTrace(
+                      run.plan.outputDir,
+                      baseQueryId,
+                      book.bookId,
+                      chunkArtifactId,
+                      baseRetriever,
+                      evalCase,
+                      queryMode,
+                      retrievalQuery,
+                      prepared.config.candidatePoolSize
+                    )
+                  : null
+                let baseHits: RetrievedChunkPayload[]
+                let retrievalLatencyMs = 0
+                if (baseResolved) {
+                  baseHits = reconstructHits(baseResolved.trace, set)
+                  if (baseResolved.synthesized) {
+                    await writeRetrievalTrace(
+                      run.plan.outputDir,
+                      baseQueryId,
+                      baseResolved.trace
+                    )
+                  }
+                } else {
+                  if (retrieverNeedsEmbedding(baseRetriever)) {
+                    assertAffordable(
+                      run,
+                      prepared.config,
+                      baseRetriever.embeddingModel,
+                      countChunkTokens(retrievalQuery)
+                    )
+                  }
+                  const retrievalStartedAt = performance.now()
+                  baseHits = await retrieve(
+                    book.bookId,
+                    set.strategyId,
+                    retrieverParams(baseRetriever),
+                    baseRetriever.kind === 'random' ? evalCase.id : retrievalQuery,
+                    prepared.config.candidatePoolSize,
+                    retrieverNeedsEmbedding(baseRetriever)
+                      ? baseRetriever.embeddingModel
+                      : undefined,
+                    (model, tokens) => recordCost(run, prepared.config, model, 'query', tokens)
+                  )
+                  retrievalLatencyMs = performance.now() - retrievalStartedAt
+                  if (retriever.reranker) {
+                    await writeRetrievalTrace(run.plan.outputDir, baseQueryId, {
+                      schemaVersion: 1,
+                      chunkArtifactId,
+                      retrievalLatencyMs,
+                      createdAt: Date.now(),
+                      hits: baseHits.map((hit) => ({
+                        chunkId: hit.chunk.id,
+                        distance: hit.distance,
+                        rank: hit.rank
+                      }))
+                    })
+                  }
+                }
+
+                let rerankLatencyMs: number | undefined
+                let rerankTokens: number | undefined
+                let nominalRerankCostUsd: number | undefined
+                if (retriever.reranker) {
+                  const estimatedTokens = estimatedRerankTokens(retrievalQuery, baseHits)
+                  assertRerankAffordable(
                     run,
                     prepared.config,
-                    retriever.embeddingModel,
-                    countChunkTokens(retrievalQuery)
+                    retriever.reranker.model,
+                    Math.ceil(estimatedTokens * 1.2)
                   )
+                  const rerankStartedAt = performance.now()
+                  const reranked = await rerankVoyage(
+                    retrievalQuery,
+                    baseHits,
+                    retriever.reranker.model
+                  )
+                  rerankLatencyMs = performance.now() - rerankStartedAt
+                  rerankTokens = reranked.tokens ?? estimatedTokens
+                  nominalRerankCostUsd = recordRerankCost(
+                    run,
+                    prepared.config,
+                    retriever.reranker.model,
+                    rerankTokens
+                  )
+                  hits = reranked.hits
+                } else {
+                  hits = baseHits
                 }
-                const retrievalStartedAt = performance.now()
-                hits = await retrieve(
-                  book.bookId,
-                  set.strategyId,
-                  retrieverParams(retriever),
-                  retriever.kind === 'random' ? evalCase.id : retrievalQuery,
-                  prepared.config.candidatePoolSize,
-                  retrieverNeedsEmbedding(retriever) ? retriever.embeddingModel : undefined,
-                  (model, tokens) => recordCost(run, prepared.config, model, 'query', tokens)
-                )
                 const trace: QueryCacheEntry = {
                   schemaVersion: 1,
                   chunkArtifactId,
-                  retrievalLatencyMs: performance.now() - retrievalStartedAt,
+                  retrievalLatencyMs,
+                  rerankLatencyMs,
+                  rerankModel: retriever.reranker?.model,
+                  rerankTokens,
+                  nominalRerankCostUsd,
                   createdAt: Date.now(),
                   hits: hits.map((hit) => ({
                     chunkId: hit.chunk.id,

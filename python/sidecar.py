@@ -22,6 +22,8 @@ from __future__ import annotations
 import json
 import os
 import sys
+import urllib.error
+import urllib.request
 from typing import Any
 
 DEFAULT_EMBEDDING_MODEL = "text-embedding-3-large"
@@ -117,6 +119,53 @@ def main() -> int:
                     "model": model,
                 }
                 _send_response(req_id, result)
+            elif method == "rerank":
+                query = params.get("query")
+                documents = params.get("documents")
+                model = params.get("model") or "rerank-2.5-lite"
+                if not isinstance(query, str) or not query:
+                    raise ValueError("params.query must be a non-empty string")
+                if not isinstance(documents, list) or not documents:
+                    raise ValueError("params.documents must be a non-empty list of strings")
+                if voyage_api_key is None:
+                    raise ValueError("VOYAGE_API_KEY is required for Voyage reranking")
+                body = json.dumps(
+                    {
+                        "query": _sanitize_text(query),
+                        "documents": [
+                            _sanitize_text(document) if isinstance(document, str) else document
+                            for document in documents
+                        ],
+                        "model": model,
+                        "top_k": len(documents),
+                        "return_documents": False,
+                        "truncation": False,
+                    }
+                ).encode("utf-8")
+                request = urllib.request.Request(
+                    "https://api.voyageai.com/v1/rerank",
+                    data=body,
+                    headers={
+                        "Authorization": f"Bearer {voyage_api_key}",
+                        "Content-Type": "application/json",
+                    },
+                    method="POST",
+                )
+                try:
+                    with urllib.request.urlopen(request, timeout=120) as response:
+                        payload = json.loads(response.read().decode("utf-8"))
+                except urllib.error.HTTPError as error:
+                    detail = error.read().decode("utf-8", errors="replace")
+                    raise ValueError(f"Voyage rerank HTTP {error.code}: {detail[:500]}") from error
+                usage = payload.get("usage") or {}
+                _send_response(
+                    req_id,
+                    {
+                        "results": payload.get("data") or payload.get("results") or [],
+                        "tokens": usage.get("total_tokens"),
+                        "model": model,
+                    },
+                )
             elif method == "chat":
                 messages = params.get("messages")
                 if not isinstance(messages, list) or not messages:

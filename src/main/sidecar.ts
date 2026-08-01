@@ -38,6 +38,12 @@ export interface ChatResult {
   model: string
 }
 
+export interface RerankResult {
+  results: Array<{ index: number; relevance_score: number }>
+  tokens?: number
+  model: string
+}
+
 class Sidecar {
   private proc: ChildProcess | null = null
   private pending = new Map<string, PendingRequest>()
@@ -204,6 +210,14 @@ class Sidecar {
     inputType?: 'query' | 'document'
   ): Promise<EmbedResult> {
     return this.call<EmbedResult>('embed', { texts, model, inputType })
+  }
+
+  async rerank(
+    query: string,
+    documents: string[],
+    model: 'rerank-2.5' | 'rerank-2.5-lite'
+  ): Promise<RerankResult> {
+    return this.call<RerankResult>('rerank', { query, documents, model })
   }
 
   async chat(messages: ChatMessage[], model = 'gpt-4o-mini'): Promise<ChatResult> {

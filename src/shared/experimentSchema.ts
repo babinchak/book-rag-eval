@@ -40,22 +40,30 @@ const embeddingModelSchema = z.enum([
 ])
 const queryModeSchema = z.enum(['question', 'reference'])
 
+const rerankerSchema = z.object({
+  kind: z.literal('voyage'),
+  model: z.enum(['rerank-2.5', 'rerank-2.5-lite'])
+})
+
 const retrievalPipelineSchema = z.discriminatedUnion('kind', [
   z.object({
     kind: z.literal('random'),
-    seed: z.number().int().default(42)
+    seed: z.number().int().default(42),
+    reranker: rerankerSchema.optional()
   }),
-  z.object({ kind: z.literal('bm25') }),
+  z.object({ kind: z.literal('bm25'), reranker: rerankerSchema.optional() }),
   z.object({
     kind: z.literal('vector'),
-    embeddingModel: embeddingModelSchema
+    embeddingModel: embeddingModelSchema,
+    reranker: rerankerSchema.optional()
   }),
   z.object({
     kind: z.literal('hybrid-rrf'),
     embeddingModel: embeddingModelSchema,
     rrfK: positiveInteger.default(60),
     vectorWeight: z.number().positive().default(1),
-    bm25Weight: z.number().positive().default(1)
+    bm25Weight: z.number().positive().default(1),
+    reranker: rerankerSchema.optional()
   })
 ])
 
@@ -100,9 +108,15 @@ const experimentSchema = z
             'text-embedding-3-large': z.number().nonnegative().optional(),
             'voyage-4-large': z.number().nonnegative().optional()
           })
+          .default({}),
+        rerankingUsdPerMillion: z
+          .object({
+            'rerank-2.5': z.number().nonnegative().optional(),
+            'rerank-2.5-lite': z.number().nonnegative().optional()
+          })
           .default({})
       })
-      .default({ embeddingUsdPerMillion: {} })
+      .default({ embeddingUsdPerMillion: {}, rerankingUsdPerMillion: {} })
   })
   .superRefine((experiment, context) => {
     for (const chunker of experiment.chunkers) {
