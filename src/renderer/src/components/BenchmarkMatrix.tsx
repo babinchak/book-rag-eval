@@ -285,14 +285,20 @@ function BenchmarkMatrix({ cases, onOpenCase }: BenchmarkMatrixProps): React.JSX
   }, [cases])
   const visibleCases = useMemo(() => {
     const needle = search.trim().toLocaleLowerCase()
+    const evaluated = new Set(
+      resultSets.flatMap((resultSet) =>
+        resultSet.cells.map((cell) => `${cell.bookId}|${cell.caseId}`)
+      )
+    )
     return cases.filter((item) => {
+      if (!evaluated.has(`${item.bookId}|${item.caseId}`)) return false
       if (bookId !== 'all' && item.bookId !== bookId) return false
       if (!needle) return true
       return `${item.question} ${item.bookTitle} ${item.tags.join(' ')}`
         .toLocaleLowerCase()
         .includes(needle)
     })
-  }, [cases, bookId, search])
+  }, [cases, resultSets, bookId, search])
   const columns = useMemo(() => {
     const byKey = new Map<string, BenchmarkResultCell>()
     for (const cell of visibleCells) byKey.set(columnKey(cell), cell)

@@ -8,6 +8,7 @@ import {
 import { exportEvalSetFile } from './benchmarkData'
 import { createEvidenceReviewPacket } from './evidenceSampler'
 import { writeRunReport } from './report'
+import { writeTournamentReport } from './tournamentReport'
 import { planDraftGeneration, retryDraftFailures, runDraftGeneration } from './draftGeneration'
 import { compileApprovedDrafts, compileProvisionalDrafts } from './draftCompilation'
 import { writeDraftAudit } from './draftAudit'
@@ -59,6 +60,7 @@ function usage(): string {
     '  npm run rag-eval -- export-eval <book-id> <eval-set-id> <output.json> [--library-dir <path>]',
     '  npm run rag-eval -- sample-evidence <corpus.json> <output.json> --per-book <count> [--library-dir <path>]',
     '  npm run rag-eval -- report <run.json> [--output <report.md>] [--bootstrap <iterations>]',
+    '  npm run rag-eval -- tournament <run.json> [--output <report.md>] [--budget <tokens>] [--top <count>]',
     '  npm run rag-eval -- plan-drafts <draft-generation.yaml>',
     '  npm run rag-eval -- run-drafts <draft-generation.yaml> --max-usd <amount>',
     '  npm run rag-eval -- resume-drafts <draft-generation.yaml> --max-usd <amount>',
@@ -154,6 +156,17 @@ async function main(): Promise<void> {
       target,
       optionString(args, '--output'),
       rawBootstrap === undefined ? 2000 : Number(rawBootstrap)
+    )
+    process.stdout.write(`${JSON.stringify(paths, null, 2)}\n`)
+    return
+  }
+
+  if (command === 'tournament') {
+    const paths = await writeTournamentReport(
+      target,
+      optionString(args, '--output'),
+      Number(optionString(args, '--budget') ?? 8192),
+      Number(optionString(args, '--top') ?? 12)
     )
     process.stdout.write(`${JSON.stringify(paths, null, 2)}\n`)
     return
