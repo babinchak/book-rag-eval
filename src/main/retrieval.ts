@@ -5,7 +5,7 @@ import * as sqliteVec from 'sqlite-vec'
 import { bookDir } from './library'
 import { getChunkSet } from './chunking'
 import { sidecar } from './sidecar'
-import { getOpenaiKey } from './settings'
+import { getOpenaiKey, getVoyageKey } from './settings'
 import { queryBm25 } from './bm25'
 import { embeddingArtifactIdentity, embeddingDimensions } from './artifactConfig'
 import { contentHash } from '../shared/artifactIdentity'
@@ -65,8 +65,11 @@ async function queryVector(
   embeddingModel: EmbeddingModel,
   onEmbeddingUsage?: RetrievalEmbeddingUsageSink
 ): Promise<ScoredHit[]> {
-  const apiKey = await getOpenaiKey()
-  if (!apiKey) {
+  const [openaiApiKey, voyageApiKey] = await Promise.all([getOpenaiKey(), getVoyageKey()])
+  if (embeddingModel.startsWith('voyage-') && !voyageApiKey) {
+    throw new Error('VOYAGE_API_KEY is not set. Add it to the environment before retrieving.')
+  }
+  if (!embeddingModel.startsWith('voyage-') && !openaiApiKey) {
     throw new Error('OpenAI API key is not set. Add it in Settings before retrieving.')
   }
 
@@ -84,8 +87,11 @@ async function queryVector(
     )
   }
 
-  await sidecar.ensureStarted(apiKey)
-  const queryResult = await sidecar.embed([query], embeddingModel)
+  await sidecar.ensureStarted({
+    openaiApiKey: openaiApiKey ?? undefined,
+    voyageApiKey: voyageApiKey ?? undefined
+  })
+  const queryResult = await sidecar.embed([query], embeddingModel, 'query')
   onEmbeddingUsage?.(embeddingModel, queryResult.tokens)
   const queryVec = queryResult.embeddings[0]
 

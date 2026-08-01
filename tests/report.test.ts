@@ -54,8 +54,19 @@ test('builds deterministic bootstrap estimates and paired strategy deltas', () =
     ledger: {
       embeddingIndexTokens: 0,
       embeddingQueryTokens: 0,
-      actualCostUsd: 0,
-      byModel: {}
+      actualCostUsd: 0.0012,
+      byModel: {},
+      indexingByArtifact: [
+        {
+          bookId: 'book-1',
+          strategyId: 'baseline',
+          chunkArtifactId: 'chunks-1',
+          embeddingArtifactId: 'embeddings-1',
+          model: 'voyage-4-large',
+          tokens: 10_000,
+          costUsd: 0.0012
+        }
+      ]
     },
     queryCache: {},
     results: [
@@ -82,4 +93,6 @@ test('builds deterministic bootstrap estimates and paired strategy deltas', () =
   assert.equal(randomCandidate.evidenceRecallDeltaFromBaseline.mean, 0)
   assert.match(reportMarkdown(report), /Retrieval experiment report/)
   assert.match(reportMarkdown(report), /candidate/)
+  assert.match(reportMarkdown(report), /Document embedding cost by artifact/)
+  assert.match(reportMarkdown(report), /voyage-4-large/)
 })

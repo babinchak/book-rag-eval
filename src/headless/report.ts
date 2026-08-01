@@ -2,6 +2,7 @@ import { promises as fs } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { contentHash } from '../shared/artifactIdentity'
 import type { ExperimentQueryMode, ExperimentRetriever } from '../shared/experimentSchema'
+import type { EmbeddingModel } from '../preload/types'
 import type { HeadlessResultRow, HeadlessRun } from './experimentRunner'
 
 type ReportMetric =
@@ -52,6 +53,13 @@ export interface ExperimentReport {
   resultCells: number
   uniqueCases: number
   bootstrapIterations: number
+  embeddingIndexCosts: Array<{
+    bookId: string
+    strategyId: string
+    model: EmbeddingModel
+    tokens: number
+    costUsd: number
+  }>
   groups: ReportGroup[]
 }
 
@@ -209,6 +217,20 @@ export function summarizeRun(run: HeadlessRun, bootstrapIterations = 2000): Expe
     resultCells: run.results.length,
     uniqueCases: new Set(run.results.map(caseId)).size,
     bootstrapIterations,
+    embeddingIndexCosts: (run.ledger.indexingByArtifact ?? [])
+      .map(({ bookId, strategyId, model, tokens, costUsd }) => ({
+        bookId,
+        strategyId,
+        model,
+        tokens,
+        costUsd
+      }))
+      .sort(
+        (left, right) =>
+          left.model.localeCompare(right.model) ||
+          left.bookId.localeCompare(right.bookId) ||
+          left.strategyId.localeCompare(right.strategyId)
+      ),
     groups: groups.sort(
       (left, right) =>
         left.contextBudget - right.contextBudget ||
@@ -236,14 +258,30 @@ export function reportMarkdown(report: ExperimentReport): string {
     `- Git commit: ${report.gitCommit ? `\`${report.gitCommit}\`` : 'unavailable'}`,
     `- Tracked diff: ${report.workingTreeDiffHash ? `\`${report.workingTreeDiffHash}\`` : 'none'}`,
     `- Cases: ${report.uniqueCases}; result cells: ${report.resultCells}`,
-    `- Actual API cost: $${report.actualCostUsd.toFixed(6)}`,
+    `- Metered API cost (tokens × pinned rate): $${report.actualCostUsd.toFixed(6)}`,
     `- Intervals: deterministic paired/nonparametric bootstrap, ${report.bootstrapIterations} iterations`,
-    '',
+    ''
+  ]
+  if (report.embeddingIndexCosts.length > 0) {
+    lines.push(
+      '## Document embedding cost by artifact',
+      '',
+      '| Book | Chunking strategy | Model | Tokens | Nominal cost |',
+      '| --- | --- | --- | ---: | ---: |'
+    )
+    for (const item of report.embeddingIndexCosts) {
+      lines.push(
+        `| ${item.bookId} | ${item.strategyId} | ${item.model} | ${item.tokens.toLocaleString('en-US')} | $${item.costUsd.toFixed(6)} |`
+      )
+    }
+    lines.push('')
+  }
+  lines.push(
     'Values are means with 95% bootstrap intervals. Δ recall is paired against the first configured strategy at the same context budget and query mode.',
     '',
     '| Budget | Query | Strategy | Retriever | Hit | MRR | nDCG | Evidence recall | Δ recall | Context precision | Tokens before evidence |',
     '| ---: | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |'
-  ]
+  )
   for (const group of report.groups) {
     const strategy = group.isBaseline ? `${group.strategyId} (baseline)` : group.strategyId
     lines.push(

@@ -22,6 +22,11 @@ export interface EmbedResult {
   model: string
 }
 
+export interface SidecarCredentials {
+  openaiApiKey?: string
+  voyageApiKey?: string
+}
+
 export interface ChatMessage {
   role: 'system' | 'user' | 'assistant'
   content: string
@@ -39,7 +44,7 @@ class Sidecar {
   private nextId = 1
   private buffer = ''
   private startPromise: Promise<void> | null = null
-  private currentApiKey: string | null = null
+  private currentCredentialsKey: string | null = null
 
   private appPath(): string {
     return app?.getAppPath?.() ?? process.env.BOOK_RAG_EVAL_APP_DIR ?? process.cwd()
@@ -63,21 +68,30 @@ class Sidecar {
     return isWin ? 'python' : 'python3'
   }
 
-  async ensureStarted(apiKey: string): Promise<void> {
-    if (this.proc && this.currentApiKey === apiKey) return
-    if (this.proc && this.currentApiKey !== apiKey) {
+  async ensureStarted(credentials: SidecarCredentials): Promise<void> {
+    const credentialsKey = `${credentials.openaiApiKey ?? ''}\0${credentials.voyageApiKey ?? ''}`
+    if (!credentials.openaiApiKey && !credentials.voyageApiKey) {
+      throw new Error('No embedding provider API key is configured')
+    }
+    if (this.proc && this.currentCredentialsKey === credentialsKey) return
+    if (this.proc && this.currentCredentialsKey !== credentialsKey) {
       this.stop()
     }
     if (this.startPromise) return this.startPromise
-    this.startPromise = this.start(apiKey).finally(() => {
+    this.startPromise = this.start(credentials, credentialsKey).finally(() => {
       this.startPromise = null
     })
     return this.startPromise
   }
 
-  private async start(apiKey: string): Promise<void> {
+  private async start(credentials: SidecarCredentials, credentialsKey: string): Promise<void> {
     const proc = spawn(this.pythonBin(), [this.scriptPath()], {
-      env: { ...process.env, OPENAI_API_KEY: apiKey, PYTHONUNBUFFERED: '1' },
+      env: {
+        ...process.env,
+        ...(credentials.openaiApiKey ? { OPENAI_API_KEY: credentials.openaiApiKey } : {}),
+        ...(credentials.voyageApiKey ? { VOYAGE_API_KEY: credentials.voyageApiKey } : {}),
+        PYTHONUNBUFFERED: '1'
+      },
       stdio: ['pipe', 'pipe', 'pipe'],
       windowsHide: true
     })
@@ -93,7 +107,7 @@ class Sidecar {
       recordSidecarError(err)
       this.failAllPending(err)
       this.proc = null
-      this.currentApiKey = null
+      this.currentCredentialsKey = null
     })
     proc.on('exit', (code, signal) => {
       log.info('sidecar', `exit code=${code} signal=${signal}`)
@@ -101,11 +115,11 @@ class Sidecar {
       if (code !== 0 && code !== null) recordSidecarError(exitErr)
       this.failAllPending(exitErr)
       this.proc = null
-      this.currentApiKey = null
+      this.currentCredentialsKey = null
     })
 
     this.proc = proc
-    this.currentApiKey = apiKey
+    this.currentCredentialsKey = credentialsKey
 
     try {
       const result = await this.call('ping', {})
@@ -129,7 +143,7 @@ class Sidecar {
       // ignore
     }
     this.proc = null
-    this.currentApiKey = null
+    this.currentCredentialsKey = null
     this.failAllPending(new Error('sidecar stopped'))
   }
 
@@ -184,8 +198,12 @@ class Sidecar {
     return promise
   }
 
-  async embed(texts: string[], model = 'text-embedding-3-large'): Promise<EmbedResult> {
-    return this.call<EmbedResult>('embed', { texts, model })
+  async embed(
+    texts: string[],
+    model = 'text-embedding-3-large',
+    inputType?: 'query' | 'document'
+  ): Promise<EmbedResult> {
+    return this.call<EmbedResult>('embed', { texts, model, inputType })
   }
 
   async chat(messages: ChatMessage[], model = 'gpt-4o-mini'): Promise<ChatResult> {

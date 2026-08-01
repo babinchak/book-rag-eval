@@ -29,7 +29,7 @@ export interface StrategyConfig {
 export type AugmentStep = { kind: 'breadcrumb' } | { kind: 'summary'; model: string }
 
 export interface EmbeddingSlot {
-  model: 'text-embedding-3-small' | 'text-embedding-3-large'
+  model: 'text-embedding-3-small' | 'text-embedding-3-large' | 'voyage-4-large'
 }
 
 // Post-retrieve stage — stackable steps that reshape candidates before

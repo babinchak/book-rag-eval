@@ -1,5 +1,5 @@
 """
-JSON-RPC sidecar for OpenAI embedding calls.
+JSON-RPC sidecar for embedding and chat model calls.
 
 Communication: line-delimited JSON over stdin/stdout. One JSON object per line.
 
@@ -56,9 +56,10 @@ def _send_error(req_id: Any, message: str) -> None:
 
 
 def main() -> int:
-    api_key = os.environ.get("OPENAI_API_KEY")
-    if not api_key:
-        _send_error(None, "OPENAI_API_KEY not set in sidecar environment")
+    openai_api_key = os.environ.get("OPENAI_API_KEY")
+    voyage_api_key = os.environ.get("VOYAGE_API_KEY")
+    if not openai_api_key and not voyage_api_key:
+        _send_error(None, "Neither OPENAI_API_KEY nor VOYAGE_API_KEY is set")
         return 1
 
     try:
@@ -67,10 +68,15 @@ def main() -> int:
         _send_error(None, f"openai package not installed: {e}. Run: pip install openai")
         return 1
 
-    client = OpenAI(api_key=api_key)
+    openai_client = OpenAI(api_key=openai_api_key) if openai_api_key else None
+    voyage_client = (
+        OpenAI(api_key=voyage_api_key, base_url="https://api.voyageai.com/v1")
+        if voyage_api_key
+        else None
+    )
 
     for raw in sys.stdin:
-        line = raw.strip()
+        line = raw.lstrip("\ufeff").strip()
         if not line:
             continue
 
@@ -93,7 +99,18 @@ def main() -> int:
                     raise ValueError("params.texts must be a non-empty list of strings")
                 texts = [_sanitize_text(t) if isinstance(t, str) else t for t in texts]
                 model = params.get("model") or DEFAULT_EMBEDDING_MODEL
-                response = client.embeddings.create(input=texts, model=model)
+                input_type = params.get("inputType")
+                if model.startswith("voyage-"):
+                    if voyage_client is None:
+                        raise ValueError("VOYAGE_API_KEY is required for Voyage embeddings")
+                    extra_body = {"input_type": input_type} if input_type else None
+                    response = voyage_client.embeddings.create(
+                        input=texts, model=model, extra_body=extra_body
+                    )
+                else:
+                    if openai_client is None:
+                        raise ValueError("OPENAI_API_KEY is required for OpenAI embeddings")
+                    response = openai_client.embeddings.create(input=texts, model=model)
                 result = {
                     "embeddings": [d.embedding for d in response.data],
                     "tokens": response.usage.total_tokens,
@@ -109,7 +126,9 @@ def main() -> int:
                         msg["content"] = _sanitize_text(msg["content"])
                 model = params.get("model") or "gpt-4o-mini"
                 temperature = params.get("temperature", 0.2)
-                response = client.chat.completions.create(
+                if openai_client is None:
+                    raise ValueError("OPENAI_API_KEY is required for chat")
+                response = openai_client.chat.completions.create(
                     model=model,
                     messages=messages,
                     temperature=temperature,

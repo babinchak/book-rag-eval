@@ -16,7 +16,11 @@ interface StrategyManagerProps {
   onBack: () => void
 }
 
-const EMBED_MODELS: EmbeddingSlot['model'][] = ['text-embedding-3-small', 'text-embedding-3-large']
+const EMBED_MODELS: EmbeddingSlot['model'][] = [
+  'text-embedding-3-small',
+  'text-embedding-3-large',
+  'voyage-4-large'
+]
 const CHAT_MODELS: GenerationSlot['model'][] = ['gpt-4o-mini', 'gpt-4o', 'gpt-4.1-mini', 'gpt-4.1']
 const CHUNKER_KINDS: ChunkParams['kind'][] = [
   'fixed-token',

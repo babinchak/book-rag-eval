@@ -1,13 +1,11 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import {
-  contentHash,
-  createArtifactIdentity,
-  stableJson
-} from '../src/shared/artifactIdentity'
+import { contentHash, createArtifactIdentity, stableJson } from '../src/shared/artifactIdentity'
 import {
   bm25ArtifactIdentity,
   embeddingArtifactIdentity,
+  embeddingDimensions,
+  embeddingProvider,
   resolvedChunkArtifactId
 } from '../src/main/artifactConfig'
 import type { ChunkSet } from '../src/preload/types'
@@ -79,6 +77,9 @@ test('index identities depend on the exact chunk artifact and index configuratio
     embeddingArtifactIdentity(set, 'text-embedding-3-small', 1536).id,
     embeddingArtifactIdentity(set, 'text-embedding-3-large', 3072).id
   )
+  assert.equal(embeddingProvider('voyage-4-large'), 'voyage')
+  assert.equal(embeddingDimensions('voyage-4-large'), 1024)
+  assert.equal(embeddingArtifactIdentity(set, 'voyage-4-large', 1024).config.provider, 'voyage')
   assert.equal(
     bm25ArtifactIdentity(set).dependencies.chunks,
     embeddingArtifactIdentity(set, 'text-embedding-3-small', 1536).dependencies.chunks

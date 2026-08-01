@@ -35,6 +35,20 @@ test('parses a deterministic random retrieval control', () => {
   assert.deepEqual(config.pricing.embeddingUsdPerMillion, {})
 })
 
+test('parses Voyage vector retrieval and pricing', () => {
+  const config = parseExperimentConfig({
+    schemaVersion: EXPERIMENT_SCHEMA_VERSION,
+    name: 'voyage',
+    books: [{ bookId: 'book-1', evalSetId: 'reviewed' }],
+    chunkers: [{ kind: 'fixed-token', size: 256, overlap: 32 }],
+    retrievers: [{ kind: 'vector', embeddingModel: 'voyage-4-large' }],
+    contextBudgets: [4096],
+    pricing: { embeddingUsdPerMillion: { 'voyage-4-large': 0.12 } }
+  })
+  assert.equal(config.retrievers[0].embeddingModel, 'voyage-4-large')
+  assert.equal(config.pricing.embeddingUsdPerMillion['voyage-4-large'], 0.12)
+})
+
 test('rejects invalid overlap and duplicate context budgets', () => {
   const base = {
     schemaVersion: EXPERIMENT_SCHEMA_VERSION,

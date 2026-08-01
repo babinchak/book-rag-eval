@@ -57,6 +57,8 @@ export interface PlannedArtifact {
     model: EmbeddingModel
     artifactId: string
     exists: boolean
+    estimatedTokens: number
+    estimatedCostUsd: number | null
   }>
 }
 
@@ -129,6 +131,15 @@ export interface CostLedger {
   byModel: Partial<
     Record<EmbeddingModel, { indexTokens: number; queryTokens: number; costUsd: number }>
   >
+  indexingByArtifact: Array<{
+    bookId: string
+    strategyId: string
+    chunkArtifactId: string
+    embeddingArtifactId: string
+    model: EmbeddingModel
+    tokens: number
+    costUsd: number
+  }>
 }
 
 export interface HeadlessRun {
@@ -351,7 +362,19 @@ export async function planExperiment(
           if (price === undefined) unknownCostModels.add(model)
           else estimatedCostUsd += (estimatedChunkTokens / 1_000_000) * price
         }
-        return { model, artifactId: identity.id, exists }
+        const price = priceOf(config, model)
+        return {
+          model,
+          artifactId: identity.id,
+          exists,
+          estimatedTokens: exists ? 0 : estimatedChunkTokens,
+          estimatedCostUsd:
+            exists || price === undefined
+              ? exists
+                ? 0
+                : null
+              : (estimatedChunkTokens / 1_000_000) * price
+        }
       })
       artifacts.push({
         bookId: book.bookId,
@@ -444,8 +467,16 @@ function emptyLedger(): CostLedger {
     embeddingIndexTokens: 0,
     embeddingQueryTokens: 0,
     actualCostUsd: 0,
-    byModel: {}
+    byModel: {},
+    indexingByArtifact: []
   }
+}
+
+interface IndexCostContext {
+  bookId: string
+  strategyId: string
+  chunkArtifactId: string
+  embeddingArtifactId: string
 }
 
 function recordCost(
@@ -453,7 +484,8 @@ function recordCost(
   config: LoadedExperiment,
   model: EmbeddingModel,
   kind: 'index' | 'query',
-  tokens: number
+  tokens: number,
+  indexContext?: IndexCostContext
 ): void {
   const price = priceOf(config, model)
   if (price === undefined) {
@@ -462,8 +494,24 @@ function recordCost(
   const cost = (tokens / 1_000_000) * price
   const current = run.ledger.byModel[model] ?? { indexTokens: 0, queryTokens: 0, costUsd: 0 }
   if (kind === 'index') {
+    if (!indexContext) throw new Error('Index cost recording requires artifact context')
     run.ledger.embeddingIndexTokens += tokens
     current.indexTokens += tokens
+    run.ledger.indexingByArtifact ??= []
+    const existing = run.ledger.indexingByArtifact.find(
+      (item) => item.embeddingArtifactId === indexContext.embeddingArtifactId
+    )
+    if (existing) {
+      existing.tokens += tokens
+      existing.costUsd += cost
+    } else {
+      run.ledger.indexingByArtifact.push({
+        ...indexContext,
+        model,
+        tokens,
+        costUsd: cost
+      })
+    }
   } else {
     run.ledger.embeddingQueryTokens += tokens
     current.queryTokens += tokens
@@ -593,6 +641,7 @@ export async function runExperiment(
     queryCache: {},
     results: []
   }
+  run.ledger.indexingByArtifact ??= []
   if (run.ledger.actualCostUsd > maxUsd + 1e-9) {
     throw new Error(
       `Existing run has already spent $${run.ledger.actualCostUsd.toFixed(6)}, above the new --max-usd $${maxUsd.toFixed(6)}`
@@ -632,12 +681,26 @@ export async function runExperiment(
             if (!existingEmbedding || existingEmbedding.count !== set.chunks.length) {
               assertAffordable(run, prepared.config, retriever.embeddingModel, exactTokens)
             }
-            const embed = await runEmbedding(book.bookId, set.strategyId, retriever.embeddingModel)
-            if (embed.totalTokens > 0) {
-              recordCost(run, prepared.config, retriever.embeddingModel, 'index', embed.totalTokens)
-              run.updatedAt = Date.now()
-              await writeJsonAtomic(plan.runPath, run)
-            }
+            const embeddingIdentity = embeddingArtifactIdentity(
+              set,
+              retriever.embeddingModel,
+              embeddingDimensions(retriever.embeddingModel)
+            )
+            await runEmbedding(
+              book.bookId,
+              set.strategyId,
+              retriever.embeddingModel,
+              async (tokens) => {
+                recordCost(run, prepared.config, retriever.embeddingModel, 'index', tokens, {
+                  bookId: book.bookId,
+                  strategyId: set.strategyId,
+                  chunkArtifactId,
+                  embeddingArtifactId: embeddingIdentity.id
+                })
+                run.updatedAt = Date.now()
+                await writeJsonAtomic(plan.runPath, run)
+              }
+            )
           }
 
           for (const evalCase of book.cases) {

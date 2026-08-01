@@ -36,7 +36,13 @@ export function embeddingDimensions(model: EmbeddingModel): number {
       return 1536
     case 'text-embedding-3-large':
       return 3072
+    case 'voyage-4-large':
+      return 1024
   }
+}
+
+export function embeddingProvider(model: EmbeddingModel): 'openai' | 'voyage' {
+  return model.startsWith('voyage-') ? 'voyage' : 'openai'
 }
 
 export function resolvedChunkArtifactId(set: ChunkSet): string {
@@ -63,7 +69,7 @@ export function embeddingArtifactIdentity(
   return createArtifactIdentity(
     'embeddings',
     {
-      provider: 'openai',
+      provider: model.startsWith('voyage-') ? 'voyage' : 'openai',
       model,
       dimensions,
       normalization: EMBEDDING_NORMALIZATION

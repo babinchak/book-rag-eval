@@ -33,7 +33,11 @@ const chunkerSchema = z.discriminatedUnion('kind', [
   })
 ])
 
-const embeddingModelSchema = z.enum(['text-embedding-3-small', 'text-embedding-3-large'])
+const embeddingModelSchema = z.enum([
+  'text-embedding-3-small',
+  'text-embedding-3-large',
+  'voyage-4-large'
+])
 const queryModeSchema = z.enum(['question', 'reference'])
 
 const retrievalPipelineSchema = z.discriminatedUnion('kind', [
@@ -90,7 +94,8 @@ const experimentSchema = z
         embeddingUsdPerMillion: z
           .object({
             'text-embedding-3-small': z.number().nonnegative().optional(),
-            'text-embedding-3-large': z.number().nonnegative().optional()
+            'text-embedding-3-large': z.number().nonnegative().optional(),
+            'voyage-4-large': z.number().nonnegative().optional()
           })
           .default({})
       })

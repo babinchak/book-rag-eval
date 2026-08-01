@@ -275,7 +275,7 @@ export type AugmentStep = { kind: 'breadcrumb' } | { kind: 'summary'; model: str
 
 export type PostRetrieveStep = { kind: 'rerank-identity' } | { kind: 'dedup' }
 
-export type EmbeddingModel = 'text-embedding-3-small' | 'text-embedding-3-large'
+export type EmbeddingModel = 'text-embedding-3-small' | 'text-embedding-3-large' | 'voyage-4-large'
 
 export interface EmbeddingSlot {
   model: EmbeddingModel

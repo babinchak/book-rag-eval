@@ -11,6 +11,7 @@ const PER_1M = 1_000_000
 export const MODEL_PRICING: Record<string, ModelPricing> = {
   'text-embedding-3-large': { embedding: 0.13 },
   'text-embedding-3-small': { embedding: 0.02 },
+  'voyage-4-large': { embedding: 0.12 },
   'text-embedding-ada-002': { embedding: 0.1 },
   'gpt-4o-mini': { input: 0.15, output: 0.6 },
   'gpt-4o-mini-2024-07-18': { input: 0.15, output: 0.6 },
@@ -39,9 +40,7 @@ export function chatCostUsd(
 ): number | null {
   const p = lookup(model)
   if (!p?.input || !p?.output) return null
-  return (
-    (promptTokens / PER_1M) * p.input + (completionTokens / PER_1M) * p.output
-  )
+  return (promptTokens / PER_1M) * p.input + (completionTokens / PER_1M) * p.output
 }
 
 export function formatUsd(cost: number | null | undefined): string {

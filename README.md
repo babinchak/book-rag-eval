@@ -180,6 +180,11 @@ Set `libraryDir` in the experiment or use
 `BOOK_RAG_EVAL_LIBRARY_DIR`/`--library-dir`. For headless paid retrieval, set
 `OPENAI_API_KEY` in the environment or copy `.env.example` to the ignored
 project-root `.env`; the key is never written to run artifacts.
+Voyage retrieval additionally reads `VOYAGE_API_KEY` from the environment.
+Embedding spend is metered from provider-reported token usage and journaled by
+book, chunk artifact, strategy, and model. Reported dollars are nominal token
+cost at the experiment's pinned rate; provider free allowances or account
+credits are not observable from an embedding response.
 
 Set `queryModes` to compare the raw user `question` with the fixed diagnostic
 `reference` query (`canonicalSearchQuery`). Query rewriting belongs in a future
@@ -218,6 +223,11 @@ watermarks them as provisional. The tracked
 runs all 150 drafts through fixed/structural token chunkers, random/BM25
 retrieval, both query modes, and three context budgets at zero API cost. These
 results are for iteration and must not be presented as a final leaderboard.
+The follow-up
+[`experiments/six-book-provisional-dense.yaml`](experiments/six-book-provisional-dense.yaml)
+compares `text-embedding-3-large` and `voyage-4-large` as vector retrievers and
+as equal-weight BM25 hybrids at the standard 4,096-token budget. Document
+embedding artifacts are reused between vector and hybrid retrieval.
 
 The Library header's **Benchmark** workspace discovers draft runs in
 `.rag-eval/eval-drafts` and headless runs in `.rag-eval/runs`. Its Results

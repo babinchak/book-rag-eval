@@ -5,7 +5,7 @@ import * as sqliteVec from 'sqlite-vec'
 import { bookDir } from './library'
 import { getChunkSet } from './chunking'
 import { sidecar } from './sidecar'
-import { getOpenaiKey } from './settings'
+import { getOpenaiKey, getVoyageKey } from './settings'
 import {
   embeddingArtifactIdentity,
   embeddingDimensions,
@@ -62,10 +62,13 @@ export interface EmbedResult {
   model: string
 }
 
+export type EmbeddingIndexUsageSink = (tokens: number) => void | Promise<void>
+
 export async function runEmbedding(
   bookId: string,
   strategyId: string,
-  model: EmbeddingModel = DEFAULT_EMBEDDING_MODEL
+  model: EmbeddingModel = DEFAULT_EMBEDDING_MODEL,
+  onUsage?: EmbeddingIndexUsageSink
 ): Promise<EmbedResult> {
   const set = await getChunkSet(bookId, strategyId)
   const dimensions = embeddingDimensions(model)
@@ -114,11 +117,17 @@ export async function runEmbedding(
       }
     }
 
-    const apiKey = await getOpenaiKey()
-    if (!apiKey) {
+    const [openaiApiKey, voyageApiKey] = await Promise.all([getOpenaiKey(), getVoyageKey()])
+    if (model.startsWith('voyage-') && !voyageApiKey) {
+      throw new Error('VOYAGE_API_KEY is not set. Add it to the environment before embedding.')
+    }
+    if (!model.startsWith('voyage-') && !openaiApiKey) {
       throw new Error('OpenAI API key is not set. Add it in Settings before embedding.')
     }
-    await sidecar.ensureStarted(apiKey)
+    await sidecar.ensureStarted({
+      openaiApiKey: openaiApiKey ?? undefined,
+      voyageApiKey: voyageApiKey ?? undefined
+    })
 
     let totalTokens = 0
     const insert = db.prepare('INSERT OR REPLACE INTO vec_chunks(id, embedding) VALUES (?, ?)')
@@ -127,7 +136,8 @@ export async function runEmbedding(
       const batch = toEmbed.slice(i, i + EMBED_BATCH)
       const result = await sidecar.embed(
         batch.map((c) => c.text),
-        model
+        model,
+        'document'
       )
       if (result.embeddings.length !== batch.length) {
         throw new Error(
@@ -141,13 +151,13 @@ export async function runEmbedding(
       })
       tx()
       totalTokens += result.tokens
+      const priorTokens = readTokensTotal(db)
+      db.prepare('INSERT OR REPLACE INTO meta(key, value) VALUES (?, ?)').run(
+        'tokens_total',
+        String(priorTokens + result.tokens)
+      )
+      await onUsage?.(result.tokens)
     }
-
-    const priorTokens = readTokensTotal(db)
-    db.prepare('INSERT OR REPLACE INTO meta(key, value) VALUES (?, ?)').run(
-      'tokens_total',
-      String(priorTokens + totalTokens)
-    )
 
     return {
       artifactId: artifact.id,

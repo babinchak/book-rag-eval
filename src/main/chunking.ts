@@ -6,10 +6,7 @@ import { sidecar } from './sidecar'
 import { getOpenaiKey } from './settings'
 import { chunkTokenSpans, countChunkTokens } from './tokenChunking'
 import { normalizeParams, strategyIdOf } from '../shared/strategy'
-import {
-  SEMANTIC_CHUNK_EMBEDDING_MODEL,
-  chunkArtifactIdentity
-} from './artifactConfig'
+import { SEMANTIC_CHUNK_EMBEDDING_MODEL, chunkArtifactIdentity } from './artifactConfig'
 import type { CanonicalSpineDocument } from '../shared/canonicalDocument'
 import type { Chunk, ChunkParams, ChunkSet, ChunkSetSummary } from '../preload/types'
 
@@ -298,25 +295,14 @@ export function chunkStructuralTokens(
   }
   const trailing = coalesced.at(-1)
   const beforeTrailing = coalesced.at(-2)
-  if (
-    trailing &&
-    beforeTrailing &&
-    (trailing.tokenCount ?? 0) < minimumUsefulTokens
-  ) {
+  if (trailing && beforeTrailing && (trailing.tokenCount ?? 0) < minimumUsefulTokens) {
     const text = spine.text.slice(beforeTrailing.textStart, trailing.textEnd)
     const tokenCount = countChunkTokens(text)
     if (tokenCount <= params.maxSize) {
       coalesced.splice(
         -2,
         2,
-        makeChunk(
-          sid,
-          spine.href,
-          text,
-          beforeTrailing.textStart,
-          trailing.textEnd,
-          tokenCount
-        )
+        makeChunk(sid, spine.href, text, beforeTrailing.textStart, trailing.textEnd, tokenCount)
       )
     }
   }
@@ -460,7 +446,7 @@ export async function runChunking(
         'OpenAI API key is not set. Add it in Settings before running semantic chunking.'
       )
     }
-    await sidecar.ensureStarted(apiKey)
+    await sidecar.ensureStarted({ openaiApiKey: apiKey })
   }
 
   const chunks: Chunk[] = []

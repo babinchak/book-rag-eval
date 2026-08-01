@@ -64,6 +64,10 @@ export async function getOpenaiKey(): Promise<string | null> {
   }
 }
 
+export async function getVoyageKey(): Promise<string | null> {
+  return process.env.VOYAGE_API_KEY?.trim() || null
+}
+
 export async function clearOpenaiKey(): Promise<void> {
   const blob = await read()
   delete blob.openaiKeyEncrypted
