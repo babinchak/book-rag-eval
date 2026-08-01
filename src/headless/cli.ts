@@ -6,6 +6,7 @@ import { writeRunReport } from './report'
 import { planDraftGeneration, retryDraftFailures, runDraftGeneration } from './draftGeneration'
 import { compileApprovedDrafts, compileProvisionalDrafts } from './draftCompilation'
 import { writeDraftAudit } from './draftAudit'
+import { sidecar } from '../main/sidecar'
 
 interface ParsedArgs {
   positional: string[]
@@ -236,7 +237,9 @@ async function main(): Promise<void> {
   throw new Error(`Unknown command: ${command}\n\n${usage()}`)
 }
 
-main().catch((error: unknown) => {
-  process.stderr.write(`${(error as Error).message}\n`)
-  process.exitCode = 1
-})
+main()
+  .catch((error: unknown) => {
+    process.stderr.write(`${(error as Error).message}\n`)
+    process.exitCode = 1
+  })
+  .finally(() => sidecar.stop())

@@ -1,5 +1,5 @@
 import { promises as fs } from 'node:fs'
-import { dirname, resolve } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
 import { contentHash } from '../shared/artifactIdentity'
 import type { ExperimentQueryMode, ExperimentRetriever } from '../shared/experimentSchema'
 import type { EmbeddingModel } from '../preload/types'
@@ -53,8 +53,17 @@ export interface ExperimentReport {
   resultCells: number
   uniqueCases: number
   bootstrapIterations: number
+  embeddingModelCosts: Array<{
+    model: EmbeddingModel
+    indexTokens: number
+    indexCostUsd: number
+    queryTokens: number
+    queryCostUsd: number
+    totalCostUsd: number
+  }>
   embeddingIndexCosts: Array<{
     bookId: string
+    bookTitle?: string
     strategyId: string
     model: EmbeddingModel
     tokens: number
@@ -207,6 +216,33 @@ export function summarizeRun(run: HeadlessRun, bootstrapIterations = 2000): Expe
     })
   }
 
+  const embeddingIndexCosts = (run.ledger.indexingByArtifact ?? [])
+    .map(({ bookId, strategyId, model, tokens, costUsd }) => ({
+      bookId,
+      strategyId,
+      model,
+      tokens,
+      costUsd
+    }))
+    .sort(
+      (left, right) =>
+        left.model.localeCompare(right.model) ||
+        left.bookId.localeCompare(right.bookId) ||
+        left.strategyId.localeCompare(right.strategyId)
+    )
+  const embeddingModelCosts = Object.entries(run.ledger.byModel).map(([model, usage]) => {
+    const indexCostUsd = embeddingIndexCosts
+      .filter((item) => item.model === model)
+      .reduce((total, item) => total + item.costUsd, 0)
+    return {
+      model: model as EmbeddingModel,
+      indexTokens: usage!.indexTokens,
+      indexCostUsd,
+      queryTokens: usage!.queryTokens,
+      queryCostUsd: usage!.costUsd - indexCostUsd,
+      totalCostUsd: usage!.costUsd
+    }
+  })
   return {
     schemaVersion: 1,
     runFingerprint: run.fingerprint,
@@ -217,20 +253,8 @@ export function summarizeRun(run: HeadlessRun, bootstrapIterations = 2000): Expe
     resultCells: run.results.length,
     uniqueCases: new Set(run.results.map(caseId)).size,
     bootstrapIterations,
-    embeddingIndexCosts: (run.ledger.indexingByArtifact ?? [])
-      .map(({ bookId, strategyId, model, tokens, costUsd }) => ({
-        bookId,
-        strategyId,
-        model,
-        tokens,
-        costUsd
-      }))
-      .sort(
-        (left, right) =>
-          left.model.localeCompare(right.model) ||
-          left.bookId.localeCompare(right.bookId) ||
-          left.strategyId.localeCompare(right.strategyId)
-      ),
+    embeddingModelCosts,
+    embeddingIndexCosts,
     groups: groups.sort(
       (left, right) =>
         left.contextBudget - right.contextBudget ||
@@ -264,6 +288,18 @@ export function reportMarkdown(report: ExperimentReport): string {
   ]
   if (report.embeddingIndexCosts.length > 0) {
     lines.push(
+      '## Embedding cost summary',
+      '',
+      '| Model | Document tokens | Document cost | Query tokens | Query cost | Total |',
+      '| --- | ---: | ---: | ---: | ---: | ---: |'
+    )
+    for (const item of report.embeddingModelCosts) {
+      lines.push(
+        `| ${item.model} | ${item.indexTokens.toLocaleString('en-US')} | $${item.indexCostUsd.toFixed(6)} | ${item.queryTokens.toLocaleString('en-US')} | $${item.queryCostUsd.toFixed(6)} | $${item.totalCostUsd.toFixed(6)} |`
+      )
+    }
+    lines.push(
+      '',
       '## Document embedding cost by artifact',
       '',
       '| Book | Chunking strategy | Model | Tokens | Nominal cost |',
@@ -271,7 +307,7 @@ export function reportMarkdown(report: ExperimentReport): string {
     )
     for (const item of report.embeddingIndexCosts) {
       lines.push(
-        `| ${item.bookId} | ${item.strategyId} | ${item.model} | ${item.tokens.toLocaleString('en-US')} | $${item.costUsd.toFixed(6)} |`
+        `| ${item.bookTitle ?? item.bookId} | ${item.strategyId} | ${item.model} | ${item.tokens.toLocaleString('en-US')} | $${item.costUsd.toFixed(6)} |`
       )
     }
     lines.push('')
@@ -299,6 +335,20 @@ export async function writeRunReport(
   const absoluteRunPath = resolve(runPath)
   const run = JSON.parse(await fs.readFile(absoluteRunPath, 'utf8')) as HeadlessRun
   const report = summarizeRun(run, bootstrapIterations)
+  const titles = new Map<string, string>()
+  await Promise.all(
+    [...new Set(report.embeddingIndexCosts.map((item) => item.bookId))].map(async (bookId) => {
+      try {
+        const manifest = JSON.parse(
+          await fs.readFile(join(run.plan.libraryDir, bookId, 'manifest.json'), 'utf8')
+        ) as { metadata?: { title?: string } }
+        if (manifest.metadata?.title) titles.set(bookId, manifest.metadata.title)
+      } catch {
+        // A portable run may be reported without its original library.
+      }
+    })
+  )
+  for (const item of report.embeddingIndexCosts) item.bookTitle = titles.get(item.bookId)
   const markdownPath = resolve(outputPath ?? absoluteRunPath.replace(/\.json$/i, '.report.md'))
   const summaryPath = markdownPath.replace(/\.md$/i, '.json')
   await fs.mkdir(dirname(markdownPath), { recursive: true })
