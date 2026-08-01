@@ -73,7 +73,13 @@ const retrievalPipelineSchema = z.discriminatedUnion('kind', [
   z.object({
     kind: z.literal('bge-m3'),
     model: z.literal('BAAI/bge-m3').default('BAAI/bge-m3'),
-    mode: z.enum(['dense', 'sparse', 'colbert-dense-shortlist']),
+    mode: z.enum([
+      'dense',
+      'sparse',
+      'colbert-dense-shortlist',
+      'hybrid-dense-sparse-rrf',
+      'hybrid-all-rrf'
+    ]),
     shortlist: positiveInteger.default(200),
     reranker: rerankerSchema.optional()
   })

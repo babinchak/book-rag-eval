@@ -171,7 +171,12 @@ class LocalRetrievalSidecar {
     artifactDir: string,
     query: string,
     k: number,
-    mode: 'dense' | 'sparse' | 'colbert-dense-shortlist',
+    mode:
+      | 'dense'
+      | 'sparse'
+      | 'colbert-dense-shortlist'
+      | 'hybrid-dense-sparse-rrf'
+      | 'hybrid-all-rrf',
     shortlist: number
   ): Promise<LocalQueryResult> {
     await this.ensureStarted()

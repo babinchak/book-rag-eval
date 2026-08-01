@@ -951,11 +951,14 @@ async function ensureLocalIndex(
   const artifactId = localArtifactIdentity(set.artifactId!, retriever)
   const artifactDir = localArtifactDir(outputDir, set.artifactId!, retriever)
   if (await localArtifactExists(artifactDir)) {
+    const manifest = JSON.parse(
+      await fs.readFile(join(artifactDir, 'manifest.json'), 'utf8')
+    ) as { indexingLatencyMs?: number }
     return {
       artifactId,
       artifactDir,
       built: false,
-      indexingLatencyMs: 0,
+      indexingLatencyMs: manifest.indexingLatencyMs ?? 0,
       storageBytes: await directorySize(artifactDir)
     }
   }

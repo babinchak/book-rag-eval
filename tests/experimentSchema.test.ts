@@ -117,7 +117,9 @@ test('parses local ColBERTv2 and BGE-M3 retrieval modes', () => {
       { kind: 'colbertv2' },
       { kind: 'bge-m3', mode: 'dense' },
       { kind: 'bge-m3', mode: 'sparse' },
-      { kind: 'bge-m3', mode: 'colbert-dense-shortlist', shortlist: 100 }
+      { kind: 'bge-m3', mode: 'colbert-dense-shortlist', shortlist: 100 },
+      { kind: 'bge-m3', mode: 'hybrid-dense-sparse-rrf' },
+      { kind: 'bge-m3', mode: 'hybrid-all-rrf', shortlist: 100 }
     ],
     contextBudgets: [8192]
   })

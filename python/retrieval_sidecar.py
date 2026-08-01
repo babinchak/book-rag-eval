@@ -21,6 +21,8 @@ except AttributeError:
 
 _colbert_models: dict[str, Any] = {}
 _bge_models: dict[str, Any] = {}
+_colbert_retrievers: dict[str, Any] = {}
+_bge_artifacts: dict[str, dict[str, Any]] = {}
 
 
 def _send(payload: dict[str, Any]) -> None:
@@ -86,15 +88,17 @@ def _colbert_index(params: dict[str, Any]) -> dict[str, Any]:
         override=True,
     )
     index.add_documents(documents_ids=ids, documents_embeddings=embeddings)
+    indexing_latency_ms = (time.perf_counter() - started) * 1000
     manifest = {
         "schemaVersion": 1,
         "kind": "colbertv2-plaid",
         "model": model_name,
         "documents": len(ids),
         "createdAt": int(time.time() * 1000),
+        "indexingLatencyMs": indexing_latency_ms,
     }
     (artifact_dir / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
-    return {**manifest, "indexingLatencyMs": (time.perf_counter() - started) * 1000}
+    return manifest
 
 
 def _colbert_query(params: dict[str, Any]) -> dict[str, Any]:
@@ -108,18 +112,23 @@ def _colbert_query(params: dict[str, Any]) -> dict[str, Any]:
     k = int(params.get("k") or 50)
     started = time.perf_counter()
     model = _colbert_model(manifest["model"])
-    index = indexes.PLAID(
-        index_folder=str(artifact_dir),
-        index_name="index",
-        override=False,
-    )
+    artifact_key = str(artifact_dir)
+    retriever = _colbert_retrievers.get(artifact_key)
+    if retriever is None:
+        index = indexes.PLAID(
+            index_folder=str(artifact_dir),
+            index_name="index",
+            override=False,
+        )
+        retriever = retrieve.ColBERT(index=index)
+        _colbert_retrievers[artifact_key] = retriever
     query_embeddings = model.encode(
         [query],
         batch_size=1,
         is_query=True,
         show_progress_bar=False,
     )
-    results = retrieve.ColBERT(index=index).retrieve(queries_embeddings=query_embeddings, k=k)[0]
+    results = retriever.retrieve(queries_embeddings=query_embeddings, k=k)[0]
     return {
         "hits": [
             {"id": str(hit["id"]), "score": float(hit["score"]), "rank": rank}
@@ -175,6 +184,7 @@ def _bge_index(params: dict[str, Any]) -> dict[str, Any]:
     (artifact_dir / "sparse.json").write_text(
         json.dumps(sparse_weights, separators=(",", ":")), encoding="utf-8"
     )
+    indexing_latency_ms = (time.perf_counter() - started) * 1000
     manifest = {
         "schemaVersion": 1,
         "kind": "bge-m3",
@@ -185,9 +195,10 @@ def _bge_index(params: dict[str, Any]) -> dict[str, Any]:
         "colbertDimensions": int(flattened.shape[1]),
         "colbertVectors": int(flattened.shape[0]),
         "createdAt": int(time.time() * 1000),
+        "indexingLatencyMs": indexing_latency_ms,
     }
     (artifact_dir / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
-    return {**manifest, "indexingLatencyMs": (time.perf_counter() - started) * 1000}
+    return manifest
 
 
 def _sparse_score(query_weights: dict[str, float], document_weights: dict[str, float]) -> float:
@@ -196,13 +207,69 @@ def _sparse_score(query_weights: dict[str, float], document_weights: dict[str, f
     return sum(float(weight) * float(document_weights.get(token, 0.0)) for token, weight in query_weights.items())
 
 
+def _load_bge_artifact(artifact_dir: Path) -> dict[str, Any]:
+    import numpy as np
+    import torch
+
+    artifact_key = str(artifact_dir)
+    artifact = _bge_artifacts.get(artifact_key)
+    if artifact is not None:
+        return artifact
+    dense = np.load(artifact_dir / "dense.npy", mmap_mode="r")
+    artifact = {
+        "ids": json.loads((artifact_dir / "ids.json").read_text(encoding="utf-8")),
+        "dense": dense,
+        "dense_gpu": torch.as_tensor(np.asarray(dense, dtype=np.float32), device="cuda"),
+        "sparse": json.loads((artifact_dir / "sparse.json").read_text(encoding="utf-8")),
+        "vectors": np.load(artifact_dir / "colbert.npy", mmap_mode="r"),
+        "offsets": np.load(artifact_dir / "colbert-offsets.npy", mmap_mode="r"),
+    }
+    _bge_artifacts[artifact_key] = artifact
+    return artifact
+
+
+def _rank_positions(scores: Any) -> Any:
+    import numpy as np
+
+    order = np.argsort(-scores)
+    ranks = np.empty(len(order), dtype=np.int32)
+    ranks[order] = np.arange(1, len(order) + 1, dtype=np.int32)
+    return ranks
+
+
+def _late_interaction_scores(
+    query_vectors: Any,
+    candidate_indices: Any,
+    vectors: Any,
+    offsets: Any,
+) -> Any:
+    import numpy as np
+    import torch
+
+    query_tensor = torch.as_tensor(np.asarray(query_vectors, dtype=np.float32), device="cuda")
+    scores: list[float] = []
+    with torch.inference_mode():
+        for candidate_index in candidate_indices:
+            document_vectors = torch.as_tensor(
+                np.asarray(
+                    vectors[offsets[candidate_index] : offsets[candidate_index + 1]],
+                    dtype=np.float32,
+                ),
+                device="cuda",
+            )
+            score = (query_tensor @ document_vectors.T).max(dim=1).values.sum()
+            scores.append(float(score.item()))
+    return np.asarray(scores, dtype=np.float32)
+
+
 def _bge_query(params: dict[str, Any]) -> dict[str, Any]:
     import numpy as np
     import torch
 
     artifact_dir = Path(params["artifactDir"]).resolve()
     manifest = json.loads((artifact_dir / "manifest.json").read_text(encoding="utf-8"))
-    ids = json.loads((artifact_dir / "ids.json").read_text(encoding="utf-8"))
+    artifact = _load_bge_artifact(artifact_dir)
+    ids = artifact["ids"]
     query = params.get("query")
     if not isinstance(query, str) or not query:
         raise ValueError("params.query must be a non-empty string")
@@ -219,42 +286,67 @@ def _bge_query(params: dict[str, Any]) -> dict[str, Any]:
         return_sparse=True,
         return_colbert_vecs=True,
     )
-    dense = np.load(artifact_dir / "dense.npy", mmap_mode="r")
-    query_dense = np.asarray(output["dense_vecs"][0], dtype=np.float32)
-    dense_scores = np.asarray(dense, dtype=np.float32) @ query_dense
+    query_dense = torch.as_tensor(
+        np.asarray(output["dense_vecs"][0], dtype=np.float32), device="cuda"
+    )
+    with torch.inference_mode():
+        dense_scores = (artifact["dense_gpu"] @ query_dense).float().cpu().numpy()
+    sparse_scores = None
+    if mode in ("sparse", "hybrid-dense-sparse-rrf", "hybrid-all-rrf"):
+        query_sparse = {
+            str(token): float(weight)
+            for token, weight in output["lexical_weights"][0].items()
+        }
+        sparse_scores = np.asarray(
+            [_sparse_score(query_sparse, document) for document in artifact["sparse"]],
+            dtype=np.float32,
+        )
     if mode == "dense":
         ranked_indices = np.argsort(-dense_scores)[:k]
         scores = dense_scores[ranked_indices]
     elif mode == "sparse":
-        sparse = json.loads((artifact_dir / "sparse.json").read_text(encoding="utf-8"))
-        query_sparse = output["lexical_weights"][0]
-        sparse_scores = np.asarray(
-            [_sparse_score(query_sparse, document) for document in sparse], dtype=np.float32
-        )
+        assert sparse_scores is not None
         ranked_indices = np.argsort(-sparse_scores)[:k]
         scores = sparse_scores[ranked_indices]
     elif mode == "colbert-dense-shortlist":
         candidate_indices = np.argsort(-dense_scores)[:shortlist]
-        vectors = np.load(artifact_dir / "colbert.npy", mmap_mode="r")
-        offsets = np.load(artifact_dir / "colbert-offsets.npy", mmap_mode="r")
-        query_vectors = torch.as_tensor(
-            np.asarray(output["colbert_vecs"][0], dtype=np.float32), device="cuda"
+        late_scores = _late_interaction_scores(
+            output["colbert_vecs"][0],
+            candidate_indices,
+            artifact["vectors"],
+            artifact["offsets"],
         )
-        late_scores: list[float] = []
-        with torch.inference_mode():
-            for candidate_index in candidate_indices:
-                document_vectors = torch.as_tensor(
-                    np.asarray(
-                        vectors[offsets[candidate_index] : offsets[candidate_index + 1]],
-                        dtype=np.float32,
-                    ),
-                    device="cuda",
-                )
-                score = (query_vectors @ document_vectors.T).max(dim=1).values.sum()
-                late_scores.append(float(score.item()))
-        order = np.argsort(-np.asarray(late_scores, dtype=np.float32))[:k]
+        order = np.argsort(-late_scores)[:k]
         ranked_indices = candidate_indices[order]
-        scores = np.asarray(late_scores, dtype=np.float32)[order]
+        scores = late_scores[order]
+    elif mode == "hybrid-dense-sparse-rrf":
+        assert sparse_scores is not None
+        fused_scores = 1.0 / (60 + _rank_positions(dense_scores))
+        fused_scores += 1.0 / (60 + _rank_positions(sparse_scores))
+        ranked_indices = np.argsort(-fused_scores)[:k]
+        scores = fused_scores[ranked_indices]
+    elif mode == "hybrid-all-rrf":
+        assert sparse_scores is not None
+        dense_candidates = np.argsort(-dense_scores)[:shortlist]
+        sparse_candidates = np.argsort(-sparse_scores)[:shortlist]
+        candidate_indices = np.unique(np.concatenate([dense_candidates, sparse_candidates]))
+        late_scores = _late_interaction_scores(
+            output["colbert_vecs"][0],
+            candidate_indices,
+            artifact["vectors"],
+            artifact["offsets"],
+        )
+        dense_ranks = _rank_positions(dense_scores)
+        sparse_ranks = _rank_positions(sparse_scores)
+        late_ranks = _rank_positions(late_scores)
+        fused_scores = (
+            1.0 / (60 + dense_ranks[candidate_indices])
+            + 1.0 / (60 + sparse_ranks[candidate_indices])
+            + 1.0 / (60 + late_ranks)
+        )
+        order = np.argsort(-fused_scores)[:k]
+        ranked_indices = candidate_indices[order]
+        scores = fused_scores[order]
     else:
         raise ValueError(f"unknown BGE-M3 query mode: {mode}")
     return {

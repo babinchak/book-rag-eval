@@ -51,7 +51,7 @@ function retrieverLabel(cell: BenchmarkResultCell): string {
   const mode =
     cell.retriever.mode === 'colbert-dense-shortlist'
       ? `multi-vector top ${cell.retriever.shortlist}`
-      : cell.retriever.mode
+      : cell.retriever.mode.replace('hybrid-', 'hybrid ').replace('-rrf', ' RRF')
   return `BGE-M3 · ${mode}${reranker}`
 }
 
