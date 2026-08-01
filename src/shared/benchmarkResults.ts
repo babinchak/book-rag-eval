@@ -4,6 +4,7 @@ import type { ExperimentQueryMode, ExperimentRetriever } from './experimentSchem
 export interface BenchmarkRunSummary {
   runPath: string
   fingerprint: string
+  caseSetFingerprint: string
   name: string
   status: 'running' | 'completed' | 'failed'
   updatedAt: number

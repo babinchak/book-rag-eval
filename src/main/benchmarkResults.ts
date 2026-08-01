@@ -7,6 +7,7 @@ import type {
   BenchmarkRunSummary
 } from '../shared/benchmarkResults'
 import type { ExperimentQueryMode } from '../shared/experimentSchema'
+import { contentHash } from '../shared/artifactIdentity'
 
 function artifactsRoot(override?: string): string {
   return resolve(
@@ -42,6 +43,7 @@ function queryModeOf(row: HeadlessResultRow): ExperimentQueryMode {
 }
 
 function summaryOf(runPath: string, run: HeadlessRun): BenchmarkRunSummary {
+  const caseKeys = [...new Set(run.results.map((row) => `${row.bookId}|${row.caseId}`))].sort()
   const queryModes = [...new Set(run.results.map(queryModeOf))]
   const configuredModes =
     run.results.length === 0
@@ -50,12 +52,13 @@ function summaryOf(runPath: string, run: HeadlessRun): BenchmarkRunSummary {
   return {
     runPath,
     fingerprint: run.fingerprint,
+    caseSetFingerprint: contentHash(caseKeys),
     name: run.plan.name,
     status: run.status,
     updatedAt: run.updatedAt,
     actualCostUsd: run.ledger.actualCostUsd,
     resultCells: run.results.length,
-    uniqueCases: new Set(run.results.map((row) => `${row.bookId}|${row.caseId}`)).size,
+    uniqueCases: caseKeys.length,
     contextBudgets: [...new Set(run.results.map((row) => row.contextBudget))].sort((a, b) => a - b),
     queryModes: queryModes.length > 0 ? queryModes : (configuredModes ?? ['reference'])
   }

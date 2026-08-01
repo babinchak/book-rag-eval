@@ -59,10 +59,12 @@ test('lists normalized headless result matrices and rejects paths outside runs',
   const runs = await listBenchmarkRuns(root)
   assert.equal(runs.length, 1)
   assert.equal(runs[0].uniqueCases, 1)
+  assert.match(runs[0].caseSetFingerprint, /^[a-f0-9]{64}$/)
   assert.deepEqual(runs[0].queryModes, ['reference'])
 
   const results = await getBenchmarkRunResults(runPath, root)
   assert.equal(results.cells[0].queryMode, 'reference')
+  assert.equal(results.run.caseSetFingerprint, runs[0].caseSetFingerprint)
   assert.equal(results.cells[0].metrics.hitAtK, 1)
   await assert.rejects(() => getBenchmarkRunResults(join(root, 'outside.json'), root), /inside/)
 })
