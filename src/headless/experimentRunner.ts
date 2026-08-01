@@ -695,6 +695,7 @@ export async function runExperiment(
 
   try {
     const completed = new Set(run.results.map((row) => row.key))
+    let resultsSinceCheckpoint = 0
     for (const book of prepared.books) {
       for (const chunker of prepared.config.chunkers) {
         const summary = await runChunking(book.bookId, chunker)
@@ -842,7 +843,11 @@ export async function runExperiment(
                 })
                 completed.add(key)
                 run.updatedAt = Date.now()
-                await writeJsonAtomic(plan.runPath, run)
+                resultsSinceCheckpoint += 1
+                if (resultsSinceCheckpoint >= 100) {
+                  await writeJsonAtomic(plan.runPath, run)
+                  resultsSinceCheckpoint = 0
+                }
               }
             }
           }
