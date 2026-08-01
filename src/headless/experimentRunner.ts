@@ -28,6 +28,7 @@ import {
 import {
   parseExperimentConfig,
   type ExperimentConfig,
+  type ExperimentContextPolicy,
   type ExperimentQueryMode,
   type ExperimentRetriever
 } from '../shared/experimentSchema'
@@ -126,6 +127,7 @@ export interface HeadlessResultRow {
   retriever: ExperimentRetriever
   queryMode?: ExperimentQueryMode
   retrievalQuery?: string
+  contextPolicy?: ExperimentContextPolicy
   contextBudget: number
   retrievedChunkIds: string[]
   retrievedTokens: number
@@ -209,6 +211,7 @@ function reproducibleConfig(config: LoadedExperiment): object {
     chunkers: config.chunkers,
     retrievers: config.retrievers,
     queryModes: config.queryModes,
+    contextPolicies: config.contextPolicies,
     contextBudgets: config.contextBudgets,
     candidatePoolSize: config.candidatePoolSize,
     splits: config.splits,
@@ -604,7 +607,8 @@ export async function planExperiment(
   )
   const retrievalQueries =
     withinBookCases * config.chunkers.length * config.retrievers.length * config.queryModes.length
-  const experimentCells = retrievalQueries * config.contextBudgets.length
+  const experimentCells =
+    retrievalQueries * config.contextPolicies.length * config.contextBudgets.length
 
   return {
     schemaVersion: 1,
@@ -916,8 +920,16 @@ function retrievalQueryFor(evalCase: EvalCase, queryMode: ExperimentQueryMode): 
   return queryMode === 'question' ? evalCase.question : evalCase.canonicalSearchQuery
 }
 
-function resultKey(queryId: string, contextBudget: number): string {
-  return `${queryId}:${contextBudget}`
+function contextPolicyId(policy: ExperimentContextPolicy): string {
+  return policy.kind === 'chunks' ? 'chunks' : `neighbors-${policy.window}`
+}
+
+function resultKey(
+  queryId: string,
+  contextPolicy: ExperimentContextPolicy,
+  contextBudget: number
+): string {
+  return `${queryId}:${contextPolicyId(contextPolicy)}:${contextBudget}`
 }
 
 function reconstructHits(cache: QueryCacheEntry, set: ChunkSet): RetrievedChunkPayload[] {
@@ -1017,6 +1029,29 @@ function contextCandidates(bookId: string, hits: RetrievedChunkPayload[]): Conte
     tokenCount: chunk.tokenCount ?? countChunkTokens(chunk.text),
     text: chunk.text
   }))
+}
+
+function applyContextPolicy(
+  hits: RetrievedChunkPayload[],
+  set: ChunkSet,
+  policy: ExperimentContextPolicy
+): RetrievedChunkPayload[] {
+  if (policy.kind === 'chunks') return hits
+
+  const chunkIndex = new Map(set.chunks.map((chunk, index) => [chunk.id, index]))
+  const seen = new Set<string>()
+  const expanded: RetrievedChunkPayload[] = []
+  for (const hit of hits) {
+    const index = chunkIndex.get(hit.chunk.id)
+    if (index === undefined) continue
+    for (let offset = -policy.window; offset <= policy.window; offset++) {
+      const chunk = set.chunks[index + offset]
+      if (!chunk || chunk.spineHref !== hit.chunk.spineHref || seen.has(chunk.id)) continue
+      seen.add(chunk.id)
+      expanded.push({ chunk, distance: hit.distance, rank: expanded.length + 1 })
+    }
+  }
+  return expanded
 }
 
 async function readExistingRun(path: string, fingerprint: string): Promise<HeadlessRun | null> {
@@ -1171,10 +1206,14 @@ export async function runExperiment(
                 retrievalQuery,
                 prepared.config.candidatePoolSize
               )
-              const missingBudgets = prepared.config.contextBudgets.filter(
-                (budget) => !completed.has(resultKey(queryId, budget))
+              const missingCells = prepared.config.contextPolicies.flatMap((contextPolicy) =>
+                prepared.config.contextBudgets.flatMap((budget) =>
+                  completed.has(resultKey(queryId, contextPolicy, budget))
+                    ? []
+                    : [{ contextPolicy, budget }]
+                )
               )
-              if (missingBudgets.length === 0) continue
+              if (missingCells.length === 0) continue
 
               let hits: RetrievedChunkPayload[]
               const cachedFromRun = run.queryCache[queryId]
@@ -1332,9 +1371,10 @@ export async function runExperiment(
                 await writeJsonAtomic(plan.runPath, run)
               }
 
-              for (const budget of missingBudgets) {
+              for (const { contextPolicy, budget } of missingCells) {
+                const contextHits = applyContextPolicy(hits, set, contextPolicy)
                 const assembled = assembleContextBudget(
-                  contextCandidates(book.bookId, hits),
+                  contextCandidates(book.bookId, contextHits),
                   budget,
                   countChunkTokens
                 )
@@ -1350,7 +1390,7 @@ export async function runExperiment(
                 })
                 const { candidateRelevance, ...persistedMetrics } = metrics
                 void candidateRelevance
-                const key = resultKey(queryId, budget)
+                const key = resultKey(queryId, contextPolicy, budget)
                 run.results.push({
                   key,
                   bookId: book.bookId,
@@ -1363,6 +1403,7 @@ export async function runExperiment(
                   retriever,
                   queryMode,
                   retrievalQuery,
+                  contextPolicy,
                   contextBudget: budget,
                   retrievedChunkIds: assembled.items.map((item) => item.candidate.id),
                   retrievedTokens: assembled.totalTokens,
@@ -1446,6 +1487,7 @@ export async function exportRun(runPath: string, format: 'jsonl' | 'csv'): Promi
     'retriever',
     'queryMode',
     'retrievalQuery',
+    'contextPolicy',
     'contextBudget',
     'retrievedTokens',
     'hitAtK',
@@ -1477,6 +1519,7 @@ export async function exportRun(runPath: string, format: 'jsonl' | 'csv'): Promi
         JSON.stringify(row.retriever),
         row.queryMode ?? 'reference',
         row.retrievalQuery ?? '',
+        JSON.stringify(row.contextPolicy ?? { kind: 'chunks' }),
         row.contextBudget,
         row.retrievedTokens,
         row.metrics.hitAtK,

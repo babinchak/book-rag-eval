@@ -108,6 +108,7 @@ test('plans, runs, resumes, and exports a zero-cost BM25 experiment', async (con
       'retrievers:',
       '  - kind: bm25',
       'queryModes: [question, reference]',
+      'contextPolicies: [{ kind: chunks }, { kind: neighbors, window: 1 }]',
       'contextBudgets: [16, 64]',
       'candidatePoolSize: 10',
       'splits: [dev]'
@@ -130,7 +131,7 @@ test('plans, runs, resumes, and exports a zero-cost BM25 experiment', async (con
   }
   assert.equal(plan.books[0].selectedCases, 1)
   assert.equal(plan.retrievalQueries, 2)
-  assert.equal(plan.experimentCells, 4)
+  assert.equal(plan.experimentCells, 8)
   assert.equal(plan.estimatedCostUsd, 0)
   assert.equal(plan.artifacts[0].chunkExists, false)
   assert.match(plan.sourceControl.gitCommit ?? '', /^[0-9a-f]{40}$/)
@@ -146,16 +147,21 @@ test('plans, runs, resumes, and exports a zero-cost BM25 experiment', async (con
     results: Array<{
       queryMode: string
       retrievalQuery: string
+      contextPolicy: { kind: string }
       metrics: { hitAtK: number | null }
     }>
     ledger: { actualCostUsd: number }
     plan: { runPath: string }
   }
   assert.equal(first.status, 'completed')
-  assert.equal(first.results.length, 4)
+  assert.equal(first.results.length, 8)
   assert.deepEqual(
     new Set(first.results.map((row) => row.queryMode)),
     new Set(['question', 'reference'])
+  )
+  assert.deepEqual(
+    new Set(first.results.map((row) => row.contextPolicy.kind)),
+    new Set(['chunks', 'neighbors'])
   )
   assert.equal(first.ledger.actualCostUsd, 0)
   assert.ok(first.results.some((row) => row.metrics.hitAtK === 1))
@@ -165,7 +171,7 @@ test('plans, runs, resumes, and exports a zero-cost BM25 experiment', async (con
   const resumed = JSON.parse(await fs.readFile(plan.runPath, 'utf8')) as {
     results: unknown[]
   }
-  assert.equal(resumed.results.length, 4)
+  assert.equal(resumed.results.length, 8)
 
   const jsonlPath = (await cli('export', first.plan.runPath, '--format', 'jsonl')).stdout.trim()
   const csvPath = (await cli('export', first.plan.runPath, '--format', 'csv')).stdout.trim()

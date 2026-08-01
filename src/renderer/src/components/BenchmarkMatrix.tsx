@@ -30,7 +30,7 @@ function retrieverKey(cell: BenchmarkResultCell): string {
 }
 
 function columnKey(cell: BenchmarkResultCell): string {
-  return `${cell.strategyId}|${retrieverKey(cell)}`
+  return `${cell.strategyId}|${retrieverKey(cell)}|${JSON.stringify(cell.contextPolicy)}`
 }
 
 function resultCellKey(cell: BenchmarkResultCell): string {
@@ -39,20 +39,23 @@ function resultCellKey(cell: BenchmarkResultCell): string {
 
 function retrieverLabel(cell: BenchmarkResultCell): string {
   const reranker = cell.retriever.reranker ? ` + ${cell.retriever.reranker.model}` : ''
-  if (cell.retriever.kind === 'random') return `Random (seed ${cell.retriever.seed})${reranker}`
-  if (cell.retriever.kind === 'bm25') return `BM25${reranker}`
+  const context =
+    cell.contextPolicy.kind === 'neighbors' ? ` + ±${cell.contextPolicy.window} neighbor` : ''
+  if (cell.retriever.kind === 'random')
+    return `Random (seed ${cell.retriever.seed})${reranker}${context}`
+  if (cell.retriever.kind === 'bm25') return `BM25${reranker}${context}`
   if (cell.retriever.kind === 'vector') {
-    return `Vector · ${cell.retriever.embeddingModel}${reranker}`
+    return `Vector · ${cell.retriever.embeddingModel}${reranker}${context}`
   }
   if (cell.retriever.kind === 'hybrid-rrf') {
-    return `Hybrid RRF · ${cell.retriever.embeddingModel}${reranker}`
+    return `Hybrid RRF · ${cell.retriever.embeddingModel}${reranker}${context}`
   }
-  if (cell.retriever.kind === 'colbertv2') return `ColBERTv2${reranker}`
+  if (cell.retriever.kind === 'colbertv2') return `ColBERTv2${reranker}${context}`
   const mode =
     cell.retriever.mode === 'colbert-dense-shortlist'
       ? `multi-vector top ${cell.retriever.shortlist}`
       : cell.retriever.mode.replace('hybrid-', 'hybrid ').replace('-rrf', ' RRF')
-  return `BGE-M3 · ${mode}${reranker}`
+  return `BGE-M3 · ${mode}${reranker}${context}`
 }
 
 function retrieverSortKey(cell: BenchmarkResultCell): string {

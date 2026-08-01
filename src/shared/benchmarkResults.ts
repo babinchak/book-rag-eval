@@ -1,5 +1,9 @@
 import type { RetrievalMetrics } from './evalMetrics'
-import type { ExperimentQueryMode, ExperimentRetriever } from './experimentSchema'
+import type {
+  ExperimentContextPolicy,
+  ExperimentQueryMode,
+  ExperimentRetriever
+} from './experimentSchema'
 
 export interface BenchmarkRunSummary {
   runPath: string
@@ -22,6 +26,7 @@ export interface BenchmarkResultCell {
   retriever: ExperimentRetriever
   queryMode: ExperimentQueryMode
   retrievalQuery: string
+  contextPolicy: ExperimentContextPolicy
   contextBudget: number
   retrievedChunkIds: string[]
   retrievedTokens: number

@@ -22,6 +22,36 @@ test('parses a retrieval experiment and fills deterministic defaults', () => {
   assert.deepEqual(config.excludeEvidenceKinds, [])
   assert.equal(config.outputDir, '.rag-eval/runs')
   assert.deepEqual(config.queryModes, ['reference'])
+  assert.deepEqual(config.contextPolicies, [{ kind: 'chunks' }])
+})
+
+test('parses context expansion policies and rejects duplicates', () => {
+  const base = {
+    schemaVersion: EXPERIMENT_SCHEMA_VERSION,
+    name: 'context-expansion',
+    books: [{ bookId: 'book-1', evalSetId: 'reviewed' }],
+    chunkers: [{ kind: 'fixed-token', size: 256, overlap: 32 }],
+    retrievers: [{ kind: 'bm25' }],
+    contextBudgets: [8192]
+  }
+  assert.deepEqual(
+    parseExperimentConfig({
+      ...base,
+      contextPolicies: [{ kind: 'chunks' }, { kind: 'neighbors' }]
+    }).contextPolicies,
+    [{ kind: 'chunks' }, { kind: 'neighbors', window: 1 }]
+  )
+  assert.throws(
+    () =>
+      parseExperimentConfig({
+        ...base,
+        contextPolicies: [
+          { kind: 'neighbors', window: 1 },
+          { kind: 'neighbors', window: 1 }
+        ]
+      }),
+    /contextPolicies must be unique/
+  )
 })
 
 test('parses weighted hybrid retrieval', () => {

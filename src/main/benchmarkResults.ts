@@ -99,6 +99,7 @@ export async function getBenchmarkRunResults(
     retriever: row.retriever,
     queryMode: queryModeOf(row),
     retrievalQuery: row.retrievalQuery ?? '',
+    contextPolicy: row.contextPolicy ?? { kind: 'chunks' },
     contextBudget: row.contextBudget,
     retrievedChunkIds: row.retrievedChunkIds,
     retrievedTokens: row.retrievedTokens,

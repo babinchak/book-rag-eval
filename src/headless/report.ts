@@ -1,7 +1,11 @@
 import { promises as fs } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { contentHash } from '../shared/artifactIdentity'
-import type { ExperimentQueryMode, ExperimentRetriever } from '../shared/experimentSchema'
+import type {
+  ExperimentContextPolicy,
+  ExperimentQueryMode,
+  ExperimentRetriever
+} from '../shared/experimentSchema'
 import type { EmbeddingModel } from '../preload/types'
 import type { VoyageRerankModel } from '../main/reranking'
 import type { HeadlessResultRow, HeadlessRun } from './experimentRunner'
@@ -47,6 +51,7 @@ export interface ReportGroup {
   strategyId: string
   retriever: string
   queryMode: ExperimentQueryMode
+  contextPolicy: string
   contextBudget: number
   cases: number
   isBaseline: boolean
@@ -108,7 +113,12 @@ function retrieverLabel(retriever: ExperimentRetriever): string {
 }
 
 function groupId(row: HeadlessResultRow): string {
-  return `${row.strategyId}|${retrieverLabel(row.retriever)}|${row.queryMode ?? 'reference'}|${row.contextBudget}`
+  return `${row.strategyId}|${retrieverLabel(row.retriever)}|${row.queryMode ?? 'reference'}|${contextPolicyLabel(row.contextPolicy)}|${row.contextBudget}`
+}
+
+function contextPolicyLabel(policy?: ExperimentContextPolicy): string {
+  if (!policy || policy.kind === 'chunks') return 'chunks'
+  return `neighbors:${policy.window}`
 }
 
 function caseId(row: HeadlessResultRow): string {
@@ -184,7 +194,7 @@ export function summarizeRun(run: HeadlessRun, bootstrapIterations = 2000): Expe
 
   const baselineByRetrieverBudgetAndQuery = new Map<string, HeadlessResultRow[]>()
   for (const row of run.results) {
-    const baselineKey = `${retrieverLabel(row.retriever)}|${row.contextBudget}|${row.queryMode ?? 'reference'}`
+    const baselineKey = `${retrieverLabel(row.retriever)}|${row.contextBudget}|${row.queryMode ?? 'reference'}|${contextPolicyLabel(row.contextPolicy)}`
     if (!baselineByRetrieverBudgetAndQuery.has(baselineKey)) {
       baselineByRetrieverBudgetAndQuery.set(baselineKey, rowsByGroup.get(groupId(row))!)
     }
@@ -207,7 +217,7 @@ export function summarizeRun(run: HeadlessRun, bootstrapIterations = 2000): Expe
 
     const baselineRows =
       baselineByRetrieverBudgetAndQuery.get(
-        `${retrieverLabel(first.retriever)}|${first.contextBudget}|${first.queryMode ?? 'reference'}`
+        `${retrieverLabel(first.retriever)}|${first.contextBudget}|${first.queryMode ?? 'reference'}|${contextPolicyLabel(first.contextPolicy)}`
       ) ?? []
     const baseline = new Map(
       baselineRows.flatMap((row) => {
@@ -226,6 +236,7 @@ export function summarizeRun(run: HeadlessRun, bootstrapIterations = 2000): Expe
       strategyId: first.strategyId,
       retriever: retrieverLabel(first.retriever),
       queryMode: first.queryMode ?? 'reference',
+      contextPolicy: contextPolicyLabel(first.contextPolicy),
       contextBudget: first.contextBudget,
       cases: new Set(rows.map(caseId)).size,
       isBaseline: baselineRows.length > 0 && groupId(first) === groupId(baselineRows[0]),
@@ -288,6 +299,7 @@ export function summarizeRun(run: HeadlessRun, bootstrapIterations = 2000): Expe
       (left, right) =>
         left.contextBudget - right.contextBudget ||
         left.queryMode.localeCompare(right.queryMode) ||
+        left.contextPolicy.localeCompare(right.contextPolicy) ||
         left.retriever.localeCompare(right.retriever) ||
         left.strategyId.localeCompare(right.strategyId)
     )
@@ -372,13 +384,13 @@ export function reportMarkdown(report: ExperimentReport): string {
   lines.push(
     'Values are means with 95% bootstrap intervals. Δ recall is paired against the first configured strategy at the same context budget and query mode.',
     '',
-    '| Budget | Query | Strategy | Retriever | Evidence efficiency | Payload efficiency | Hit | MRR | nDCG | Evidence recall | Δ recall | Evidence density | Item precision | Tokens to first | Tokens to full |',
-    '| ---: | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |'
+    '| Budget | Query | Context | Strategy | Retriever | Evidence efficiency | Payload efficiency | Hit | MRR | nDCG | Evidence recall | Δ recall | Evidence density | Item precision | Tokens to first | Tokens to full |',
+    '| ---: | --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |'
   )
   for (const group of report.groups) {
     const strategy = group.isBaseline ? `${group.strategyId} (baseline)` : group.strategyId
     lines.push(
-      `| ${group.contextBudget} | ${group.queryMode} | \`${strategy}\` | \`${group.retriever}\` | ${estimateCell(group.metrics.evidenceEfficiency)} | ${estimateCell(group.metrics.payloadEvidenceEfficiency)} | ${estimateCell(group.metrics.hitAtK)} | ${estimateCell(group.metrics.mrr)} | ${estimateCell(group.metrics.ndcgAtK)} | ${estimateCell(group.metrics.evidenceRecall)} | ${estimateCell(group.evidenceRecallDeltaFromBaseline)} | ${estimateCell(group.metrics.exactEvidenceDensity)} | ${estimateCell(group.metrics.contextPrecision)} | ${estimateCell(group.metrics.tokensToFirstEvidence)} | ${estimateCell(group.metrics.tokensToFullEvidence)} |`
+      `| ${group.contextBudget} | ${group.queryMode} | ${group.contextPolicy} | \`${strategy}\` | \`${group.retriever}\` | ${estimateCell(group.metrics.evidenceEfficiency)} | ${estimateCell(group.metrics.payloadEvidenceEfficiency)} | ${estimateCell(group.metrics.hitAtK)} | ${estimateCell(group.metrics.mrr)} | ${estimateCell(group.metrics.ndcgAtK)} | ${estimateCell(group.metrics.evidenceRecall)} | ${estimateCell(group.evidenceRecallDeltaFromBaseline)} | ${estimateCell(group.metrics.exactEvidenceDensity)} | ${estimateCell(group.metrics.contextPrecision)} | ${estimateCell(group.metrics.tokensToFirstEvidence)} | ${estimateCell(group.metrics.tokensToFullEvidence)} |`
     )
   }
   return `${lines.join('\n')}\n`

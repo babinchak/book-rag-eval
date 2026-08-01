@@ -39,6 +39,10 @@ const embeddingModelSchema = z.enum([
   'voyage-4-large'
 ])
 const queryModeSchema = z.enum(['question', 'reference'])
+const contextPolicySchema = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('chunks') }),
+  z.object({ kind: z.literal('neighbors'), window: positiveInteger.default(1) })
+])
 
 const rerankerSchema = z.object({
   kind: z.literal('voyage'),
@@ -110,6 +114,10 @@ const experimentSchema = z
     chunkers: z.array(chunkerSchema).min(1),
     retrievers: z.array(retrievalPipelineSchema).min(1),
     queryModes: z.array(queryModeSchema).min(1).default(['reference']),
+    contextPolicies: z
+      .array(contextPolicySchema)
+      .min(1)
+      .default([{ kind: 'chunks' }]),
     contextBudgets: z.array(positiveInteger).min(1),
     candidatePoolSize: positiveInteger.default(50),
     splits: z
@@ -160,11 +168,18 @@ const experimentSchema = z
     if (new Set(experiment.queryModes).size !== experiment.queryModes.length) {
       context.addIssue({ code: 'custom', message: 'queryModes must be unique' })
     }
+    const contextPolicyIds = experiment.contextPolicies.map((policy) =>
+      policy.kind === 'chunks' ? 'chunks' : `neighbors-${policy.window}`
+    )
+    if (new Set(contextPolicyIds).size !== contextPolicyIds.length) {
+      context.addIssue({ code: 'custom', message: 'contextPolicies must be unique' })
+    }
   })
 
 export type ExperimentConfig = z.infer<typeof experimentSchema>
 export type ExperimentRetriever = ExperimentConfig['retrievers'][number]
 export type ExperimentQueryMode = ExperimentConfig['queryModes'][number]
+export type ExperimentContextPolicy = ExperimentConfig['contextPolicies'][number]
 
 export function parseExperimentConfig(value: unknown): ExperimentConfig {
   return experimentSchema.parse(value)
