@@ -17,8 +17,23 @@ test('parses a retrieval experiment and fills deterministic defaults', () => {
   assert.equal(config.retrievers[0].rrfK, 60)
   assert.equal(config.candidatePoolSize, 50)
   assert.deepEqual(config.splits, ['dev'])
+  assert.deepEqual(config.excludeEvidenceKinds, [])
   assert.equal(config.outputDir, '.rag-eval/runs')
   assert.deepEqual(config.queryModes, ['reference'])
+})
+
+test('supports excluding non-text evidence tracks from an experiment', () => {
+  const config = parseExperimentConfig({
+    schemaVersion: EXPERIMENT_SCHEMA_VERSION,
+    name: 'text-only',
+    books: [{ bookId: 'book-1', evalSetId: 'reviewed' }],
+    chunkers: [{ kind: 'fixed-token', size: 256, overlap: 32 }],
+    retrievers: [{ kind: 'bm25' }],
+    contextBudgets: [8192],
+    excludeEvidenceKinds: ['table', 'image']
+  })
+
+  assert.deepEqual(config.excludeEvidenceKinds, ['table', 'image'])
 })
 
 test('parses a deterministic random retrieval control', () => {

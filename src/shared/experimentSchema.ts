@@ -88,6 +88,7 @@ const experimentSchema = z
       .array(z.enum(['dev', 'test']))
       .min(1)
       .default(['dev']),
+    excludeEvidenceKinds: z.array(z.enum(['text', 'table', 'image'])).default([]),
     maxCasesPerBook: positiveInteger.optional(),
     pricing: z
       .object({

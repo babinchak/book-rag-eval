@@ -121,8 +121,11 @@ export interface HeadlessResultRow {
 }
 
 interface QueryCacheEntry {
+  schemaVersion?: 1
   chunkArtifactId: string
   hits: Array<{ chunkId: string; distance: number; rank: number }>
+  retrievalLatencyMs?: number
+  createdAt?: number
 }
 
 export interface CostLedger {
@@ -180,6 +183,7 @@ function reproducibleConfig(config: LoadedExperiment): object {
     contextBudgets: config.contextBudgets,
     candidatePoolSize: config.candidatePoolSize,
     splits: config.splits,
+    excludeEvidenceKinds: config.excludeEvidenceKinds,
     maxCasesPerBook: config.maxCasesPerBook,
     pricing: config.pricing
   }
@@ -217,7 +221,13 @@ export async function loadExperiment(
             .then((serialized) => parseEvalSet(JSON.parse(serialized) as unknown, selection.bookId))
         : getEvalSet(selection.bookId, selection.evalSetId!)
     const [document, evalSet] = await Promise.all([documentPromise, evalSetPromise])
-    let cases = evalSet.cases.filter((evalCase) => config.splits.includes(evalCase.split))
+    let cases = evalSet.cases.filter(
+      (evalCase) =>
+        config.splits.includes(evalCase.split) &&
+        !evalCase.goldEvidence.some((evidence) =>
+          config.excludeEvidenceKinds.includes(evidence.kind)
+        )
+    )
     if (config.maxCasesPerBook !== undefined) cases = cases.slice(0, config.maxCasesPerBook)
     books.push({
       bookId: selection.bookId,
@@ -463,6 +473,33 @@ async function writeJsonAtomic(path: string, value: unknown): Promise<void> {
   const temporaryPath = `${path}.tmp`
   await fs.writeFile(temporaryPath, JSON.stringify(value, null, 2), 'utf8')
   await fs.rename(temporaryPath, path)
+}
+
+function retrievalTracePath(outputDir: string, queryId: string): string {
+  return join(dirname(outputDir), 'cache', 'retrieval', `${queryId}.json`)
+}
+
+async function readRetrievalTrace(
+  outputDir: string,
+  queryId: string
+): Promise<QueryCacheEntry | null> {
+  try {
+    const trace = JSON.parse(
+      await fs.readFile(retrievalTracePath(outputDir, queryId), 'utf8')
+    ) as QueryCacheEntry
+    return trace.chunkArtifactId && Array.isArray(trace.hits) ? trace : null
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return null
+    throw error
+  }
+}
+
+async function writeRetrievalTrace(
+  outputDir: string,
+  queryId: string,
+  trace: QueryCacheEntry
+): Promise<void> {
+  await writeJsonAtomic(retrievalTracePath(outputDir, queryId), trace)
 }
 
 function emptyLedger(): CostLedger {
@@ -726,9 +763,11 @@ export async function runExperiment(
               if (missingBudgets.length === 0) continue
 
               let hits: RetrievedChunkPayload[]
-              const cached = run.queryCache[queryId]
+              const cached =
+                run.queryCache[queryId] ?? (await readRetrievalTrace(run.plan.outputDir, queryId))
               if (cached) {
                 hits = reconstructHits(cached, set)
+                run.queryCache[queryId] = cached
               } else {
                 if (retrieverNeedsEmbedding(retriever)) {
                   assertAffordable(
@@ -738,6 +777,7 @@ export async function runExperiment(
                     countChunkTokens(retrievalQuery)
                   )
                 }
+                const retrievalStartedAt = performance.now()
                 hits = await retrieve(
                   book.bookId,
                   set.strategyId,
@@ -747,14 +787,19 @@ export async function runExperiment(
                   retrieverNeedsEmbedding(retriever) ? retriever.embeddingModel : undefined,
                   (model, tokens) => recordCost(run, prepared.config, model, 'query', tokens)
                 )
-                run.queryCache[queryId] = {
+                const trace: QueryCacheEntry = {
+                  schemaVersion: 1,
                   chunkArtifactId,
+                  retrievalLatencyMs: performance.now() - retrievalStartedAt,
+                  createdAt: Date.now(),
                   hits: hits.map((hit) => ({
                     chunkId: hit.chunk.id,
                     distance: hit.distance,
                     rank: hit.rank
                   }))
                 }
+                run.queryCache[queryId] = trace
+                await writeRetrievalTrace(run.plan.outputDir, queryId, trace)
                 run.updatedAt = Date.now()
                 await writeJsonAtomic(plan.runPath, run)
               }
@@ -821,6 +866,26 @@ export async function runExperiment(
 function csvCell(value: unknown): string {
   const text = value === null || value === undefined ? '' : String(value)
   return `"${text.replace(/"/g, '""')}"`
+}
+
+export async function cacheRunRetrievalTraces(
+  runPath: string
+): Promise<{ cached: number; cacheDir: string }> {
+  const absoluteRunPath = resolve(runPath)
+  const run = JSON.parse(await fs.readFile(absoluteRunPath, 'utf8')) as HeadlessRun
+  let cached = 0
+  for (const [queryId, trace] of Object.entries(run.queryCache)) {
+    await writeRetrievalTrace(run.plan.outputDir, queryId, {
+      schemaVersion: 1,
+      createdAt: trace.createdAt ?? run.updatedAt,
+      ...trace
+    })
+    cached += 1
+  }
+  return {
+    cached,
+    cacheDir: join(dirname(run.plan.outputDir), 'cache', 'retrieval')
+  }
 }
 
 export async function exportRun(runPath: string, format: 'jsonl' | 'csv'): Promise<string> {
