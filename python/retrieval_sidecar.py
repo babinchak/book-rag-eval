@@ -23,6 +23,7 @@ _colbert_models: dict[str, Any] = {}
 _bge_models: dict[str, Any] = {}
 _colbert_retrievers: dict[str, Any] = {}
 _bge_artifacts: dict[str, dict[str, Any]] = {}
+_bge_query_outputs: dict[tuple[str, str, int], dict[str, Any]] = {}
 
 
 def _send(payload: dict[str, Any]) -> None:
@@ -278,14 +279,18 @@ def _bge_query(params: dict[str, Any]) -> dict[str, Any]:
     shortlist = min(int(params.get("shortlist") or 200), len(ids))
     started = time.perf_counter()
     model = _bge_model(manifest["model"])
-    output = model.encode(
-        [query],
-        batch_size=1,
-        max_length=manifest["maxLength"],
-        return_dense=True,
-        return_sparse=True,
-        return_colbert_vecs=True,
-    )
+    query_cache_key = (manifest["model"], query, manifest["maxLength"])
+    output = _bge_query_outputs.get(query_cache_key)
+    if output is None:
+        output = model.encode(
+            [query],
+            batch_size=1,
+            max_length=manifest["maxLength"],
+            return_dense=True,
+            return_sparse=True,
+            return_colbert_vecs=True,
+        )
+        _bge_query_outputs[query_cache_key] = output
     query_dense = torch.as_tensor(
         np.asarray(output["dense_vecs"][0], dtype=np.float32), device="cuda"
     )

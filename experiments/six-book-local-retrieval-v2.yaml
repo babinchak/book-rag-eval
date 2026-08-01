@@ -1,0 +1,51 @@
+# Six-book GPU retrieval tournament over the winning 256-token chunker.
+schemaVersion: 1
+name: six-book-local-retrieval-v2
+outputDir: ../.rag-eval/runs
+
+books:
+  - bookId: 89837bc58f2f7a00efba19501669db603e8a18d1f50e0f350b57f4e6220ae2e3
+    evalSetPath: ../.rag-eval/provisional-evals/six-book-smoke-v1/89837bc58f2f7a00efba19501669db603e8a18d1f50e0f350b57f4e6220ae2e3.json
+  - bookId: b431f705db5c5c17f0ccd512fd689b52724be51ca2847f2f190a273b5eac6db2
+    evalSetPath: ../.rag-eval/provisional-evals/six-book-smoke-v1/b431f705db5c5c17f0ccd512fd689b52724be51ca2847f2f190a273b5eac6db2.json
+  - bookId: 83c5b63c365f1d48a841789c8517c19f1416d3be4932c229b34981d491fbf6f1
+    evalSetPath: ../.rag-eval/provisional-evals/six-book-smoke-v1/83c5b63c365f1d48a841789c8517c19f1416d3be4932c229b34981d491fbf6f1.json
+  - bookId: b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32
+    evalSetPath: ../.rag-eval/provisional-evals/six-book-smoke-v1/b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32.json
+  - bookId: 225822fed9ed520c7a4c36efcc06eb110912c9305c695334d5411ae106b242be
+    evalSetPath: ../.rag-eval/provisional-evals/six-book-smoke-v1/225822fed9ed520c7a4c36efcc06eb110912c9305c695334d5411ae106b242be.json
+  - bookId: 2da38dab93cf1edb422868a0fcaf1ec923618d29f7f8d3676ab7c97d224616df
+    evalSetPath: ../.rag-eval/provisional-evals/six-book-smoke-v1/2da38dab93cf1edb422868a0fcaf1ec923618d29f7f8d3676ab7c97d224616df.json
+
+chunkers:
+  - kind: fixed-token
+    size: 256
+    overlap: 32
+    encoding: cl100k_base
+
+retrievers:
+  - kind: colbertv2
+    model: lightonai/colbertv2.0
+  - kind: bge-m3
+    model: BAAI/bge-m3
+    mode: dense
+  - kind: bge-m3
+    model: BAAI/bge-m3
+    mode: sparse
+  - kind: bge-m3
+    model: BAAI/bge-m3
+    mode: colbert-dense-shortlist
+    shortlist: 200
+  - kind: bge-m3
+    model: BAAI/bge-m3
+    mode: hybrid-dense-sparse-rrf
+  - kind: bge-m3
+    model: BAAI/bge-m3
+    mode: hybrid-all-rrf
+    shortlist: 200
+
+queryModes: [question]
+contextBudgets: [512, 1024, 2048, 4096, 8192, 16384]
+candidatePoolSize: 50
+splits: [dev]
+excludeEvidenceKinds: [table, image]
