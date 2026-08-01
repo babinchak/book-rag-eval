@@ -50,6 +50,12 @@ body,
   --c-hit-3: #fef9c3;
   --c-hit-k: #fde68a;
   --c-miss: #fee2e2;
+  --c-matrix-best-bg: #166534;
+  --c-matrix-best-text: #ffffff;
+  --c-matrix-good-bg: #86efac;
+  --c-matrix-good-text: #14532d;
+  --c-matrix-hit-bg: #dcfce7;
+  --c-matrix-hit-text: #166534;
 }
 
 /* Dark theme */
@@ -88,6 +94,12 @@ body,
   --c-hit-3: #2a2000;
   --c-hit-k: #2a1500;
   --c-miss: #2d0b0b;
+  --c-matrix-best-bg: #166534;
+  --c-matrix-best-text: #f0fdf4;
+  --c-matrix-good-bg: #0f4d2d;
+  --c-matrix-good-text: #bbf7d0;
+  --c-matrix-hit-bg: #092e1b;
+  --c-matrix-hit-text: #a7f3d0;
 }
 
 body {

@@ -37,6 +37,12 @@ export const cv = {
   hit3: 'var(--c-hit-3)',
   hitK: 'var(--c-hit-k)',
   miss: 'var(--c-miss)',
+  matrixBestBg: 'var(--c-matrix-best-bg)',
+  matrixBestText: 'var(--c-matrix-best-text)',
+  matrixGoodBg: 'var(--c-matrix-good-bg)',
+  matrixGoodText: 'var(--c-matrix-good-text)',
+  matrixHitBg: 'var(--c-matrix-hit-bg)',
+  matrixHitText: 'var(--c-matrix-hit-text)'
 } as const
 
 function getEffective(mode: ThemeMode): 'light' | 'dark' {

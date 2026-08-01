@@ -82,11 +82,54 @@ function displayMetric(value: number | null, metric: MatrixMetric): string {
   return `${Math.round(value * 100)}%`
 }
 
-function cellColors(value: number | null): { background: string; color: string } {
+function cellColors(
+  value: number | null,
+  metric: MatrixMetric,
+  firstHitRank?: number | null
+): { background: string; color: string } {
   if (value === null) return { background: cv.surface2, color: cv.text4 }
   if (value <= 0) return { background: cv.errorBg, color: cv.errorText }
-  if (value >= 0.999) return { background: cv.successBg, color: cv.successText }
-  return { background: cv.warningBg, color: cv.warningText }
+  const strongest = metric === 'hitAtK' ? firstHitRank === 1 : value >= 0.8
+  const strong =
+    metric === 'hitAtK' ? (firstHitRank ?? Number.POSITIVE_INFINITY) <= 3 : value >= 0.4
+  if (strongest) return { background: cv.matrixBestBg, color: cv.matrixBestText }
+  if (strong) return { background: cv.matrixGoodBg, color: cv.matrixGoodText }
+  return { background: cv.matrixHitBg, color: cv.matrixHitText }
+}
+
+function MatrixLegend({ metric }: { metric: MatrixMetric }): React.JSX.Element {
+  const items =
+    metric === 'hitAtK'
+      ? [
+          ['Rank 1', cv.matrixBestBg, cv.matrixBestText],
+          ['Ranks 2–3', cv.matrixGoodBg, cv.matrixGoodText],
+          ['Rank 4+', cv.matrixHitBg, cv.matrixHitText],
+          ['Miss', cv.errorBg, cv.errorText]
+        ]
+      : [
+          ['80–100%', cv.matrixBestBg, cv.matrixBestText],
+          ['40–79%', cv.matrixGoodBg, cv.matrixGoodText],
+          ['1–39%', cv.matrixHitBg, cv.matrixHitText],
+          ['Zero', cv.errorBg, cv.errorText]
+        ]
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10 }}>
+      {items.map(([label, background, color]) => (
+        <span
+          key={label}
+          style={{
+            padding: '4px 6px',
+            borderRadius: 4,
+            background,
+            color,
+            whiteSpace: 'nowrap'
+          }}
+        >
+          {label}
+        </span>
+      ))}
+    </div>
+  )
 }
 
 const controlStyle: React.CSSProperties = {
@@ -372,6 +415,7 @@ function BenchmarkMatrix({ cases, onOpenCase }: BenchmarkMatrixProps): React.JSX
             </option>
           ))}
         </select>
+        <MatrixLegend metric={metric} />
         <input
           value={search}
           onChange={(event) => setSearch(event.target.value)}
@@ -450,7 +494,7 @@ function BenchmarkMatrix({ cases, onOpenCase }: BenchmarkMatrixProps): React.JSX
                   {columns.map(({ key }) => {
                     const cell = cellByKey.get(`${item.bookId}|${item.caseId}|${key}`)
                     const value = cell ? metricValue(cell, metric) : null
-                    const colors = cellColors(value)
+                    const colors = cellColors(value, metric, cell?.metrics.firstHitRank)
                     return (
                       <td
                         key={key}
