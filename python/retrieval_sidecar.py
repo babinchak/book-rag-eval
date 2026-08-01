@@ -168,8 +168,12 @@ def _bge_index(params: dict[str, Any]) -> dict[str, Any]:
     np.save(artifact_dir / "colbert.npy", flattened)
     np.save(artifact_dir / "colbert-offsets.npy", offsets)
     (artifact_dir / "ids.json").write_text(json.dumps(ids), encoding="utf-8")
+    sparse_weights = [
+        {str(token): float(weight) for token, weight in document.items()}
+        for document in output["lexical_weights"]
+    ]
     (artifact_dir / "sparse.json").write_text(
-        json.dumps(output["lexical_weights"], separators=(",", ":")), encoding="utf-8"
+        json.dumps(sparse_weights, separators=(",", ":")), encoding="utf-8"
     )
     manifest = {
         "schemaVersion": 1,
