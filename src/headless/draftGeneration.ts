@@ -17,6 +17,7 @@ import {
   parseDraftGenerationConfig,
   type DraftGenerationConfig
 } from '../shared/draftGenerationSchema'
+import type { DraftReviewStatus } from '../shared/caseBrowser'
 import { readSourceControlState, type SourceControlState } from './sourceControl'
 
 export const DRAFT_PROMPT_VERSION = 'canonical-eval-draft-v1'
@@ -111,7 +112,9 @@ export interface EvalDraftRecord {
   referenceAnswer: string
   tags: string[]
   difficulty: 'easy' | 'medium' | 'hard'
-  reviewStatus: 'pending' | 'approved' | 'rejected'
+  reviewStatus: DraftReviewStatus
+  reviewerNotes?: string
+  reviewedAt?: number
   provenance: {
     kind: 'llm_assisted'
     model: string
@@ -145,6 +148,13 @@ export interface DraftGenerationRun {
     sourceControl: SourceControlState
     additionalAttempts: number
     startingFailures: number
+  }>
+  reviewEvents?: Array<{
+    candidateId: string
+    at: number
+    previousStatus: DraftReviewStatus
+    reviewStatus: DraftReviewStatus
+    changedFields: string[]
   }>
   error?: string
 }

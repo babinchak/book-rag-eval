@@ -10,6 +10,10 @@ import type {
   ChunksListResult,
   ChunksRunResult,
   CollectionsListResult,
+  DraftCaseBrowserIpcResult,
+  DraftCaseReviewIpcResult,
+  DraftCaseReviewUpdate,
+  DraftRunsListIpcResult,
   EmbedRunIpcResult,
   EmbeddingsListIpcResult,
   EmbeddingsRemoveIpcResult,
@@ -58,6 +62,13 @@ const api = {
   collections: {
     list: (): Promise<CollectionsListResult> => ipcRenderer.invoke('collections:list')
   },
+  benchmarkCases: {
+    listRuns: (): Promise<DraftRunsListIpcResult> => ipcRenderer.invoke('benchmarkCases:listRuns'),
+    get: (runPath: string): Promise<DraftCaseBrowserIpcResult> =>
+      ipcRenderer.invoke('benchmarkCases:get', runPath),
+    update: (runPath: string, update: DraftCaseReviewUpdate): Promise<DraftCaseReviewIpcResult> =>
+      ipcRenderer.invoke('benchmarkCases:update', runPath, update)
+  },
   chunks: {
     run: (bookId: string, params: ChunkParams): Promise<ChunksRunResult> =>
       ipcRenderer.invoke('chunks:run', bookId, params),
@@ -90,8 +101,7 @@ const api = {
   bm25: {
     run: (bookId: string, strategyId: string): Promise<Bm25RunIpcResult> =>
       ipcRenderer.invoke('bm25:run', bookId, strategyId),
-    list: (bookId: string): Promise<Bm25ListIpcResult> =>
-      ipcRenderer.invoke('bm25:list', bookId),
+    list: (bookId: string): Promise<Bm25ListIpcResult> => ipcRenderer.invoke('bm25:list', bookId),
     remove: (bookId: string, strategyId: string): Promise<Bm25RemoveIpcResult> =>
       ipcRenderer.invoke('bm25:remove', bookId, strategyId)
   },

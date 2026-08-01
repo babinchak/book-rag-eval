@@ -9,6 +9,7 @@ import { cv, useTheme } from '../lib/theme'
 interface LibraryProps {
   onOpen: (book: BookSummary) => void
   onOpenStrategies: () => void
+  onOpenBenchmarkCases: () => void
 }
 
 const UNCATEGORIZED_ID = '__uncategorized__'
@@ -83,7 +84,11 @@ function groupByCollection(
   return sections
 }
 
-function Library({ onOpen, onOpenStrategies }: LibraryProps): React.JSX.Element {
+function Library({
+  onOpen,
+  onOpenStrategies,
+  onOpenBenchmarkCases
+}: LibraryProps): React.JSX.Element {
   const [books, setBooks] = useState<BookSummary[] | null>(null)
   const [collections, setCollections] = useState<CollectionSummary[]>([])
   const [error, setError] = useState<IpcError | null>(null)
@@ -168,10 +173,7 @@ function Library({ onOpen, onOpenStrategies }: LibraryProps): React.JSX.Element 
     [books, collections]
   )
 
-  const sortedBooks = useMemo(
-    () => (books ? sortBooks(books, sortKey) : []),
-    [books, sortKey]
-  )
+  const sortedBooks = useMemo(() => (books ? sortBooks(books, sortKey) : []), [books, sortKey])
 
   return (
     <div style={{ padding: 32, color: cv.text1 }}>
@@ -179,13 +181,26 @@ function Library({ onOpen, onOpenStrategies }: LibraryProps): React.JSX.Element 
         <h1 style={{ margin: 0, fontSize: 24 }}>Library</h1>
         <span style={{ color: cv.text4, fontSize: 13 }}>
           {books ? `${books.length} ${books.length === 1 ? 'book' : 'books'}` : 'loading…'}
-          {books && sections.length > 1
-            ? ` · ${sections.length} collections`
-            : ''}
+          {books && sections.length > 1 ? ` · ${sections.length} collections` : ''}
         </span>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>
           <ViewToggle viewMode={viewMode} setViewMode={setViewMode} />
           {viewMode === 'books' && <SortPicker sortKey={sortKey} setSortKey={setSortKey} />}
+          <button
+            onClick={onOpenBenchmarkCases}
+            title="Browse and review benchmark cases"
+            style={{
+              padding: '5px 10px',
+              fontSize: 12,
+              cursor: 'pointer',
+              background: cv.bg,
+              color: cv.text2,
+              border: `1px solid ${cv.border2}`,
+              borderRadius: 4
+            }}
+          >
+            Benchmark
+          </button>
           <button
             onClick={onOpenStrategies}
             title="Manage saved strategies"
@@ -278,12 +293,7 @@ function Library({ onOpen, onOpenStrategies }: LibraryProps): React.JSX.Element 
                     }}
                   >
                     {section.books.map((book) => (
-                      <BookCard
-                        key={book.id}
-                        book={book}
-                        onOpen={onOpen}
-                        onRemove={handleRemove}
-                      />
+                      <BookCard key={book.id} book={book} onOpen={onOpen} onRemove={handleRemove} />
                     ))}
                   </div>
                 )}
@@ -345,7 +355,15 @@ interface SortPickerProps {
 
 function SortPicker({ sortKey, setSortKey }: SortPickerProps): React.JSX.Element {
   return (
-    <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: cv.text3 }}>
+    <label
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 6,
+        fontSize: 12,
+        color: cv.text3
+      }}
+    >
       Sort
       <select
         value={sortKey}
@@ -438,14 +456,20 @@ function BookCard({ book, onOpen, onRemove }: BookCardProps): React.JSX.Element 
         }}
       >
         {book.coverDataUrl ? (
-          <img src={book.coverDataUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <img
+            src={book.coverDataUrl}
+            alt=""
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          />
         ) : (
           <span style={{ color: cv.text4, padding: 12, textAlign: 'center', fontSize: 13 }}>
             {book.title}
           </span>
         )}
       </button>
-      <div style={{ fontSize: 13, fontWeight: 500, lineHeight: 1.3, color: cv.text1 }}>{book.title}</div>
+      <div style={{ fontSize: 13, fontWeight: 500, lineHeight: 1.3, color: cv.text1 }}>
+        {book.title}
+      </div>
       {book.author && <div style={{ fontSize: 12, color: cv.text3 }}>{book.author}</div>}
       {hover && (
         <button

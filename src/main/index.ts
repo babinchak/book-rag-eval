@@ -2,13 +2,7 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import {
-  importEpubFromDialog,
-  listCollections,
-  listLibrary,
-  openBook,
-  removeBook
-} from './library'
+import { importEpubFromDialog, listCollections, listLibrary, openBook, removeBook } from './library'
 import { getChunkSet, listChunkSets, runChunking } from './chunking'
 import { listEmbeddingSets, removeEmbeddings, runEmbedding } from './embeddings'
 import { listBm25Indexes, removeBm25Index, runBm25Indexing } from './bm25'
@@ -21,6 +15,8 @@ import {
   updateSavedStrategy
 } from './savedStrategies'
 import type { StrategyConfig } from '../shared/savedStrategy'
+import type { DraftCaseReviewUpdate } from '../shared/caseBrowser'
+import { getDraftCaseBrowser, listDraftCaseRuns, updateDraftCaseReview } from './benchmarkCases'
 import { ask } from './retrieval'
 import { normalizeRetrieverParams, type RetrieverParams } from '../shared/retriever'
 import {
@@ -59,6 +55,9 @@ import type {
   Bm25RunIpcResult,
   ChunkParams,
   CollectionsListResult,
+  DraftCaseBrowserIpcResult,
+  DraftCaseReviewIpcResult,
+  DraftRunsListIpcResult,
   ChunksGetResult,
   ChunksListResult,
   ChunksRunResult,
@@ -156,6 +155,46 @@ app.whenReady().then(() => {
       return { ok: false, error: captureIpcError(err, 'collections:list', []) }
     }
   })
+
+  ipcMain.handle('benchmarkCases:listRuns', async (): Promise<DraftRunsListIpcResult> => {
+    try {
+      return { ok: true, runs: await listDraftCaseRuns() }
+    } catch (err) {
+      return { ok: false, error: captureIpcError(err, 'benchmarkCases:listRuns', []) }
+    }
+  })
+
+  ipcMain.handle(
+    'benchmarkCases:get',
+    async (_, runPath: string): Promise<DraftCaseBrowserIpcResult> => {
+      try {
+        return { ok: true, data: await getDraftCaseBrowser(runPath) }
+      } catch (err) {
+        return {
+          ok: false,
+          error: captureIpcError(err, 'benchmarkCases:get', [runPath])
+        }
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'benchmarkCases:update',
+    async (
+      _,
+      runPath: string,
+      update: DraftCaseReviewUpdate
+    ): Promise<DraftCaseReviewIpcResult> => {
+      try {
+        return { ok: true, data: await updateDraftCaseReview(runPath, update) }
+      } catch (err) {
+        return {
+          ok: false,
+          error: captureIpcError(err, 'benchmarkCases:update', [runPath, update])
+        }
+      }
+    }
+  )
 
   ipcMain.handle('library:import', async (): Promise<LibraryImportResult> => {
     try {

@@ -151,7 +151,9 @@ export async function compileApprovedDrafts(
   if (run.failures.length > 0) {
     throw new Error(`Draft run has ${run.failures.length} unresolved generation failures`)
   }
-  const pending = run.drafts.filter((draft) => draft.reviewStatus === 'pending')
+  const pending = run.drafts.filter(
+    (draft) => draft.reviewStatus === 'pending' || draft.reviewStatus === 'needs_revision'
+  )
   if (pending.length > 0) {
     throw new Error(`${pending.length} drafts are still pending human review`)
   }

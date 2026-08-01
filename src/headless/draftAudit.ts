@@ -157,7 +157,9 @@ export function buildDraftAudit(run: DraftGenerationRun, packet: EvidenceReviewP
     flaggedDrafts: items.filter((item) => item.flags.length > 0).length,
     recommendedRejects: items.filter((item) => item.disposition === 'reject').length,
     recommendedRevisions: items.filter((item) => item.disposition === 'revise').length,
-    pendingHumanReview: run.drafts.filter((draft) => draft.reviewStatus === 'pending').length,
+    pendingHumanReview: run.drafts.filter(
+      (draft) => draft.reviewStatus === 'pending' || draft.reviewStatus === 'needs_revision'
+    ).length,
     byBook,
     items
   }

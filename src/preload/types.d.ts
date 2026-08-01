@@ -1,5 +1,14 @@
 import type { ArtifactIdentity } from '../shared/artifactIdentity'
 import type { BenchmarkEvalCase, BenchmarkEvalSet, LegacyGoldSpan } from '../shared/evalSchema'
+import type { DraftCaseBrowserData, DraftRunBrowserSummary } from '../shared/caseBrowser'
+
+export type {
+  DraftCaseBrowserData,
+  DraftCaseBrowserItem,
+  DraftCaseReviewUpdate,
+  DraftReviewStatus,
+  DraftRunBrowserSummary
+} from '../shared/caseBrowser'
 
 export interface ReadiumManifestLink {
   href: string
@@ -117,6 +126,14 @@ export type LibraryImportResult =
 export type LibraryOpenResult = { ok: true; data: LoadedEpub } | { ok: false; error: IpcError }
 
 export type LibraryRemoveResult = { ok: true } | { ok: false; error: IpcError }
+
+export type DraftRunsListIpcResult =
+  | { ok: true; runs: DraftRunBrowserSummary[] }
+  | { ok: false; error: IpcError }
+export type DraftCaseBrowserIpcResult =
+  | { ok: true; data: DraftCaseBrowserData }
+  | { ok: false; error: IpcError }
+export type DraftCaseReviewIpcResult = DraftCaseBrowserIpcResult
 
 export type ChunkParams =
   | {

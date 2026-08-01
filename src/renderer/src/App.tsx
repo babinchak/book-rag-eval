@@ -3,6 +3,7 @@ import type { BookSummary } from '../../preload/types'
 import Library from './components/Library'
 import Reader from './components/Reader'
 import StrategyManager from './components/StrategyManager'
+import BenchmarkCases from './components/BenchmarkCases'
 import ViewErrorBoundary from './components/ViewErrorBoundary'
 import { cv } from './lib/theme'
 
@@ -10,6 +11,7 @@ type View =
   | { kind: 'library' }
   | { kind: 'reader'; book: BookSummary }
   | { kind: 'strategies' }
+  | { kind: 'benchmark-cases' }
 
 function App(): React.JSX.Element {
   const [view, setView] = useState<View>({ kind: 'library' })
@@ -28,6 +30,7 @@ function App(): React.JSX.Element {
           <Library
             onOpen={(book) => setView({ kind: 'reader', book })}
             onOpenStrategies={() => setView({ kind: 'strategies' })}
+            onOpenBenchmarkCases={() => setView({ kind: 'benchmark-cases' })}
           />
         </ViewErrorBoundary>
       )}
@@ -39,6 +42,11 @@ function App(): React.JSX.Element {
       {view.kind === 'strategies' && (
         <ViewErrorBoundary view="strategies" onReset={() => setView({ kind: 'library' })}>
           <StrategyManager onBack={() => setView({ kind: 'library' })} />
+        </ViewErrorBoundary>
+      )}
+      {view.kind === 'benchmark-cases' && (
+        <ViewErrorBoundary view="benchmark-cases" onReset={() => setView({ kind: 'library' })}>
+          <BenchmarkCases onBack={() => setView({ kind: 'library' })} />
         </ViewErrorBoundary>
       )}
     </div>

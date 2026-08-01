@@ -199,6 +199,12 @@ test('plans, validates, meters, and resumes canonical draft generation', async (
   const reviewedRun = JSON.parse(await fs.readFile(run.plan.runPath, 'utf8')) as {
     drafts: Array<{ reviewStatus: string; sourceHash: string }>
   }
+  reviewedRun.drafts[0].reviewStatus = 'needs_revision'
+  await fs.writeFile(run.plan.runPath, JSON.stringify(reviewedRun), 'utf8')
+  await assert.rejects(
+    () => compileApprovedDrafts(run.plan.runPath, compiledDir, 'Reviewer One'),
+    /pending human review/
+  )
   reviewedRun.drafts[0].reviewStatus = 'approved'
   reviewedRun.drafts[0].sourceHash = 'tampered-source'
   await fs.writeFile(run.plan.runPath, JSON.stringify(reviewedRun), 'utf8')

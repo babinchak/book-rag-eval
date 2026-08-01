@@ -204,6 +204,15 @@ refuses pending cases or generation failures, revalidates reviewer edits
 against the canonical packet, and writes schema-v2 eval sets plus a fingerprinted
 manifest.
 
+The Library header's **Benchmark** workspace discovers draft runs in
+`.rag-eval/eval-drafts` and provides a global case browser for human review.
+It supports book/status/evidence filters, audit flags, editable questions and
+reference queries, exact-evidence highlighting, reviewer notes, and
+`approved`/`rejected`/`needs changes` decisions. Review events are journaled in
+the draft run, and approval revalidates the edited case against its canonical
+evidence. Set `BOOK_RAG_EVAL_ARTIFACTS_DIR` when the artifact directory is not
+the project-root `.rag-eval` directory.
+
 Python sidecar setup will be documented once it lands.
 
 ## License
