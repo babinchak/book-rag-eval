@@ -107,6 +107,26 @@ test('parses a Voyage reranking stage and pricing', () => {
   assert.equal(config.pricing.rerankingUsdPerMillion['rerank-2.5-lite'], 0.02)
 })
 
+test('parses local ColBERTv2 and BGE-M3 retrieval modes', () => {
+  const config = parseExperimentConfig({
+    schemaVersion: EXPERIMENT_SCHEMA_VERSION,
+    name: 'local-models',
+    books: [{ bookId: 'book-1', evalSetId: 'reviewed' }],
+    chunkers: [{ kind: 'fixed-token', size: 256, overlap: 32 }],
+    retrievers: [
+      { kind: 'colbertv2' },
+      { kind: 'bge-m3', mode: 'dense' },
+      { kind: 'bge-m3', mode: 'sparse' },
+      { kind: 'bge-m3', mode: 'colbert-dense-shortlist', shortlist: 100 }
+    ],
+    contextBudgets: [8192]
+  })
+
+  assert.equal(config.retrievers[0].model, 'lightonai/colbertv2.0')
+  assert.equal(config.retrievers[1].model, 'BAAI/bge-m3')
+  assert.equal(config.retrievers[3].shortlist, 100)
+})
+
 test('rejects invalid overlap and duplicate context budgets', () => {
   const base = {
     schemaVersion: EXPERIMENT_SCHEMA_VERSION,

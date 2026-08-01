@@ -1,0 +1,35 @@
+# Builds both local index families for the smallest smoke book and scores one case.
+schemaVersion: 1
+name: local-retrieval-api-smoke
+outputDir: ../.rag-eval/runs
+
+books:
+  - bookId: b431f705db5c5c17f0ccd512fd689b52724be51ca2847f2f190a273b5eac6db2
+    evalSetPath: ../.rag-eval/provisional-evals/six-book-smoke-v1/b431f705db5c5c17f0ccd512fd689b52724be51ca2847f2f190a273b5eac6db2.json
+
+chunkers:
+  - kind: fixed-token
+    size: 256
+    overlap: 32
+    encoding: cl100k_base
+
+retrievers:
+  - kind: colbertv2
+    model: lightonai/colbertv2.0
+  - kind: bge-m3
+    model: BAAI/bge-m3
+    mode: dense
+  - kind: bge-m3
+    model: BAAI/bge-m3
+    mode: sparse
+  - kind: bge-m3
+    model: BAAI/bge-m3
+    mode: colbert-dense-shortlist
+    shortlist: 200
+
+queryModes: [question]
+contextBudgets: [8192]
+candidatePoolSize: 50
+splits: [dev]
+excludeEvidenceKinds: [table, image]
+maxCasesPerBook: 1

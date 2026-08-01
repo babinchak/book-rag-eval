@@ -16,6 +16,17 @@ This creates `python/.venv/`, installs the requirements, and that's it. The
 Electron main process auto-detects this venv on startup — no activation, no
 `PYTHON_BIN` env var needed.
 
+## Optional local retrieval setup
+
+ColBERTv2 and BGE-M3 experiments use a separate GPU environment:
+
+```
+npm run setup:retrieval-python
+```
+
+This creates `python/.retrieval-venv/` with pinned PyTorch, PyLate, and
+FlagEmbedding packages. Model weights and generated indexes remain outside git.
+
 ## Manual run (debugging)
 
 ```powershell

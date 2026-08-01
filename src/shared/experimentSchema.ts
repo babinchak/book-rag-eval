@@ -64,6 +64,18 @@ const retrievalPipelineSchema = z.discriminatedUnion('kind', [
     vectorWeight: z.number().positive().default(1),
     bm25Weight: z.number().positive().default(1),
     reranker: rerankerSchema.optional()
+  }),
+  z.object({
+    kind: z.literal('colbertv2'),
+    model: z.literal('lightonai/colbertv2.0').default('lightonai/colbertv2.0'),
+    reranker: rerankerSchema.optional()
+  }),
+  z.object({
+    kind: z.literal('bge-m3'),
+    model: z.literal('BAAI/bge-m3').default('BAAI/bge-m3'),
+    mode: z.enum(['dense', 'sparse', 'colbert-dense-shortlist']),
+    shortlist: positiveInteger.default(200),
+    reranker: rerankerSchema.optional()
   })
 ])
 

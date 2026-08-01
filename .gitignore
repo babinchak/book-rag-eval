@@ -12,5 +12,6 @@ out
 
 # Python sidecar
 python/.venv/
+python/.retrieval-venv/
 python/__pycache__/
 python/*.pyc

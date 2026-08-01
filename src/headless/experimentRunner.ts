@@ -39,6 +39,7 @@ import type {
   RetrieverParams
 } from '../preload/types'
 import { readSourceControlState, type SourceControlState } from './sourceControl'
+import { localRetrievalSidecar } from './localRetrievalSidecar'
 
 export const HEADLESS_RUN_SCHEMA_VERSION = 1
 
@@ -61,6 +62,13 @@ export interface PlannedArtifact {
     exists: boolean
     estimatedTokens: number
     estimatedCostUsd: number | null
+  }>
+  localArtifacts: Array<{
+    kind: 'colbertv2' | 'bge-m3'
+    model: string
+    artifactId: string
+    artifactDir: string
+    exists: boolean
   }>
 }
 
@@ -154,6 +162,16 @@ export interface CostLedger {
     model: EmbeddingModel
     tokens: number
     costUsd: number
+  }>
+  localIndexes: Array<{
+    bookId: string
+    strategyId: string
+    chunkArtifactId: string
+    kind: 'colbertv2' | 'bge-m3'
+    model: string
+    artifactId: string
+    indexingLatencyMs: number
+    storageBytes: number
   }>
 }
 
@@ -317,6 +335,46 @@ function retrieverParams(retriever: ExperimentRetriever): RetrieverParams {
         vectorWeight: retriever.vectorWeight,
         bm25Weight: retriever.bm25Weight
       }
+    case 'colbertv2':
+    case 'bge-m3':
+      throw new Error(`${retriever.kind} is handled by the local retrieval sidecar`)
+  }
+}
+
+type LocalRetriever = Extract<ExperimentRetriever, { kind: 'colbertv2' | 'bge-m3' }>
+
+function isLocalRetriever(retriever: ExperimentRetriever): retriever is LocalRetriever {
+  return retriever.kind === 'colbertv2' || retriever.kind === 'bge-m3'
+}
+
+function localArtifactIdentity(chunkArtifactId: string, retriever: LocalRetriever): string {
+  return contentHash({
+    kind: retriever.kind,
+    model: retriever.model,
+    chunkArtifactId,
+    maxLength: retriever.kind === 'bge-m3' ? 512 : undefined
+  })
+}
+
+function localArtifactDir(
+  outputDir: string,
+  chunkArtifactId: string,
+  retriever: LocalRetriever
+): string {
+  return join(
+    dirname(outputDir),
+    'artifacts',
+    'local-retrieval',
+    localArtifactIdentity(chunkArtifactId, retriever)
+  )
+}
+
+async function localArtifactExists(artifactDir: string): Promise<boolean> {
+  try {
+    await fs.access(join(artifactDir, 'manifest.json'))
+    return true
+  } catch {
+    return false
   }
 }
 
@@ -418,6 +476,21 @@ export async function planExperiment(
               : (estimatedChunkTokens / 1_000_000) * price
         }
       })
+      const localPlans: PlannedArtifact['localArtifacts'] = []
+      const plannedLocalArtifacts = new Set<string>()
+      for (const retriever of config.retrievers.filter(isLocalRetriever)) {
+        const artifactId = localArtifactIdentity(chunkIdentity.id, retriever)
+        if (plannedLocalArtifacts.has(artifactId)) continue
+        plannedLocalArtifacts.add(artifactId)
+        const artifactDir = localArtifactDir(config.outputDir, chunkIdentity.id, retriever)
+        localPlans.push({
+          kind: retriever.kind,
+          model: retriever.model,
+          artifactId,
+          artifactDir,
+          exists: await localArtifactExists(artifactDir)
+        })
+      }
       artifacts.push({
         bookId: book.bookId,
         strategyId,
@@ -426,7 +499,8 @@ export async function planExperiment(
         estimatedChunkTokens,
         bm25ArtifactId: bm25Identity.id,
         bm25Exists: bm25Sets.some((set) => set.artifactId === bm25Identity.id),
-        embeddingArtifacts: embeddingPlans
+        embeddingArtifacts: embeddingPlans,
+        localArtifacts: localPlans
       })
 
       for (const retriever of config.retrievers) {
@@ -693,7 +767,8 @@ function emptyLedger(): CostLedger {
     rerankCostUsd: 0,
     byReranker: {},
     byModel: {},
-    indexingByArtifact: []
+    indexingByArtifact: [],
+    localIndexes: []
   }
 }
 
@@ -853,6 +928,81 @@ function reconstructHits(cache: QueryCacheEntry, set: ChunkSet): RetrievedChunkP
   })
 }
 
+async function directorySize(path: string): Promise<number> {
+  let total = 0
+  for (const entry of await fs.readdir(path, { withFileTypes: true })) {
+    const child = join(path, entry.name)
+    total += entry.isDirectory() ? await directorySize(child) : (await fs.stat(child)).size
+  }
+  return total
+}
+
+async function ensureLocalIndex(
+  outputDir: string,
+  set: ChunkSet,
+  retriever: LocalRetriever
+): Promise<{
+  artifactId: string
+  artifactDir: string
+  built: boolean
+  indexingLatencyMs: number
+  storageBytes: number
+}> {
+  const artifactId = localArtifactIdentity(set.artifactId!, retriever)
+  const artifactDir = localArtifactDir(outputDir, set.artifactId!, retriever)
+  if (await localArtifactExists(artifactDir)) {
+    return {
+      artifactId,
+      artifactDir,
+      built: false,
+      indexingLatencyMs: 0,
+      storageBytes: await directorySize(artifactDir)
+    }
+  }
+  const documents = set.chunks.map((chunk) => ({ id: chunk.id, text: chunk.text }))
+  const result =
+    retriever.kind === 'colbertv2'
+      ? await localRetrievalSidecar.indexColbert(artifactDir, documents, retriever.model)
+      : await localRetrievalSidecar.indexBge(artifactDir, documents, retriever.model)
+  return {
+    artifactId,
+    artifactDir,
+    built: true,
+    indexingLatencyMs: result.indexingLatencyMs,
+    storageBytes: await directorySize(artifactDir)
+  }
+}
+
+async function retrieveLocal(
+  outputDir: string,
+  set: ChunkSet,
+  retriever: LocalRetriever,
+  query: string,
+  k: number
+): Promise<{ hits: RetrievedChunkPayload[]; latencyMs: number }> {
+  const { artifactDir } = await ensureLocalIndex(outputDir, set, retriever)
+  const result =
+    retriever.kind === 'colbertv2'
+      ? await localRetrievalSidecar.queryColbert(artifactDir, query, k)
+      : await localRetrievalSidecar.queryBge(
+          artifactDir,
+          query,
+          k,
+          retriever.mode,
+          retriever.shortlist
+        )
+  const chunks = new Map(set.chunks.map((chunk) => [chunk.id, chunk]))
+  return {
+    latencyMs: result.queryLatencyMs,
+    hits: result.hits.flatMap((hit) => {
+      const chunk = chunks.get(hit.id)
+      return chunk
+        ? [{ chunk, distance: -hit.score, rank: hit.rank }]
+        : []
+    })
+  }
+}
+
 function contextCandidates(bookId: string, hits: RetrievedChunkPayload[]): ContextCandidate[] {
   return hits.map(({ chunk }) => ({
     id: chunk.id,
@@ -918,6 +1068,7 @@ export async function runExperiment(
     results: []
   }
   run.ledger.indexingByArtifact ??= []
+  run.ledger.localIndexes ??= []
   run.ledger.rerankTokens ??= 0
   run.ledger.rerankCostUsd ??= 0
   run.ledger.byReranker ??= {}
@@ -941,6 +1092,27 @@ export async function runExperiment(
         const chunkArtifactId = set.artifactId!
 
         for (const retriever of prepared.config.retrievers) {
+          if (isLocalRetriever(retriever)) {
+            const localIndex = await ensureLocalIndex(run.plan.outputDir, set, retriever)
+            if (
+              !run.ledger.localIndexes.some(
+                (item) => item.artifactId === localIndex.artifactId
+              )
+            ) {
+              run.ledger.localIndexes.push({
+                bookId: book.bookId,
+                strategyId: set.strategyId,
+                chunkArtifactId,
+                kind: retriever.kind,
+                model: retriever.model,
+                artifactId: localIndex.artifactId,
+                indexingLatencyMs: localIndex.indexingLatencyMs,
+                storageBytes: localIndex.storageBytes
+              })
+              run.updatedAt = Date.now()
+              await writeJsonAtomic(plan.runPath, run)
+            }
+          }
           if (retrieverNeedsBm25(retriever)) {
             await runBm25Indexing(book.bookId, set.strategyId)
           }
@@ -1068,18 +1240,30 @@ export async function runExperiment(
                     )
                   }
                   const retrievalStartedAt = performance.now()
-                  baseHits = await retrieve(
-                    book.bookId,
-                    set.strategyId,
-                    retrieverParams(baseRetriever),
-                    baseRetriever.kind === 'random' ? evalCase.id : retrievalQuery,
-                    prepared.config.candidatePoolSize,
-                    retrieverNeedsEmbedding(baseRetriever)
-                      ? baseRetriever.embeddingModel
-                      : undefined,
-                    (model, tokens) => recordCost(run, prepared.config, model, 'query', tokens)
-                  )
-                  retrievalLatencyMs = performance.now() - retrievalStartedAt
+                  if (isLocalRetriever(baseRetriever)) {
+                    const local = await retrieveLocal(
+                      run.plan.outputDir,
+                      set,
+                      baseRetriever,
+                      retrievalQuery,
+                      prepared.config.candidatePoolSize
+                    )
+                    baseHits = local.hits
+                    retrievalLatencyMs = local.latencyMs
+                  } else {
+                    baseHits = await retrieve(
+                      book.bookId,
+                      set.strategyId,
+                      retrieverParams(baseRetriever),
+                      baseRetriever.kind === 'random' ? evalCase.id : retrievalQuery,
+                      prepared.config.candidatePoolSize,
+                      retrieverNeedsEmbedding(baseRetriever)
+                        ? baseRetriever.embeddingModel
+                        : undefined,
+                      (model, tokens) => recordCost(run, prepared.config, model, 'query', tokens)
+                    )
+                    retrievalLatencyMs = performance.now() - retrievalStartedAt
+                  }
                   if (retriever.reranker) {
                     await writeRetrievalTrace(run.plan.outputDir, baseQueryId, {
                       schemaVersion: 1,
@@ -1205,6 +1389,8 @@ export async function runExperiment(
     run.updatedAt = Date.now()
     await writeJsonAtomic(plan.runPath, run)
     throw error
+  } finally {
+    localRetrievalSidecar.stop()
   }
 }
 

@@ -38,10 +38,21 @@ function resultCellKey(cell: BenchmarkResultCell): string {
 }
 
 function retrieverLabel(cell: BenchmarkResultCell): string {
-  if (cell.retriever.kind === 'random') return `Random (seed ${cell.retriever.seed})`
-  if (cell.retriever.kind === 'bm25') return 'BM25'
-  if (cell.retriever.kind === 'vector') return `Vector · ${cell.retriever.embeddingModel}`
-  return `Hybrid RRF · ${cell.retriever.embeddingModel}`
+  const reranker = cell.retriever.reranker ? ` + ${cell.retriever.reranker.model}` : ''
+  if (cell.retriever.kind === 'random') return `Random (seed ${cell.retriever.seed})${reranker}`
+  if (cell.retriever.kind === 'bm25') return `BM25${reranker}`
+  if (cell.retriever.kind === 'vector') {
+    return `Vector · ${cell.retriever.embeddingModel}${reranker}`
+  }
+  if (cell.retriever.kind === 'hybrid-rrf') {
+    return `Hybrid RRF · ${cell.retriever.embeddingModel}${reranker}`
+  }
+  if (cell.retriever.kind === 'colbertv2') return `ColBERTv2${reranker}`
+  const mode =
+    cell.retriever.mode === 'colbert-dense-shortlist'
+      ? `multi-vector top ${cell.retriever.shortlist}`
+      : cell.retriever.mode
+  return `BGE-M3 · ${mode}${reranker}`
 }
 
 function retrieverSortKey(cell: BenchmarkResultCell): string {
@@ -49,7 +60,11 @@ function retrieverSortKey(cell: BenchmarkResultCell): string {
   if (retriever.kind === 'random') return `0-random-${String(retriever.seed).padStart(10, '0')}`
   if (retriever.kind === 'bm25') return '1-bm25'
   if (retriever.kind === 'vector') return `2-vector-${retriever.embeddingModel}`
-  return `3-hybrid-${retriever.embeddingModel}-${String(retriever.rrfK ?? 60).padStart(5, '0')}`
+  if (retriever.kind === 'hybrid-rrf') {
+    return `3-hybrid-${retriever.embeddingModel}-${String(retriever.rrfK ?? 60).padStart(5, '0')}`
+  }
+  if (retriever.kind === 'colbertv2') return `4-colbertv2-${retriever.model}`
+  return `5-bge-m3-${retriever.mode}-${String(retriever.shortlist).padStart(5, '0')}`
 }
 
 function strategyLabel(strategyId: string): string {

@@ -85,6 +85,7 @@ export interface ExperimentReport {
     tokens: number
     costUsd: number
   }>
+  localIndexes: HeadlessRun['ledger']['localIndexes']
   groups: ReportGroup[]
 }
 
@@ -99,6 +100,10 @@ function retrieverLabel(retriever: ExperimentRetriever): string {
       return `vector:${retriever.embeddingModel}${reranker}`
     case 'hybrid-rrf':
       return `hybrid-rrf:${retriever.embeddingModel}:k${retriever.rrfK}:v${retriever.vectorWeight ?? 1}:b${retriever.bm25Weight ?? 1}${reranker}`
+    case 'colbertv2':
+      return `colbertv2:${retriever.model}${reranker}`
+    case 'bge-m3':
+      return `bge-m3:${retriever.mode}${retriever.mode === 'colbert-dense-shortlist' ? `:top${retriever.shortlist}` : ''}${reranker}`
   }
 }
 
@@ -278,6 +283,7 @@ export function summarizeRun(run: HeadlessRun, bootstrapIterations = 2000): Expe
     embeddingModelCosts,
     embeddingIndexCosts,
     rerankerCosts,
+    localIndexes: run.ledger.localIndexes ?? [],
     groups: groups.sort(
       (left, right) =>
         left.contextBudget - right.contextBudget ||
@@ -345,6 +351,20 @@ export function reportMarkdown(report: ExperimentReport): string {
     for (const item of report.rerankerCosts) {
       lines.push(
         `| ${item.model} | ${item.tokens.toLocaleString('en-US')} | $${item.costUsd.toFixed(6)} |`
+      )
+    }
+    lines.push('')
+  }
+  if (report.localIndexes.length > 0) {
+    lines.push(
+      '## Local index summary',
+      '',
+      '| Family | Model | Book | Chunking strategy | Build time | Storage |',
+      '| --- | --- | --- | --- | ---: | ---: |'
+    )
+    for (const item of report.localIndexes) {
+      lines.push(
+        `| ${item.kind} | ${item.model} | ${item.bookId} | ${item.strategyId} | ${(item.indexingLatencyMs / 1000).toFixed(2)}s | ${(item.storageBytes / 1024 / 1024).toFixed(2)} MiB |`
       )
     }
     lines.push('')
