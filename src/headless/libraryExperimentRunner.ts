@@ -115,7 +115,15 @@ async function writeAtomic(path: string, value: unknown): Promise<void> {
   await fs.mkdir(dirname(path), { recursive: true })
   const temporary = `${path}.tmp`
   await fs.writeFile(temporary, `${JSON.stringify(value, null, 2)}\n`, 'utf8')
-  await fs.rename(temporary, path)
+  for (let attempt = 0; ; attempt++) {
+    try {
+      await fs.rename(temporary, path)
+      return
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'EPERM' || attempt >= 5) throw error
+      await new Promise((resolveDelay) => setTimeout(resolveDelay, 50 * (attempt + 1)))
+    }
+  }
 }
 function price(config: Config, model: EmbeddingModel): number {
   const value = config.pricing.embeddingUsdPerMillion[model]
@@ -260,7 +268,7 @@ export async function runLibraryExperiment(configPath: string, maxUsd: number, l
     await runBm25Indexing(spec.bookId, set.strategyId)
   }
   const sourceControl = await readSourceControlState()
-  const fingerprint = contentHash({ config: parsed, cases, corpus, sourceControl, metricVersion: 2 })
+  const fingerprint = contentHash({ config: parsed, cases, corpus, metricVersion: 2 })
   const runPath = join(config.outputDir, `${config.name}-${fingerprint.slice(0, 16)}.json`)
   let run: HeadlessRun
   try { run = JSON.parse(await fs.readFile(runPath, 'utf8')) as HeadlessRun } catch (error) {
