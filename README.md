@@ -166,6 +166,7 @@ npm run rag-eval -- run-drafts .rag-eval/draft-generation.yaml -- --max-usd 5
 npm run rag-eval -- retry-draft-failures .rag-eval/eval-drafts/<run>.json -- --max-usd 5 --additional-attempts 2
 npm run rag-eval -- audit-drafts .rag-eval/eval-drafts/<run>.json
 npm run rag-eval -- compile-drafts .rag-eval/eval-drafts/<run>.json benchmarks/evals/smoke-v1 -- --reviewed-by <name>
+npm run rag-eval -- compile-provisional-drafts .rag-eval/eval-drafts/<run>.json .rag-eval/provisional-evals/smoke-v1
 ```
 
 `plan` reports selected books/cases, missing content-addressed artifacts,
@@ -179,6 +180,11 @@ Set `libraryDir` in the experiment or use
 `BOOK_RAG_EVAL_LIBRARY_DIR`/`--library-dir`. For headless paid retrieval, set
 `OPENAI_API_KEY` in the environment or copy `.env.example` to the ignored
 project-root `.env`; the key is never written to run artifacts.
+
+Set `queryModes` to compare the raw user `question` with the fixed diagnostic
+`reference` query (`canonicalSearchQuery`). Query rewriting belongs in a future
+retrieval pipeline stage and should be cached per case/model/prompt/trial rather
+than regenerated for every chunker and context budget.
 
 For portable benchmarks, use `evalSetPath` in experiment YAML and commit the
 canonical eval JSON. `evalSetId` remains available for draft sets stored inside
@@ -204,8 +210,21 @@ refuses pending cases or generation failures, revalidates reviewer edits
 against the canonical packet, and writes schema-v2 eval sets plus a fingerprinted
 manifest.
 
+For exploratory retrieval before review is finished,
+`compile-provisional-drafts` validates every generated case against the same
+canonical evidence packet but includes pending/revision/rejected cases and
+watermarks them as provisional. The tracked
+[`experiments/six-book-provisional-baselines.yaml`](experiments/six-book-provisional-baselines.yaml)
+runs all 150 drafts through fixed/structural token chunkers, random/BM25
+retrieval, both query modes, and three context budgets at zero API cost. These
+results are for iteration and must not be presented as a final leaderboard.
+
 The Library header's **Benchmark** workspace discovers draft runs in
-`.rag-eval/eval-drafts` and provides a global case browser for human review.
+`.rag-eval/eval-drafts` and headless runs in `.rag-eval/runs`. Its Results
+matrix shows cases by chunker/retriever, with selectors for experiment, query
+mode, context budget, metric, and book. Clicking a cell opens its exact query,
+hit rank, evidence recall, retrieved token count, and chunk IDs. The Case
+browser remains available for later human review.
 It supports book/status/evidence filters, audit flags, editable questions and
 reference queries, exact-evidence highlighting, reviewer notes, and
 `approved`/`rejected`/`needs changes` decisions. Review events are journaled in

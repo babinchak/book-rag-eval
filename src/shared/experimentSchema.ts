@@ -34,6 +34,7 @@ const chunkerSchema = z.discriminatedUnion('kind', [
 ])
 
 const embeddingModelSchema = z.enum(['text-embedding-3-small', 'text-embedding-3-large'])
+const queryModeSchema = z.enum(['question', 'reference'])
 
 const retrievalPipelineSchema = z.discriminatedUnion('kind', [
   z.object({
@@ -76,6 +77,7 @@ const experimentSchema = z
     books: z.array(bookSelectionSchema).min(1),
     chunkers: z.array(chunkerSchema).min(1),
     retrievers: z.array(retrievalPipelineSchema).min(1),
+    queryModes: z.array(queryModeSchema).min(1).default(['reference']),
     contextBudgets: z.array(positiveInteger).min(1),
     candidatePoolSize: positiveInteger.default(50),
     splits: z
@@ -115,10 +117,14 @@ const experimentSchema = z
     if (new Set(experiment.contextBudgets).size !== experiment.contextBudgets.length) {
       context.addIssue({ code: 'custom', message: 'contextBudgets must be unique' })
     }
+    if (new Set(experiment.queryModes).size !== experiment.queryModes.length) {
+      context.addIssue({ code: 'custom', message: 'queryModes must be unique' })
+    }
   })
 
 export type ExperimentConfig = z.infer<typeof experimentSchema>
 export type ExperimentRetriever = ExperimentConfig['retrievers'][number]
+export type ExperimentQueryMode = ExperimentConfig['queryModes'][number]
 
 export function parseExperimentConfig(value: unknown): ExperimentConfig {
   return experimentSchema.parse(value)

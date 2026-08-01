@@ -1,7 +1,7 @@
 import { promises as fs } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { contentHash } from '../shared/artifactIdentity'
-import type { ExperimentRetriever } from '../shared/experimentSchema'
+import type { ExperimentQueryMode, ExperimentRetriever } from '../shared/experimentSchema'
 import type { HeadlessResultRow, HeadlessRun } from './experimentRunner'
 
 type ReportMetric =
@@ -34,6 +34,7 @@ export interface ReportGroup {
   id: string
   strategyId: string
   retriever: string
+  queryMode: ExperimentQueryMode
   contextBudget: number
   cases: number
   isBaseline: boolean
@@ -68,7 +69,7 @@ function retrieverLabel(retriever: ExperimentRetriever): string {
 }
 
 function groupId(row: HeadlessResultRow): string {
-  return `${row.strategyId}|${retrieverLabel(row.retriever)}|${row.contextBudget}`
+  return `${row.strategyId}|${retrieverLabel(row.retriever)}|${row.queryMode ?? 'reference'}|${row.contextBudget}`
 }
 
 function caseId(row: HeadlessResultRow): string {
@@ -142,10 +143,11 @@ export function summarizeRun(run: HeadlessRun, bootstrapIterations = 2000): Expe
     rowsByGroup.set(id, rows)
   }
 
-  const baselineByBudget = new Map<number, HeadlessResultRow[]>()
+  const baselineByBudgetAndQuery = new Map<string, HeadlessResultRow[]>()
   for (const row of run.results) {
-    if (!baselineByBudget.has(row.contextBudget)) {
-      baselineByBudget.set(row.contextBudget, rowsByGroup.get(groupId(row))!)
+    const baselineKey = `${row.contextBudget}|${row.queryMode ?? 'reference'}`
+    if (!baselineByBudgetAndQuery.has(baselineKey)) {
+      baselineByBudgetAndQuery.set(baselineKey, rowsByGroup.get(groupId(row))!)
     }
   }
 
@@ -164,8 +166,10 @@ export function summarizeRun(run: HeadlessRun, bootstrapIterations = 2000): Expe
       })
     ) as Record<ReportMetric, ConfidenceEstimate>
 
+    const baselineRows =
+      baselineByBudgetAndQuery.get(`${first.contextBudget}|${first.queryMode ?? 'reference'}`) ?? []
     const baseline = new Map(
-      (baselineByBudget.get(first.contextBudget) ?? []).flatMap((row) => {
+      baselineRows.flatMap((row) => {
         const value = numericMetric(row, 'evidenceRecall')
         return value === null ? [] : ([[caseId(row), value]] as const)
       })
@@ -180,9 +184,10 @@ export function summarizeRun(run: HeadlessRun, bootstrapIterations = 2000): Expe
       id,
       strategyId: first.strategyId,
       retriever: retrieverLabel(first.retriever),
+      queryMode: first.queryMode ?? 'reference',
       contextBudget: first.contextBudget,
       cases: new Set(rows.map(caseId)).size,
-      isBaseline: groupId(first) === groupId(baselineByBudget.get(first.contextBudget)![0]),
+      isBaseline: baselineRows.length > 0 && groupId(first) === groupId(baselineRows[0]),
       metrics,
       evidenceRecallDeltaFromBaseline: bootstrapMean(
         pairedDeltas,
@@ -205,6 +210,7 @@ export function summarizeRun(run: HeadlessRun, bootstrapIterations = 2000): Expe
     groups: groups.sort(
       (left, right) =>
         left.contextBudget - right.contextBudget ||
+        left.queryMode.localeCompare(right.queryMode) ||
         left.retriever.localeCompare(right.retriever) ||
         left.strategyId.localeCompare(right.strategyId)
     )
@@ -231,15 +237,15 @@ export function reportMarkdown(report: ExperimentReport): string {
     `- Actual API cost: $${report.actualCostUsd.toFixed(6)}`,
     `- Intervals: deterministic paired/nonparametric bootstrap, ${report.bootstrapIterations} iterations`,
     '',
-    'Values are means with 95% bootstrap intervals. Δ recall is paired against the first configured strategy at the same context budget.',
+    'Values are means with 95% bootstrap intervals. Δ recall is paired against the first configured strategy at the same context budget and query mode.',
     '',
-    '| Budget | Strategy | Retriever | Hit | MRR | nDCG | Evidence recall | Δ recall | Context precision | Tokens before evidence |',
-    '| ---: | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |'
+    '| Budget | Query | Strategy | Retriever | Hit | MRR | nDCG | Evidence recall | Δ recall | Context precision | Tokens before evidence |',
+    '| ---: | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |'
   ]
   for (const group of report.groups) {
     const strategy = group.isBaseline ? `${group.strategyId} (baseline)` : group.strategyId
     lines.push(
-      `| ${group.contextBudget} | \`${strategy}\` | \`${group.retriever}\` | ${estimateCell(group.metrics.hitAtK)} | ${estimateCell(group.metrics.mrr)} | ${estimateCell(group.metrics.ndcgAtK)} | ${estimateCell(group.metrics.evidenceRecall)} | ${estimateCell(group.evidenceRecallDeltaFromBaseline)} | ${estimateCell(group.metrics.contextPrecision)} | ${estimateCell(group.metrics.tokensBeforeFirstEvidence)} |`
+      `| ${group.contextBudget} | ${group.queryMode} | \`${strategy}\` | \`${group.retriever}\` | ${estimateCell(group.metrics.hitAtK)} | ${estimateCell(group.metrics.mrr)} | ${estimateCell(group.metrics.ndcgAtK)} | ${estimateCell(group.metrics.evidenceRecall)} | ${estimateCell(group.evidenceRecallDeltaFromBaseline)} | ${estimateCell(group.metrics.contextPrecision)} | ${estimateCell(group.metrics.tokensBeforeFirstEvidence)} |`
     )
   }
   return `${lines.join('\n')}\n`

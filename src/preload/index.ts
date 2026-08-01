@@ -2,6 +2,8 @@ import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 import type {
   AskIpcResult,
+  BenchmarkRunResultsIpcResult,
+  BenchmarkRunsListIpcResult,
   Bm25ListIpcResult,
   Bm25RemoveIpcResult,
   Bm25RunIpcResult,
@@ -68,6 +70,12 @@ const api = {
       ipcRenderer.invoke('benchmarkCases:get', runPath),
     update: (runPath: string, update: DraftCaseReviewUpdate): Promise<DraftCaseReviewIpcResult> =>
       ipcRenderer.invoke('benchmarkCases:update', runPath, update)
+  },
+  benchmarkResults: {
+    listRuns: (): Promise<BenchmarkRunsListIpcResult> =>
+      ipcRenderer.invoke('benchmarkResults:listRuns'),
+    get: (runPath: string): Promise<BenchmarkRunResultsIpcResult> =>
+      ipcRenderer.invoke('benchmarkResults:get', runPath)
   },
   chunks: {
     run: (bookId: string, params: ChunkParams): Promise<ChunksRunResult> =>

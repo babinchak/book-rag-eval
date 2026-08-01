@@ -18,6 +18,7 @@ test('parses a retrieval experiment and fills deterministic defaults', () => {
   assert.equal(config.candidatePoolSize, 50)
   assert.deepEqual(config.splits, ['dev'])
   assert.equal(config.outputDir, '.rag-eval/runs')
+  assert.deepEqual(config.queryModes, ['reference'])
 })
 
 test('parses a deterministic random retrieval control', () => {
@@ -50,6 +51,25 @@ test('rejects invalid overlap and duplicate context budgets', () => {
         chunkers: [{ kind: 'fixed-token', size: 100, overlap: 100 }]
       }),
     /overlap must be smaller|contextBudgets must be unique/
+  )
+})
+
+test('accepts question/reference comparisons and rejects duplicate query modes', () => {
+  const base = {
+    schemaVersion: EXPERIMENT_SCHEMA_VERSION,
+    name: 'query-comparison',
+    books: [{ bookId: 'book-1', evalSetId: 'reviewed' }],
+    chunkers: [{ kind: 'fixed-token', size: 100, overlap: 10 }],
+    retrievers: [{ kind: 'bm25' }],
+    contextBudgets: [2048]
+  }
+  assert.deepEqual(
+    parseExperimentConfig({ ...base, queryModes: ['question', 'reference'] }).queryModes,
+    ['question', 'reference']
+  )
+  assert.throws(
+    () => parseExperimentConfig({ ...base, queryModes: ['question', 'question'] }),
+    /queryModes must be unique/
   )
 })
 

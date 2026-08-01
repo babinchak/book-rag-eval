@@ -42,8 +42,9 @@ function generatedValue(draft: EvalDraftRecord): GeneratedEvalDraft {
 
 function evalCaseFromDraft(
   draft: EvalDraftRecord,
-  reviewedBy: string,
-  run: DraftGenerationRun
+  reviewedBy: string | undefined,
+  run: DraftGenerationRun,
+  provisional = false
 ): BenchmarkEvalCase {
   const evidence: GoldEvidence = {
     id: 'evidence-1',
@@ -77,10 +78,12 @@ function evalCaseFromDraft(
       model: draft.provenance.model,
       promptHash: draft.provenance.promptHash,
       source: draft.candidateId,
-      reviewedBy
+      ...(reviewedBy ? { reviewedBy } : {})
     },
     referenceAnswers: [draft.referenceAnswer],
-    notes: `Approved from canonical evidence candidate ${draft.candidateId}.`,
+    notes: provisional
+      ? `PROVISIONAL UNREVIEWED case from canonical evidence candidate ${draft.candidateId}.`
+      : `Approved from canonical evidence candidate ${draft.candidateId}.`,
     searchQuery: draft.canonicalSearchQuery,
     goldSpans:
       draft.evidenceKind === 'text'
@@ -95,6 +98,23 @@ function evalCaseFromDraft(
           ]
         : []
   }
+}
+
+export interface ProvisionalDraftManifest {
+  schemaVersion: 1
+  provisional: true
+  sourceRunFingerprint: string
+  corpusId: string
+  corpusFingerprint: string
+  cases: number
+  evalSets: Array<{
+    bookId: string
+    evalSetId: string
+    cases: number
+    path: string
+    hash: string
+  }>
+  compilationFingerprint: string
 }
 
 async function writeJsonAtomic(path: string, value: unknown): Promise<void> {
@@ -234,4 +254,88 @@ export async function compileApprovedDrafts(
     manifestPath: join(absoluteOutputDir, 'manifest.json'),
     manifest
   }
+}
+
+export async function compileProvisionalDrafts(
+  runPath: string,
+  outputDir: string
+): Promise<{ manifestPath: string; manifest: ProvisionalDraftManifest }> {
+  const absoluteRunPath = resolve(runPath)
+  const run = JSON.parse(await fs.readFile(absoluteRunPath, 'utf8')) as DraftGenerationRun
+  if (run.status !== 'completed' && run.status !== 'completed_with_failures') {
+    throw new Error(`Draft run must be completed before compilation; status is ${run.status}`)
+  }
+  if (run.failures.length > 0) {
+    throw new Error(`Draft run has ${run.failures.length} unresolved generation failures`)
+  }
+  const packet = parseEvidenceReviewPacket(
+    JSON.parse(await fs.readFile(run.plan.packetPath, 'utf8')) as unknown
+  )
+  if (packet.corpusFingerprint !== run.plan.corpusFingerprint) {
+    throw new Error('Canonical evidence packet no longer matches the draft run fingerprint')
+  }
+  const candidates = new Map(packet.candidates.map((candidate) => [candidate.id, candidate]))
+  const validated: EvalDraftRecord[] = run.drafts.map((draft) => {
+    const candidate = candidates.get(draft.candidateId)
+    if (!candidate) throw new Error(`Draft has unknown candidate ${draft.candidateId}`)
+    assertDraftIdentity(draft, candidate, run)
+    return {
+      ...validateDraft(
+        candidate,
+        generatedValue(draft),
+        draft.provenance.model,
+        draft.provenance.promptHash,
+        draft.provenance.packetFingerprint
+      ),
+      reviewStatus: draft.reviewStatus,
+      reviewerNotes: draft.reviewerNotes,
+      reviewedAt: draft.reviewedAt
+    }
+  })
+  const byBook = new Map<string, EvalDraftRecord[]>()
+  for (const draft of validated) {
+    const drafts = byBook.get(draft.bookId) ?? []
+    drafts.push(draft)
+    byBook.set(draft.bookId, drafts)
+  }
+  const absoluteOutputDir = resolve(outputDir)
+  const compiledSets: Array<{ set: BenchmarkEvalSet; path: string; hash: string }> = []
+  for (const [bookId, drafts] of byBook) {
+    const timestamp = run.completedAt ?? run.updatedAt
+    const set = parseEvalSet({
+      schemaVersion: EVAL_SCHEMA_VERSION,
+      id: `${run.plan.name}-provisional-${bookId.slice(0, 12)}`,
+      bookId,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+      cases: drafts.map((draft) => evalCaseFromDraft(draft, undefined, run, true))
+    })
+    const path = join(absoluteOutputDir, `${bookId}.json`)
+    compiledSets.push({ set, path, hash: contentHash(set) })
+  }
+  const manifestCore = {
+    schemaVersion: 1 as const,
+    provisional: true as const,
+    sourceRunFingerprint: run.fingerprint,
+    corpusId: run.plan.corpusId,
+    corpusFingerprint: run.plan.corpusFingerprint,
+    cases: validated.length,
+    evalSets: compiledSets.map(({ set, path, hash }) => ({
+      bookId: set.bookId,
+      evalSetId: set.id,
+      cases: set.cases.length,
+      path: basename(path),
+      hash
+    }))
+  }
+  const manifest: ProvisionalDraftManifest = {
+    ...manifestCore,
+    compilationFingerprint: contentHash(manifestCore)
+  }
+  await fs.mkdir(absoluteOutputDir, { recursive: true })
+  await Promise.all([
+    ...compiledSets.map(({ set, path }) => writeJsonAtomic(path, set)),
+    writeJsonAtomic(join(absoluteOutputDir, 'manifest.json'), manifest)
+  ])
+  return { manifestPath: join(absoluteOutputDir, 'manifest.json'), manifest }
 }

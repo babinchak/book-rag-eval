@@ -4,7 +4,7 @@ import { exportEvalSetFile } from './benchmarkData'
 import { createEvidenceReviewPacket } from './evidenceSampler'
 import { writeRunReport } from './report'
 import { planDraftGeneration, retryDraftFailures, runDraftGeneration } from './draftGeneration'
-import { compileApprovedDrafts } from './draftCompilation'
+import { compileApprovedDrafts, compileProvisionalDrafts } from './draftCompilation'
 import { writeDraftAudit } from './draftAudit'
 
 interface ParsedArgs {
@@ -57,6 +57,7 @@ function usage(): string {
     '  npm run rag-eval -- resume-drafts <draft-generation.yaml> --max-usd <amount>',
     '  npm run rag-eval -- retry-draft-failures <draft-run.json> --max-usd <amount> --additional-attempts <count>',
     '  npm run rag-eval -- audit-drafts <draft-run.json> [--output <audit.md>]',
+    '  npm run rag-eval -- compile-provisional-drafts <draft-run.json> <output-dir>',
     '  npm run rag-eval -- compile-drafts <draft-run.json> <output-dir> --reviewed-by <name>'
   ].join('\n')
 }
@@ -178,6 +179,14 @@ async function main(): Promise<void> {
     const reviewedBy = optionString(args, '--reviewed-by')
     if (!outputDir || !reviewedBy) throw new Error(usage())
     const compiled = await compileApprovedDrafts(target, outputDir, reviewedBy)
+    process.stdout.write(`${JSON.stringify(compiled, null, 2)}\n`)
+    return
+  }
+
+  if (command === 'compile-provisional-drafts') {
+    const outputDir = args.positional[1]
+    if (!outputDir) throw new Error(usage())
+    const compiled = await compileProvisionalDrafts(target, outputDir)
     process.stdout.write(`${JSON.stringify(compiled, null, 2)}\n`)
     return
   }

@@ -109,6 +109,7 @@ test('browses and safely persists review decisions for canonical drafts', async 
   assert.equal(browser.books[0].title, 'Meditations')
   assert.equal(browser.cases[0].excerpt, 'The Stoics held that material objects alone existed.')
   assert.equal(browser.cases[0].reviewStatus, 'pending')
+  assert.match(browser.cases[0].caseId, /^case-[0-9a-f]{20}$/)
 
   const needsChanges = await updateDraftCaseReview(
     runPath,

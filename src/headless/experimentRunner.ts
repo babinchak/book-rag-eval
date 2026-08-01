@@ -26,6 +26,7 @@ import {
 import {
   parseExperimentConfig,
   type ExperimentConfig,
+  type ExperimentQueryMode,
   type ExperimentRetriever
 } from '../shared/experimentSchema'
 import type {
@@ -108,6 +109,8 @@ export interface HeadlessResultRow {
   strategyId: string
   chunkArtifactId: string
   retriever: ExperimentRetriever
+  queryMode?: ExperimentQueryMode
+  retrievalQuery?: string
   contextBudget: number
   retrievedChunkIds: string[]
   retrievedTokens: number
@@ -159,6 +162,7 @@ function reproducibleConfig(config: LoadedExperiment): object {
     })),
     chunkers: config.chunkers,
     retrievers: config.retrievers,
+    queryModes: config.queryModes,
     contextBudgets: config.contextBudgets,
     candidatePoolSize: config.candidatePoolSize,
     splits: config.splits,
@@ -364,7 +368,16 @@ export async function planExperiment(
         if (!retrieverNeedsEmbedding(retriever)) continue
         const queryTokens = book.cases
           .filter((evalCase) => evalCase.scope === 'within_book')
-          .reduce((total, evalCase) => total + countChunkTokens(evalCase.canonicalSearchQuery), 0)
+          .reduce(
+            (total, evalCase) =>
+              total +
+              config.queryModes.reduce(
+                (queryTotal, queryMode) =>
+                  queryTotal + countChunkTokens(retrievalQueryFor(evalCase, queryMode)),
+                0
+              ),
+            0
+          )
         estimatedEmbeddingTokens += queryTokens
         const price = priceOf(config, retriever.embeddingModel)
         if (price === undefined) unknownCostModels.add(retriever.embeddingModel)
@@ -389,7 +402,8 @@ export async function planExperiment(
       total + book.cases.filter((evalCase) => evalCase.scope === 'within_book').length,
     0
   )
-  const retrievalQueries = withinBookCases * config.chunkers.length * config.retrievers.length
+  const retrievalQueries =
+    withinBookCases * config.chunkers.length * config.retrievers.length * config.queryModes.length
   const experimentCells = retrievalQueries * config.contextBudgets.length
 
   return {
@@ -485,15 +499,23 @@ function queryKey(
   chunkArtifactId: string,
   retriever: ExperimentRetriever,
   evalCase: EvalCase,
+  queryMode: ExperimentQueryMode,
+  retrievalQuery: string,
   candidatePoolSize: number
 ): string {
   return contentHash({
     bookId,
     chunkArtifactId,
     retriever,
-    query: evalCase.canonicalSearchQuery,
+    caseId: evalCase.id,
+    queryMode,
+    query: retrievalQuery,
     candidatePoolSize
   })
+}
+
+function retrievalQueryFor(evalCase: EvalCase, queryMode: ExperimentQueryMode): string {
+  return queryMode === 'question' ? evalCase.question : evalCase.canonicalSearchQuery
 }
 
 function resultKey(queryId: string, contextBudget: number): string {
@@ -620,84 +642,91 @@ export async function runExperiment(
 
           for (const evalCase of book.cases) {
             if (evalCase.scope !== 'within_book') continue
-            const queryId = queryKey(
-              book.bookId,
-              chunkArtifactId,
-              retriever,
-              evalCase,
-              prepared.config.candidatePoolSize
-            )
-            const missingBudgets = prepared.config.contextBudgets.filter(
-              (budget) => !completed.has(resultKey(queryId, budget))
-            )
-            if (missingBudgets.length === 0) continue
-
-            let hits: RetrievedChunkPayload[]
-            const cached = run.queryCache[queryId]
-            if (cached) {
-              hits = reconstructHits(cached, set)
-            } else {
-              if (retrieverNeedsEmbedding(retriever)) {
-                assertAffordable(
-                  run,
-                  prepared.config,
-                  retriever.embeddingModel,
-                  countChunkTokens(evalCase.canonicalSearchQuery)
-                )
-              }
-              hits = await retrieve(
+            for (const queryMode of prepared.config.queryModes) {
+              const retrievalQuery = retrievalQueryFor(evalCase, queryMode)
+              const queryId = queryKey(
                 book.bookId,
-                set.strategyId,
-                retrieverParams(retriever),
-                evalCase.canonicalSearchQuery,
-                prepared.config.candidatePoolSize,
-                retrieverNeedsEmbedding(retriever) ? retriever.embeddingModel : undefined,
-                (model, tokens) => recordCost(run, prepared.config, model, 'query', tokens)
-              )
-              run.queryCache[queryId] = {
-                chunkArtifactId,
-                hits: hits.map((hit) => ({
-                  chunkId: hit.chunk.id,
-                  distance: hit.distance,
-                  rank: hit.rank
-                }))
-              }
-              run.updatedAt = Date.now()
-              await writeJsonAtomic(plan.runPath, run)
-            }
-
-            for (const budget of missingBudgets) {
-              const assembled = assembleContextBudget(
-                contextCandidates(book.bookId, hits),
-                budget,
-                countChunkTokens
-              )
-              const metricCandidates = assembled.items.map((item) => ({
-                ...item.candidate,
-                tokenCount: item.tokenCount
-              }))
-              const metrics = computeRetrievalMetrics(metricCandidates, evalCase.goldEvidence)
-              const { candidateRelevance, ...persistedMetrics } = metrics
-              void candidateRelevance
-              const key = resultKey(queryId, budget)
-              run.results.push({
-                key,
-                bookId: book.bookId,
-                evalSetId: book.evalSetId,
-                caseId: evalCase.id,
-                split: evalCase.split,
-                scope: evalCase.scope,
-                strategyId: set.strategyId,
                 chunkArtifactId,
                 retriever,
-                contextBudget: budget,
-                retrievedChunkIds: assembled.items.map((item) => item.candidate.id),
-                retrievedTokens: assembled.totalTokens,
-                metrics: persistedMetrics
-              })
-              completed.add(key)
-              run.updatedAt = Date.now()
-              await writeJsonAtomic(plan.runPath, run)
+                evalCase,
+                queryMode,
+                retrievalQuery,
+                prepared.config.candidatePoolSize
+              )
+              const missingBudgets = prepared.config.contextBudgets.filter(
+                (budget) => !completed.has(resultKey(queryId, budget))
+              )
+              if (missingBudgets.length === 0) continue
+
+              let hits: RetrievedChunkPayload[]
+              const cached = run.queryCache[queryId]
+              if (cached) {
+                hits = reconstructHits(cached, set)
+              } else {
+                if (retrieverNeedsEmbedding(retriever)) {
+                  assertAffordable(
+                    run,
+                    prepared.config,
+                    retriever.embeddingModel,
+                    countChunkTokens(retrievalQuery)
+                  )
+                }
+                hits = await retrieve(
+                  book.bookId,
+                  set.strategyId,
+                  retrieverParams(retriever),
+                  retriever.kind === 'random' ? evalCase.id : retrievalQuery,
+                  prepared.config.candidatePoolSize,
+                  retrieverNeedsEmbedding(retriever) ? retriever.embeddingModel : undefined,
+                  (model, tokens) => recordCost(run, prepared.config, model, 'query', tokens)
+                )
+                run.queryCache[queryId] = {
+                  chunkArtifactId,
+                  hits: hits.map((hit) => ({
+                    chunkId: hit.chunk.id,
+                    distance: hit.distance,
+                    rank: hit.rank
+                  }))
+                }
+                run.updatedAt = Date.now()
+                await writeJsonAtomic(plan.runPath, run)
+              }
+
+              for (const budget of missingBudgets) {
+                const assembled = assembleContextBudget(
+                  contextCandidates(book.bookId, hits),
+                  budget,
+                  countChunkTokens
+                )
+                const metricCandidates = assembled.items.map((item) => ({
+                  ...item.candidate,
+                  tokenCount: item.tokenCount
+                }))
+                const metrics = computeRetrievalMetrics(metricCandidates, evalCase.goldEvidence)
+                const { candidateRelevance, ...persistedMetrics } = metrics
+                void candidateRelevance
+                const key = resultKey(queryId, budget)
+                run.results.push({
+                  key,
+                  bookId: book.bookId,
+                  evalSetId: book.evalSetId,
+                  caseId: evalCase.id,
+                  split: evalCase.split,
+                  scope: evalCase.scope,
+                  strategyId: set.strategyId,
+                  chunkArtifactId,
+                  retriever,
+                  queryMode,
+                  retrievalQuery,
+                  contextBudget: budget,
+                  retrievedChunkIds: assembled.items.map((item) => item.candidate.id),
+                  retrievedTokens: assembled.totalTokens,
+                  metrics: persistedMetrics
+                })
+                completed.add(key)
+                run.updatedAt = Date.now()
+                await writeJsonAtomic(plan.runPath, run)
+              }
             }
           }
         }
@@ -744,6 +773,8 @@ export async function exportRun(runPath: string, format: 'jsonl' | 'csv'): Promi
     'strategyId',
     'chunkArtifactId',
     'retriever',
+    'queryMode',
+    'retrievalQuery',
     'contextBudget',
     'retrievedTokens',
     'hitAtK',
@@ -768,6 +799,8 @@ export async function exportRun(runPath: string, format: 'jsonl' | 'csv'): Promi
         row.strategyId,
         row.chunkArtifactId,
         JSON.stringify(row.retriever),
+        row.queryMode ?? 'reference',
+        row.retrievalQuery ?? '',
         row.contextBudget,
         row.retrievedTokens,
         row.metrics.hitAtK,

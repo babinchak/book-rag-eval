@@ -17,6 +17,7 @@ import {
 import type { StrategyConfig } from '../shared/savedStrategy'
 import type { DraftCaseReviewUpdate } from '../shared/caseBrowser'
 import { getDraftCaseBrowser, listDraftCaseRuns, updateDraftCaseReview } from './benchmarkCases'
+import { getBenchmarkRunResults, listBenchmarkRuns } from './benchmarkResults'
 import { ask } from './retrieval'
 import { normalizeRetrieverParams, type RetrieverParams } from '../shared/retriever'
 import {
@@ -50,6 +51,8 @@ import { listErrors, recordRendererReport, subscribe } from './errorRegistry'
 import { buildBundle, buildBundleAll } from './diagnosticBundle'
 import type {
   AskIpcResult,
+  BenchmarkRunResultsIpcResult,
+  BenchmarkRunsListIpcResult,
   Bm25ListIpcResult,
   Bm25RemoveIpcResult,
   Bm25RunIpcResult,
@@ -191,6 +194,28 @@ app.whenReady().then(() => {
         return {
           ok: false,
           error: captureIpcError(err, 'benchmarkCases:update', [runPath, update])
+        }
+      }
+    }
+  )
+
+  ipcMain.handle('benchmarkResults:listRuns', async (): Promise<BenchmarkRunsListIpcResult> => {
+    try {
+      return { ok: true, runs: await listBenchmarkRuns() }
+    } catch (err) {
+      return { ok: false, error: captureIpcError(err, 'benchmarkResults:listRuns', []) }
+    }
+  })
+
+  ipcMain.handle(
+    'benchmarkResults:get',
+    async (_, runPath: string): Promise<BenchmarkRunResultsIpcResult> => {
+      try {
+        return { ok: true, data: await getBenchmarkRunResults(runPath) }
+      } catch (err) {
+        return {
+          ok: false,
+          error: captureIpcError(err, 'benchmarkResults:get', [runPath])
         }
       }
     }

@@ -15,6 +15,7 @@ export interface DraftRunBrowserSummary {
 }
 
 export interface DraftCaseBrowserItem {
+  caseId: string
   candidateId: string
   bookId: string
   bookTitle: string

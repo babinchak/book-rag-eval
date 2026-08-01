@@ -46,47 +46,47 @@ test('plans, runs, resumes, and exports a zero-cost BM25 experiment', async (con
   const claimStart = canonical.spine[0].text.indexOf('freedom requires responsibility')
   const claimEnd = claimStart + 'freedom requires responsibility'.length
   const evalSet = {
-      schemaVersion: EVAL_SCHEMA_VERSION,
-      id: 'reviewed',
-      bookId,
-      createdAt: 1,
-      updatedAt: 1,
-      cases: [
-        {
-          id: 'case-1',
-          question: 'What does freedom require?',
-          canonicalSearchQuery: 'freedom responsibility',
-          searchQuery: 'freedom responsibility',
-          scope: 'within_book',
-          answerability: 'answerable',
-          goldEvidence: [
-            {
-              id: 'evidence-1',
-              requirementId: 'required-1',
-              kind: 'text',
-              bookId,
-              nodeId: paragraph.id,
-              spineHref: href,
-              textStart: claimStart,
-              textEnd: claimEnd
-            }
-          ],
-          goldSpans: [
-            {
-              bookId,
-              nodeId: paragraph.id,
-              spineHref: href,
-              textStart: claimStart,
-              textEnd: claimEnd
-            }
-          ],
-          tags: ['direct-fact'],
-          difficulty: 'easy',
-          split: 'dev',
-          provenance: { kind: 'human' }
-        }
-      ]
-    }
+    schemaVersion: EVAL_SCHEMA_VERSION,
+    id: 'reviewed',
+    bookId,
+    createdAt: 1,
+    updatedAt: 1,
+    cases: [
+      {
+        id: 'case-1',
+        question: 'What does freedom require?',
+        canonicalSearchQuery: 'freedom responsibility',
+        searchQuery: 'freedom responsibility',
+        scope: 'within_book',
+        answerability: 'answerable',
+        goldEvidence: [
+          {
+            id: 'evidence-1',
+            requirementId: 'required-1',
+            kind: 'text',
+            bookId,
+            nodeId: paragraph.id,
+            spineHref: href,
+            textStart: claimStart,
+            textEnd: claimEnd
+          }
+        ],
+        goldSpans: [
+          {
+            bookId,
+            nodeId: paragraph.id,
+            spineHref: href,
+            textStart: claimStart,
+            textEnd: claimEnd
+          }
+        ],
+        tags: ['direct-fact'],
+        difficulty: 'easy',
+        split: 'dev',
+        provenance: { kind: 'human' }
+      }
+    ]
+  }
   await fs.writeFile(join(evalsDir, 'reviewed.json'), JSON.stringify(evalSet), 'utf8')
   await fs.writeFile(join(root, 'portable-reviewed.json'), JSON.stringify(evalSet), 'utf8')
 
@@ -107,6 +107,7 @@ test('plans, runs, resumes, and exports a zero-cost BM25 experiment', async (con
       '    overlap: 4',
       'retrievers:',
       '  - kind: bm25',
+      'queryModes: [question, reference]',
       'contextBudgets: [16, 64]',
       'candidatePoolSize: 10',
       'splits: [dev]'
@@ -128,8 +129,8 @@ test('plans, runs, resumes, and exports a zero-cost BM25 experiment', async (con
     }
   }
   assert.equal(plan.books[0].selectedCases, 1)
-  assert.equal(plan.retrievalQueries, 1)
-  assert.equal(plan.experimentCells, 2)
+  assert.equal(plan.retrievalQueries, 2)
+  assert.equal(plan.experimentCells, 4)
   assert.equal(plan.estimatedCostUsd, 0)
   assert.equal(plan.artifacts[0].chunkExists, false)
   assert.match(plan.sourceControl.gitCommit ?? '', /^[0-9a-f]{40}$/)
@@ -142,12 +143,20 @@ test('plans, runs, resumes, and exports a zero-cost BM25 experiment', async (con
   await cli('run', configPath, '--max-usd', '0')
   const first = JSON.parse(await fs.readFile(plan.runPath, 'utf8')) as {
     status: string
-    results: Array<{ metrics: { hitAtK: number | null } }>
+    results: Array<{
+      queryMode: string
+      retrievalQuery: string
+      metrics: { hitAtK: number | null }
+    }>
     ledger: { actualCostUsd: number }
     plan: { runPath: string }
   }
   assert.equal(first.status, 'completed')
-  assert.equal(first.results.length, 2)
+  assert.equal(first.results.length, 4)
+  assert.deepEqual(
+    new Set(first.results.map((row) => row.queryMode)),
+    new Set(['question', 'reference'])
+  )
   assert.equal(first.ledger.actualCostUsd, 0)
   assert.ok(first.results.some((row) => row.metrics.hitAtK === 1))
 
@@ -156,7 +165,7 @@ test('plans, runs, resumes, and exports a zero-cost BM25 experiment', async (con
   const resumed = JSON.parse(await fs.readFile(plan.runPath, 'utf8')) as {
     results: unknown[]
   }
-  assert.equal(resumed.results.length, 2)
+  assert.equal(resumed.results.length, 4)
 
   const jsonlPath = (await cli('export', first.plan.runPath, '--format', 'jsonl')).stdout.trim()
   const csvPath = (await cli('export', first.plan.runPath, '--format', 'csv')).stdout.trim()
@@ -164,14 +173,7 @@ test('plans, runs, resumes, and exports a zero-cost BM25 experiment', async (con
   assert.match(await fs.readFile(csvPath, 'utf8'), /"evidenceRecall"/)
 
   const exportedEvalPath = join(root, 'exported-reviewed.json')
-  await cli(
-    'export-eval',
-    bookId,
-    'reviewed',
-    exportedEvalPath,
-    '--library-dir',
-    libraryDir
-  )
+  await cli('export-eval', bookId, 'reviewed', exportedEvalPath, '--library-dir', libraryDir)
   const exportedEval = JSON.parse(await fs.readFile(exportedEvalPath, 'utf8')) as {
     schemaVersion: number
     cases: unknown[]

@@ -8,6 +8,7 @@ import type {
   DraftRunBrowserSummary
 } from '../shared/caseBrowser'
 import { buildDraftAudit } from '../headless/draftAudit'
+import { contentHash } from '../shared/artifactIdentity'
 import {
   validateDraft,
   type DraftGenerationRun,
@@ -120,6 +121,10 @@ export async function getDraftCaseBrowser(
       throw new Error(`Draft ${draft.candidateId} is missing canonical review data`)
     }
     return {
+      caseId: `case-${contentHash({
+        corpusFingerprint: run.plan.corpusFingerprint,
+        candidateId: draft.candidateId
+      }).slice(0, 20)}`,
       candidateId: draft.candidateId,
       bookId: draft.bookId,
       bookTitle: book.title,

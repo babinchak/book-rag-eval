@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import type {
+  BenchmarkResultCell,
   DraftCaseBrowserData,
   DraftCaseBrowserItem,
   DraftCaseReviewUpdate,
@@ -9,12 +10,14 @@ import type {
 } from '../../../preload/types'
 import { cv } from '../lib/theme'
 import ErrorDisplay from './ErrorDisplay'
+import BenchmarkMatrix from './BenchmarkMatrix'
 
 interface BenchmarkCasesProps {
   onBack: () => void
 }
 
 type CaseTab = 'definition' | 'results'
+type WorkspaceTab = 'cases' | 'matrix'
 type StatusFilter = 'all' | DraftReviewStatus
 
 interface EditorValue {
@@ -165,6 +168,8 @@ function BenchmarkCases({ onBack }: BenchmarkCasesProps): React.JSX.Element {
   const [kindFilter, setKindFilter] = useState('all')
   const [flaggedOnly, setFlaggedOnly] = useState(false)
   const [tab, setTab] = useState<CaseTab>('definition')
+  const [workspace, setWorkspace] = useState<WorkspaceTab>('matrix')
+  const [selectedResult, setSelectedResult] = useState<BenchmarkResultCell | null>(null)
   const [editor, setEditor] = useState<EditorValue | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -304,31 +309,41 @@ function BenchmarkCases({ onBack }: BenchmarkCasesProps): React.JSX.Element {
           ← Library
         </button>
         <div>
-          <h1 style={{ margin: 0, fontSize: 18, color: cv.text1 }}>Benchmark cases</h1>
+          <h1 style={{ margin: 0, fontSize: 18, color: cv.text1 }}>RAG benchmark</h1>
           <div style={{ color: cv.text4, fontSize: 11 }}>
-            Review canonical cases before experiments
+            Explore provisional cases and compare retrieval strategies
           </div>
         </div>
+        <div style={{ display: 'flex', gap: 4, marginLeft: 14 }}>
+          <TabButton active={workspace === 'matrix'} onClick={() => setWorkspace('matrix')}>
+            Results matrix
+          </TabButton>
+          <TabButton active={workspace === 'cases'} onClick={() => setWorkspace('cases')}>
+            Case browser
+          </TabButton>
+        </div>
         <div style={{ marginLeft: 'auto', minWidth: 340 }}>
-          <select
-            value={selectedRunPath}
-            onChange={(event) => {
-              const path = event.target.value
-              setSelectedRunPath(path)
-              void loadRun(path)
-            }}
-            style={{ ...inputStyle, fontFamily: 'monospace', fontSize: 11 }}
-          >
-            {runs.map((run) => (
-              <option key={run.runPath} value={run.runPath}>
-                {run.name} · {run.totalCases} cases · {run.model}
-              </option>
-            ))}
-          </select>
+          {workspace === 'cases' && (
+            <select
+              value={selectedRunPath}
+              onChange={(event) => {
+                const path = event.target.value
+                setSelectedRunPath(path)
+                void loadRun(path)
+              }}
+              style={{ ...inputStyle, fontFamily: 'monospace', fontSize: 11 }}
+            >
+              {runs.map((run) => (
+                <option key={run.runPath} value={run.runPath}>
+                  {run.name} · {run.totalCases} cases · {run.model}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
       </header>
 
-      {data && (
+      {data && workspace === 'cases' && (
         <div
           style={{
             display: 'grid',
@@ -357,6 +372,19 @@ function BenchmarkCases({ onBack }: BenchmarkCasesProps): React.JSX.Element {
       ) : !data ? (
         <div style={{ padding: 32, color: cv.text3 }}>
           No draft-generation runs were found in <code>.rag-eval/eval-drafts</code>.
+        </div>
+      ) : workspace === 'matrix' ? (
+        <div style={{ flex: 1, minHeight: 0 }}>
+          <BenchmarkMatrix
+            cases={data.cases}
+            onOpenCase={(item, cell) => {
+              setSelectedCandidateId(item.candidateId)
+              setEditor(editorValue(item))
+              setSelectedResult(cell)
+              setTab('results')
+              setWorkspace('cases')
+            }}
+          />
         </div>
       ) : (
         <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '380px 1fr' }}>
@@ -558,22 +586,70 @@ function BenchmarkCases({ onBack }: BenchmarkCasesProps): React.JSX.Element {
                 </div>
 
                 {tab === 'results' ? (
-                  <div
-                    style={{
-                      marginTop: 18,
-                      padding: 24,
-                      border: `1px dashed ${cv.border2}`,
-                      borderRadius: 7,
-                      color: cv.text3,
-                      lineHeight: 1.6
-                    }}
-                  >
-                    <strong style={{ color: cv.text1 }}>No experiment results yet.</strong>
-                    <br />
-                    Once this case is approved and included in a run, this tab will join results by
-                    case ID and show each strategy’s query, hit rank, evidence recall, retrieved
-                    tokens, latency, cost, and retrieved passages.
-                  </div>
+                  selectedResult && selectedResult.caseId === selectedCase.caseId ? (
+                    <div
+                      style={{
+                        marginTop: 18,
+                        padding: 24,
+                        border: `1px solid ${cv.border2}`,
+                        borderRadius: 7,
+                        color: cv.text3,
+                        lineHeight: 1.5
+                      }}
+                    >
+                      <strong style={{ color: cv.text1 }}>
+                        {strategyLabelForResult(selectedResult.strategyId)} ·{' '}
+                        {selectedResult.retriever.kind}
+                      </strong>
+                      <ResultLine label="Query mode" value={selectedResult.queryMode} />
+                      <ResultLine label="Actual query" value={selectedResult.retrievalQuery} />
+                      <ResultLine
+                        label="Context budget"
+                        value={`${selectedResult.contextBudget.toLocaleString()} tokens`}
+                      />
+                      <ResultLine
+                        label="Retrieved"
+                        value={`${selectedResult.retrievedTokens.toLocaleString()} tokens`}
+                      />
+                      <ResultLine
+                        label="Hit / rank"
+                        value={`${selectedResult.metrics.hitAtK === 1 ? 'hit' : 'miss'} / ${selectedResult.metrics.firstHitRank ?? '—'}`}
+                      />
+                      <ResultLine
+                        label="Evidence recall"
+                        value={formatResultMetric(selectedResult.metrics.evidenceRecall)}
+                      />
+                      <ResultLine
+                        label="MRR"
+                        value={formatResultMetric(selectedResult.metrics.mrr)}
+                      />
+                      <div
+                        style={{
+                          marginTop: 14,
+                          color: cv.text4,
+                          fontSize: 10,
+                          fontFamily: 'monospace',
+                          whiteSpace: 'pre-wrap'
+                        }}
+                      >
+                        {selectedResult.retrievedChunkIds.join('\n')}
+                      </div>
+                    </div>
+                  ) : (
+                    <div
+                      style={{
+                        marginTop: 18,
+                        padding: 24,
+                        border: `1px dashed ${cv.border2}`,
+                        borderRadius: 7,
+                        color: cv.text3,
+                        lineHeight: 1.6
+                      }}
+                    >
+                      Open <strong style={{ color: cv.text1 }}>Results matrix</strong> and click a
+                      cell to inspect its query, metrics, and retrieved chunk IDs.
+                    </div>
+                  )
                 ) : (
                   <>
                     <div style={{ display: 'grid', gap: 14, marginTop: 18 }}>
@@ -764,6 +840,25 @@ function BenchmarkCases({ onBack }: BenchmarkCasesProps): React.JSX.Element {
           </main>
         </div>
       )}
+    </div>
+  )
+}
+
+function strategyLabelForResult(strategyId: string): string {
+  return strategyId
+    .replace('fixed-token-cl100k_base-', 'fixed tokens ')
+    .replace('structural-token-cl100k_base-', 'structural tokens ')
+}
+
+function formatResultMetric(value: number | null): string {
+  return value === null ? 'n/a' : `${Math.round(value * 100)}%`
+}
+
+function ResultLine({ label, value }: { label: string; value: string }): React.JSX.Element {
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', gap: 12, marginTop: 10 }}>
+      <span style={{ color: cv.text4 }}>{label}</span>
+      <span style={{ color: cv.text1 }}>{value}</span>
     </div>
   )
 }

@@ -10,7 +10,7 @@ import {
   validateDraft,
   type DraftModel
 } from '../src/headless/draftGeneration'
-import { compileApprovedDrafts } from '../src/headless/draftCompilation'
+import { compileApprovedDrafts, compileProvisionalDrafts } from '../src/headless/draftCompilation'
 import { writeDraftAudit } from '../src/headless/draftAudit'
 import { parseEvalSet } from '../src/shared/evalSchema'
 
@@ -190,6 +190,18 @@ test('plans, validates, meters, and resumes canonical draft generation', async (
   assert.equal(audit.markdownPath, auditPath)
   assert.equal(audit.jsonPath, `${auditPath}.json`)
   assert.match(await fs.readFile(audit.markdownPath, 'utf8'), /Pending human review: 1/)
+
+  const provisionalDir = join(root, 'provisional')
+  const provisional = await compileProvisionalDrafts(run.plan.runPath, provisionalDir)
+  assert.equal(provisional.manifest.provisional, true)
+  assert.equal(provisional.manifest.cases, 1)
+  const provisionalSet = parseEvalSet(
+    JSON.parse(
+      await fs.readFile(join(provisionalDir, provisional.manifest.evalSets[0].path), 'utf8')
+    )
+  )
+  assert.equal(provisionalSet.cases[0].provenance.reviewedBy, undefined)
+  assert.match(provisionalSet.cases[0].notes ?? '', /PROVISIONAL UNREVIEWED/)
 
   const compiledDir = join(root, 'compiled')
   await assert.rejects(

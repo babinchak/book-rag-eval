@@ -1,6 +1,13 @@
 import type { ArtifactIdentity } from '../shared/artifactIdentity'
 import type { BenchmarkEvalCase, BenchmarkEvalSet, LegacyGoldSpan } from '../shared/evalSchema'
 import type { DraftCaseBrowserData, DraftRunBrowserSummary } from '../shared/caseBrowser'
+import type { BenchmarkRunResults, BenchmarkRunSummary } from '../shared/benchmarkResults'
+
+export type {
+  BenchmarkResultCell,
+  BenchmarkRunResults,
+  BenchmarkRunSummary
+} from '../shared/benchmarkResults'
 
 export type {
   DraftCaseBrowserData,
@@ -134,6 +141,12 @@ export type DraftCaseBrowserIpcResult =
   | { ok: true; data: DraftCaseBrowserData }
   | { ok: false; error: IpcError }
 export type DraftCaseReviewIpcResult = DraftCaseBrowserIpcResult
+export type BenchmarkRunsListIpcResult =
+  | { ok: true; runs: BenchmarkRunSummary[] }
+  | { ok: false; error: IpcError }
+export type BenchmarkRunResultsIpcResult =
+  | { ok: true; data: BenchmarkRunResults }
+  | { ok: false; error: IpcError }
 
 export type ChunkParams =
   | {
