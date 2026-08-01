@@ -1,0 +1,2425 @@
+{
+  "schemaVersion": 1,
+  "provisional": true,
+  "metricVersion": 2,
+  "caseSet": [
+    "225822fed9ed520c7a4c36efcc06eb110912c9305c695334d5411ae106b242be|library-case-0a926871d84b24cd2513",
+    "225822fed9ed520c7a4c36efcc06eb110912c9305c695334d5411ae106b242be|library-case-495dda281f7cc2bb96cf",
+    "225822fed9ed520c7a4c36efcc06eb110912c9305c695334d5411ae106b242be|library-case-599870a7e9771ab17c45",
+    "225822fed9ed520c7a4c36efcc06eb110912c9305c695334d5411ae106b242be|library-case-712b9b2f1905b7388fe2",
+    "225822fed9ed520c7a4c36efcc06eb110912c9305c695334d5411ae106b242be|library-case-a77c67296dd79ec22c07",
+    "225822fed9ed520c7a4c36efcc06eb110912c9305c695334d5411ae106b242be|library-case-db976fb64d6c2ebd77f5",
+    "225822fed9ed520c7a4c36efcc06eb110912c9305c695334d5411ae106b242be|library-case-ddbe808918b8838f793b",
+    "225822fed9ed520c7a4c36efcc06eb110912c9305c695334d5411ae106b242be|library-case-ed32fb2977e6c846ee2b",
+    "2da38dab93cf1edb422868a0fcaf1ec923618d29f7f8d3676ab7c97d224616df|library-case-0f0601a852e4aae7f4a4",
+    "2da38dab93cf1edb422868a0fcaf1ec923618d29f7f8d3676ab7c97d224616df|library-case-44f9a7459cc8f800c774",
+    "2da38dab93cf1edb422868a0fcaf1ec923618d29f7f8d3676ab7c97d224616df|library-case-4d52d933e4e3a16648e1",
+    "2da38dab93cf1edb422868a0fcaf1ec923618d29f7f8d3676ab7c97d224616df|library-case-4ee429ffe0d465dd4075",
+    "2da38dab93cf1edb422868a0fcaf1ec923618d29f7f8d3676ab7c97d224616df|library-case-5b592bbd199398a87406",
+    "2da38dab93cf1edb422868a0fcaf1ec923618d29f7f8d3676ab7c97d224616df|library-case-6b60eb6323931ca2f756",
+    "2da38dab93cf1edb422868a0fcaf1ec923618d29f7f8d3676ab7c97d224616df|library-case-f5b7c852609c1ff636ca",
+    "83c5b63c365f1d48a841789c8517c19f1416d3be4932c229b34981d491fbf6f1|library-case-079e591991f0f34d385d",
+    "83c5b63c365f1d48a841789c8517c19f1416d3be4932c229b34981d491fbf6f1|library-case-113a91a9fd0144ef10c1",
+    "83c5b63c365f1d48a841789c8517c19f1416d3be4932c229b34981d491fbf6f1|library-case-3f3353c87edc58af019f",
+    "83c5b63c365f1d48a841789c8517c19f1416d3be4932c229b34981d491fbf6f1|library-case-3ffc4aedf089f1be2e67",
+    "83c5b63c365f1d48a841789c8517c19f1416d3be4932c229b34981d491fbf6f1|library-case-4fa03620cc0ef5e7d2ce",
+    "83c5b63c365f1d48a841789c8517c19f1416d3be4932c229b34981d491fbf6f1|library-case-5b355501695a81f264bd",
+    "83c5b63c365f1d48a841789c8517c19f1416d3be4932c229b34981d491fbf6f1|library-case-6b2ce4463311628198f3",
+    "83c5b63c365f1d48a841789c8517c19f1416d3be4932c229b34981d491fbf6f1|library-case-88f54d879020b64cf237",
+    "83c5b63c365f1d48a841789c8517c19f1416d3be4932c229b34981d491fbf6f1|library-case-a1c3a3a52e5f6a175925",
+    "83c5b63c365f1d48a841789c8517c19f1416d3be4932c229b34981d491fbf6f1|library-case-b2ee8bc887ae5a2c699d",
+    "89837bc58f2f7a00efba19501669db603e8a18d1f50e0f350b57f4e6220ae2e3|library-case-0175fab865d96e21b8d9",
+    "89837bc58f2f7a00efba19501669db603e8a18d1f50e0f350b57f4e6220ae2e3|library-case-447d7ad60c966114b6da",
+    "89837bc58f2f7a00efba19501669db603e8a18d1f50e0f350b57f4e6220ae2e3|library-case-4fff46df5475724aefb4",
+    "89837bc58f2f7a00efba19501669db603e8a18d1f50e0f350b57f4e6220ae2e3|library-case-592f89430f01fd1c473b",
+    "89837bc58f2f7a00efba19501669db603e8a18d1f50e0f350b57f4e6220ae2e3|library-case-61c7259e8ea92f6aea99",
+    "89837bc58f2f7a00efba19501669db603e8a18d1f50e0f350b57f4e6220ae2e3|library-case-686828caadf218210b07",
+    "89837bc58f2f7a00efba19501669db603e8a18d1f50e0f350b57f4e6220ae2e3|library-case-6da9ef189cb774245861",
+    "89837bc58f2f7a00efba19501669db603e8a18d1f50e0f350b57f4e6220ae2e3|library-case-6dfda9b1f06dc82ee2c7",
+    "89837bc58f2f7a00efba19501669db603e8a18d1f50e0f350b57f4e6220ae2e3|library-case-8b8f69b38642fbb5a75a",
+    "89837bc58f2f7a00efba19501669db603e8a18d1f50e0f350b57f4e6220ae2e3|library-case-a1fb9b3cd35d75845e53",
+    "89837bc58f2f7a00efba19501669db603e8a18d1f50e0f350b57f4e6220ae2e3|library-case-a2bfde1cef93d847e644",
+    "89837bc58f2f7a00efba19501669db603e8a18d1f50e0f350b57f4e6220ae2e3|library-case-a2c639b3b2c8746f8f48",
+    "89837bc58f2f7a00efba19501669db603e8a18d1f50e0f350b57f4e6220ae2e3|library-case-abce04b837e02f8e0af4",
+    "89837bc58f2f7a00efba19501669db603e8a18d1f50e0f350b57f4e6220ae2e3|library-case-c8a24ad68747600365f7",
+    "89837bc58f2f7a00efba19501669db603e8a18d1f50e0f350b57f4e6220ae2e3|library-case-e1cec86bd91a2bf162eb",
+    "b431f705db5c5c17f0ccd512fd689b52724be51ca2847f2f190a273b5eac6db2|library-case-04cc51b610f380070767",
+    "b431f705db5c5c17f0ccd512fd689b52724be51ca2847f2f190a273b5eac6db2|library-case-0786a1dd167a344cb07b",
+    "b431f705db5c5c17f0ccd512fd689b52724be51ca2847f2f190a273b5eac6db2|library-case-5e6a42d943c54dc9121f",
+    "b431f705db5c5c17f0ccd512fd689b52724be51ca2847f2f190a273b5eac6db2|library-case-6322628574f08ad18727",
+    "b431f705db5c5c17f0ccd512fd689b52724be51ca2847f2f190a273b5eac6db2|library-case-b47d1113f07a86b7b629",
+    "b431f705db5c5c17f0ccd512fd689b52724be51ca2847f2f190a273b5eac6db2|library-case-cf87e16d68f528a049c2",
+    "b431f705db5c5c17f0ccd512fd689b52724be51ca2847f2f190a273b5eac6db2|library-case-d087af7ded5430354edf",
+    "b431f705db5c5c17f0ccd512fd689b52724be51ca2847f2f190a273b5eac6db2|library-case-e0e072db1e1fecd0868a",
+    "b431f705db5c5c17f0ccd512fd689b52724be51ca2847f2f190a273b5eac6db2|library-case-f72d41b0199449388d0f",
+    "b431f705db5c5c17f0ccd512fd689b52724be51ca2847f2f190a273b5eac6db2|library-case-f91adc507ef208be08fe",
+    "b431f705db5c5c17f0ccd512fd689b52724be51ca2847f2f190a273b5eac6db2|library-case-fc7c7b38e3a792e9d82e",
+    "b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32|library-case-3c887a9034f6caccb521",
+    "b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32|library-case-41da407f5a96d18fe261",
+    "b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32|library-case-43eb33de8349b2b51e11",
+    "b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32|library-case-4c8d295c0fac5e5c3fda",
+    "b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32|library-case-6dea1e759a5c7f5cfebc",
+    "b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32|library-case-d04e8722b5ec64b14ed4",
+    "b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32|library-case-e3349025bc818c1b4f4f",
+    "b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32|library-case-e43e45ecaa7659191008",
+    "b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32|library-case-ec4c2524ac4aaa8cdd6d"
+  ],
+  "headlineBudget": 8192,
+  "compatibleRuns": [
+    {
+      "path": "six-book-library-screen-v1-b295d3f6f8c25e1a.json",
+      "name": "six-book-library-screen-v1",
+      "costUsd": 0.00029404999999999996,
+      "resultCells": 5760
+    },
+    {
+      "path": "six-book-library-rerank-lite-v1-936f357b8a3a9f93.json",
+      "name": "six-book-library-rerank-lite-v1",
+      "costUsd": 0.14846337999999995,
+      "resultCells": 3240
+    }
+  ],
+  "totalMeteredCostUsd": 0.14875742999999994,
+  "runDirectoryMeteredCostUsd": 1.4580822300000031,
+  "strategies": [
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-256-32\",\"retriever\":{\"kind\":\"bge-m3\",\"model\":\"BAAI/bge-m3\",\"mode\":\"hybrid-all-rrf\",\"shortlist\":200,\"reranker\":{\"kind\":\"voyage\",\"model\":\"rerank-2.5-lite\"}},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"},\"routingPolicy\":{\"kind\":\"oracle\"}}",
+      "label": "BGE-M3 hybrid-all-rrf + rerank-2.5-lite · oracle books",
+      "strategyId": "fixed-token-cl100k_base-256-32",
+      "retriever": {
+        "kind": "bge-m3",
+        "model": "BAAI/bge-m3",
+        "mode": "hybrid-all-rrf",
+        "shortlist": 200,
+        "reranker": {
+          "kind": "voyage",
+          "model": "rerank-2.5-lite"
+        }
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "six-book-library-rerank-lite-v1-936f357b8a3a9f93.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 60,
+          "evidenceEfficiency": 0.3919921875,
+          "payloadEvidenceEfficiency": 0.234375,
+          "evidenceRecall": 0.5666666666666667,
+          "mrr": 0.5666666666666667,
+          "tokensToFirstEvidence": 290.35
+        },
+        {
+          "budget": 1024,
+          "cases": 60,
+          "evidenceEfficiency": 0.48324381510416664,
+          "payloadEvidenceEfficiency": 0.40286458333333336,
+          "evidenceRecall": 0.5833333333333334,
+          "mrr": 0.576388888888889,
+          "tokensToFirstEvidence": 478.6
+        },
+        {
+          "budget": 2048,
+          "cases": 60,
+          "evidenceEfficiency": 0.554296875,
+          "payloadEvidenceEfficiency": 0.5087239583333333,
+          "evidenceRecall": 0.65,
+          "mrr": 0.5848809523809524,
+          "tokensToFirstEvidence": 803.0333333333333
+        },
+        {
+          "budget": 4096,
+          "cases": 60,
+          "evidenceEfficiency": 0.6334696451822917,
+          "payloadEvidenceEfficiency": 0.6078125,
+          "evidenceRecall": 0.725,
+          "mrr": 0.5946236171236171,
+          "tokensToFirstEvidence": 1252.0166666666667
+        },
+        {
+          "budget": 8192,
+          "cases": 60,
+          "evidenceEfficiency": 0.6906005859375,
+          "payloadEvidenceEfficiency": 0.6773600260416667,
+          "evidenceRecall": 0.7583333333333333,
+          "mrr": 0.5968994115046747,
+          "tokensToFirstEvidence": 1934.6833333333334
+        },
+        {
+          "budget": 16384,
+          "cases": 60,
+          "evidenceEfficiency": 0.735003662109375,
+          "payloadEvidenceEfficiency": 0.7281707763671875,
+          "evidenceRecall": 0.7833333333333333,
+          "mrr": 0.5976948660501293,
+          "tokensToFirstEvidence": 2950.766666666667
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-256-32\",\"retriever\":{\"kind\":\"hybrid-rrf\",\"embeddingModel\":\"voyage-4-large\",\"rrfK\":60,\"vectorWeight\":1,\"bm25Weight\":1,\"reranker\":{\"kind\":\"voyage\",\"model\":\"rerank-2.5-lite\"}},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"},\"routingPolicy\":{\"kind\":\"flat\"}}",
+      "label": "Hybrid voyage-4-large v1:b1 + rerank-2.5-lite · flat library",
+      "strategyId": "fixed-token-cl100k_base-256-32",
+      "retriever": {
+        "kind": "hybrid-rrf",
+        "embeddingModel": "voyage-4-large",
+        "rrfK": 60,
+        "vectorWeight": 1,
+        "bm25Weight": 1,
+        "reranker": {
+          "kind": "voyage",
+          "model": "rerank-2.5-lite"
+        }
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "six-book-library-rerank-lite-v1-936f357b8a3a9f93.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 60,
+          "evidenceEfficiency": 0.39552408854166665,
+          "payloadEvidenceEfficiency": 0.24384765625,
+          "evidenceRecall": 0.5583333333333333,
+          "mrr": 0.5583333333333333,
+          "tokensToFirstEvidence": 291.3333333333333
+        },
+        {
+          "budget": 1024,
+          "cases": 60,
+          "evidenceEfficiency": 0.480859375,
+          "payloadEvidenceEfficiency": 0.40187174479166665,
+          "evidenceRecall": 0.5833333333333334,
+          "mrr": 0.5666666666666667,
+          "tokensToFirstEvidence": 491.5833333333333
+        },
+        {
+          "budget": 2048,
+          "cases": 60,
+          "evidenceEfficiency": 0.5470784505208334,
+          "payloadEvidenceEfficiency": 0.5031494140625,
+          "evidenceRecall": 0.6416666666666667,
+          "mrr": 0.5775,
+          "tokensToFirstEvidence": 828.6166666666667
+        },
+        {
+          "budget": 4096,
+          "cases": 60,
+          "evidenceEfficiency": 0.6093648274739584,
+          "payloadEvidenceEfficiency": 0.58614501953125,
+          "evidenceRecall": 0.675,
+          "mrr": 0.5807407407407408,
+          "tokensToFirstEvidence": 1388.3
+        },
+        {
+          "budget": 8192,
+          "cases": 60,
+          "evidenceEfficiency": 0.6617869059244792,
+          "payloadEvidenceEfficiency": 0.6490132649739583,
+          "evidenceRecall": 0.7416666666666667,
+          "mrr": 0.5849453392468099,
+          "tokensToFirstEvidence": 2270.8333333333335
+        },
+        {
+          "budget": 16384,
+          "cases": 60,
+          "evidenceEfficiency": 0.701726786295573,
+          "payloadEvidenceEfficiency": 0.6953399658203125,
+          "evidenceRecall": 0.7416666666666667,
+          "mrr": 0.5849453392468099,
+          "tokensToFirstEvidence": 3636.1666666666665
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-256-32\",\"retriever\":{\"kind\":\"vector\",\"embeddingModel\":\"voyage-4-large\",\"reranker\":{\"kind\":\"voyage\",\"model\":\"rerank-2.5-lite\"}},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"},\"routingPolicy\":{\"kind\":\"flat\"}}",
+      "label": "Vector voyage-4-large + rerank-2.5-lite · flat library",
+      "strategyId": "fixed-token-cl100k_base-256-32",
+      "retriever": {
+        "kind": "vector",
+        "embeddingModel": "voyage-4-large",
+        "reranker": {
+          "kind": "voyage",
+          "model": "rerank-2.5-lite"
+        }
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "six-book-library-rerank-lite-v1-936f357b8a3a9f93.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 60,
+          "evidenceEfficiency": 0.4009765625,
+          "payloadEvidenceEfficiency": 0.24801432291666667,
+          "evidenceRecall": 0.5666666666666667,
+          "mrr": 0.575,
+          "tokensToFirstEvidence": 285.75
+        },
+        {
+          "budget": 1024,
+          "cases": 60,
+          "evidenceEfficiency": 0.48513997395833336,
+          "payloadEvidenceEfficiency": 0.4076009114583333,
+          "evidenceRecall": 0.575,
+          "mrr": 0.5791666666666667,
+          "tokensToFirstEvidence": 479.31666666666666
+        },
+        {
+          "budget": 2048,
+          "cases": 60,
+          "evidenceEfficiency": 0.5366129557291667,
+          "payloadEvidenceEfficiency": 0.4957275390625,
+          "evidenceRecall": 0.6083333333333333,
+          "mrr": 0.5840277777777778,
+          "tokensToFirstEvidence": 841.3833333333333
+        },
+        {
+          "budget": 4096,
+          "cases": 60,
+          "evidenceEfficiency": 0.5975687662760417,
+          "payloadEvidenceEfficiency": 0.5744588216145833,
+          "evidenceRecall": 0.6666666666666666,
+          "mrr": 0.5904371091871091,
+          "tokensToFirstEvidence": 1414.2333333333333
+        },
+        {
+          "budget": 8192,
+          "cases": 60,
+          "evidenceEfficiency": 0.6432342529296875,
+          "payloadEvidenceEfficiency": 0.6305419921875,
+          "evidenceRecall": 0.725,
+          "mrr": 0.5936082546691558,
+          "tokensToFirstEvidence": 2372.4
+        },
+        {
+          "budget": 16384,
+          "cases": 60,
+          "evidenceEfficiency": 0.6879552205403646,
+          "payloadEvidenceEfficiency": 0.6815958658854167,
+          "evidenceRecall": 0.7333333333333333,
+          "mrr": 0.5940712176321187,
+          "tokensToFirstEvidence": 3748.5
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-256-32\",\"retriever\":{\"kind\":\"vector\",\"embeddingModel\":\"voyage-4-large\"},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"},\"routingPolicy\":{\"kind\":\"flat\"}}",
+      "label": "Vector voyage-4-large · flat library",
+      "strategyId": "fixed-token-cl100k_base-256-32",
+      "retriever": {
+        "kind": "vector",
+        "embeddingModel": "voyage-4-large"
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "six-book-library-screen-v1-b295d3f6f8c25e1a.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 60,
+          "evidenceEfficiency": 0.3541341145833333,
+          "payloadEvidenceEfficiency": 0.21041666666666667,
+          "evidenceRecall": 0.5,
+          "mrr": 0.5,
+          "tokensToFirstEvidence": 314.25
+        },
+        {
+          "budget": 1024,
+          "cases": 60,
+          "evidenceEfficiency": 0.44102376302083335,
+          "payloadEvidenceEfficiency": 0.36380208333333336,
+          "evidenceRecall": 0.55,
+          "mrr": 0.5208333333333333,
+          "tokensToFirstEvidence": 523.4
+        },
+        {
+          "budget": 2048,
+          "cases": 60,
+          "evidenceEfficiency": 0.5136922200520834,
+          "payloadEvidenceEfficiency": 0.472265625,
+          "evidenceRecall": 0.6,
+          "mrr": 0.5295833333333333,
+          "tokensToFirstEvidence": 882.05
+        },
+        {
+          "budget": 4096,
+          "cases": 60,
+          "evidenceEfficiency": 0.57921142578125,
+          "payloadEvidenceEfficiency": 0.5572550455729167,
+          "evidenceRecall": 0.6666666666666666,
+          "mrr": 0.5369065656565656,
+          "tokensToFirstEvidence": 1449.8333333333333
+        },
+        {
+          "budget": 8192,
+          "cases": 60,
+          "evidenceEfficiency": 0.640386962890625,
+          "payloadEvidenceEfficiency": 0.6282368977864583,
+          "evidenceRecall": 0.725,
+          "mrr": 0.5397145366710584,
+          "tokensToFirstEvidence": 2316.4166666666665
+        },
+        {
+          "budget": 16384,
+          "cases": 60,
+          "evidenceEfficiency": 0.6861109415690104,
+          "payloadEvidenceEfficiency": 0.6799957275390625,
+          "evidenceRecall": 0.7333333333333333,
+          "mrr": 0.5401418870984088,
+          "tokensToFirstEvidence": 3706.3
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-256-32\",\"retriever\":{\"kind\":\"bge-m3\",\"model\":\"BAAI/bge-m3\",\"mode\":\"hybrid-all-rrf\",\"shortlist\":200},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"},\"routingPolicy\":{\"kind\":\"oracle\"}}",
+      "label": "BGE-M3 hybrid-all-rrf · oracle books",
+      "strategyId": "fixed-token-cl100k_base-256-32",
+      "retriever": {
+        "kind": "bge-m3",
+        "model": "BAAI/bge-m3",
+        "mode": "hybrid-all-rrf",
+        "shortlist": 200
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "six-book-library-screen-v1-b295d3f6f8c25e1a.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 60,
+          "evidenceEfficiency": 0.299755859375,
+          "payloadEvidenceEfficiency": 0.18854166666666666,
+          "evidenceRecall": 0.44166666666666665,
+          "mrr": 0.45,
+          "tokensToFirstEvidence": 341.1166666666667
+        },
+        {
+          "budget": 1024,
+          "cases": 60,
+          "evidenceEfficiency": 0.382373046875,
+          "payloadEvidenceEfficiency": 0.32005208333333335,
+          "evidenceRecall": 0.48333333333333334,
+          "mrr": 0.4638888888888889,
+          "tokensToFirstEvidence": 592.7833333333333
+        },
+        {
+          "budget": 2048,
+          "cases": 60,
+          "evidenceEfficiency": 0.4627156575520833,
+          "payloadEvidenceEfficiency": 0.424609375,
+          "evidenceRecall": 0.5833333333333334,
+          "mrr": 0.48087301587301584,
+          "tokensToFirstEvidence": 1004.1166666666667
+        },
+        {
+          "budget": 4096,
+          "cases": 60,
+          "evidenceEfficiency": 0.5452718098958333,
+          "payloadEvidenceEfficiency": 0.5245442708333333,
+          "evidenceRecall": 0.65,
+          "mrr": 0.48838191900691896,
+          "tokensToFirstEvidence": 1647.25
+        },
+        {
+          "budget": 8192,
+          "cases": 60,
+          "evidenceEfficiency": 0.62498779296875,
+          "payloadEvidenceEfficiency": 0.6129486083984375,
+          "evidenceRecall": 0.7583333333333333,
+          "mrr": 0.4945604947104226,
+          "tokensToFirstEvidence": 2521.0666666666666
+        },
+        {
+          "budget": 16384,
+          "cases": 60,
+          "evidenceEfficiency": 0.700969950358073,
+          "payloadEvidenceEfficiency": 0.6946578979492187,
+          "evidenceRecall": 0.7833333333333333,
+          "mrr": 0.494957320107248,
+          "tokensToFirstEvidence": 3510.8166666666666
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-256-32\",\"retriever\":{\"kind\":\"bge-m3\",\"model\":\"BAAI/bge-m3\",\"mode\":\"sparse\",\"shortlist\":200,\"reranker\":{\"kind\":\"voyage\",\"model\":\"rerank-2.5-lite\"}},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"},\"routingPolicy\":{\"kind\":\"flat\"}}",
+      "label": "BGE-M3 sparse + rerank-2.5-lite · flat library",
+      "strategyId": "fixed-token-cl100k_base-256-32",
+      "retriever": {
+        "kind": "bge-m3",
+        "model": "BAAI/bge-m3",
+        "mode": "sparse",
+        "shortlist": 200,
+        "reranker": {
+          "kind": "voyage",
+          "model": "rerank-2.5-lite"
+        }
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "six-book-library-rerank-lite-v1-936f357b8a3a9f93.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 60,
+          "evidenceEfficiency": 0.34451497395833336,
+          "payloadEvidenceEfficiency": 0.20520833333333333,
+          "evidenceRecall": 0.5083333333333333,
+          "mrr": 0.5,
+          "tokensToFirstEvidence": 318.3666666666667
+        },
+        {
+          "budget": 1024,
+          "cases": 60,
+          "evidenceEfficiency": 0.44020182291666665,
+          "payloadEvidenceEfficiency": 0.3640625,
+          "evidenceRecall": 0.5666666666666667,
+          "mrr": 0.523611111111111,
+          "tokensToFirstEvidence": 530.1
+        },
+        {
+          "budget": 2048,
+          "cases": 60,
+          "evidenceEfficiency": 0.5114705403645833,
+          "payloadEvidenceEfficiency": 0.46979166666666666,
+          "evidenceRecall": 0.6,
+          "mrr": 0.5256944444444444,
+          "tokensToFirstEvidence": 900.3
+        },
+        {
+          "budget": 4096,
+          "cases": 60,
+          "evidenceEfficiency": 0.5781351725260416,
+          "payloadEvidenceEfficiency": 0.5553385416666666,
+          "evidenceRecall": 0.6583333333333333,
+          "mrr": 0.5319185906685907,
+          "tokensToFirstEvidence": 1520.7166666666667
+        },
+        {
+          "budget": 8192,
+          "cases": 60,
+          "evidenceEfficiency": 0.6235310872395833,
+          "payloadEvidenceEfficiency": 0.6119466145833333,
+          "evidenceRecall": 0.675,
+          "mrr": 0.5334397546897546,
+          "tokensToFirstEvidence": 2594.4666666666667
+        },
+        {
+          "budget": 16384,
+          "cases": 60,
+          "evidenceEfficiency": 0.6492655436197917,
+          "payloadEvidenceEfficiency": 0.6434733072916666,
+          "evidenceRecall": 0.675,
+          "mrr": 0.5334397546897546,
+          "tokensToFirstEvidence": 4642.466666666666
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-256-32\",\"retriever\":{\"kind\":\"bge-m3\",\"model\":\"BAAI/bge-m3\",\"mode\":\"colbert-dense-shortlist\",\"shortlist\":200,\"reranker\":{\"kind\":\"voyage\",\"model\":\"rerank-2.5-lite\"}},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"},\"routingPolicy\":{\"kind\":\"flat\"}}",
+      "label": "BGE-M3 colbert-dense-shortlist + rerank-2.5-lite · flat library",
+      "strategyId": "fixed-token-cl100k_base-256-32",
+      "retriever": {
+        "kind": "bge-m3",
+        "model": "BAAI/bge-m3",
+        "mode": "colbert-dense-shortlist",
+        "shortlist": 200,
+        "reranker": {
+          "kind": "voyage",
+          "model": "rerank-2.5-lite"
+        }
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "six-book-library-rerank-lite-v1-936f357b8a3a9f93.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 60,
+          "evidenceEfficiency": 0.3780924479166667,
+          "payloadEvidenceEfficiency": 0.23020833333333332,
+          "evidenceRecall": 0.5333333333333333,
+          "mrr": 0.5416666666666666,
+          "tokensToFirstEvidence": 301.21666666666664
+        },
+        {
+          "budget": 1024,
+          "cases": 60,
+          "evidenceEfficiency": 0.46172688802083334,
+          "payloadEvidenceEfficiency": 0.3846354166666667,
+          "evidenceRecall": 0.5583333333333333,
+          "mrr": 0.5513888888888888,
+          "tokensToFirstEvidence": 505.73333333333335
+        },
+        {
+          "budget": 2048,
+          "cases": 60,
+          "evidenceEfficiency": 0.5241007486979167,
+          "payloadEvidenceEfficiency": 0.4822916666666667,
+          "evidenceRecall": 0.6,
+          "mrr": 0.5629166666666666,
+          "tokensToFirstEvidence": 851.7166666666667
+        },
+        {
+          "budget": 4096,
+          "cases": 60,
+          "evidenceEfficiency": 0.58106689453125,
+          "payloadEvidenceEfficiency": 0.5583333333333333,
+          "evidenceRecall": 0.6416666666666667,
+          "mrr": 0.5666203703703704,
+          "tokensToFirstEvidence": 1431.6
+        },
+        {
+          "budget": 8192,
+          "cases": 60,
+          "evidenceEfficiency": 0.6151845296223958,
+          "payloadEvidenceEfficiency": 0.6037760416666667,
+          "evidenceRecall": 0.65,
+          "mrr": 0.5675462962962963,
+          "tokensToFirstEvidence": 2529.5833333333335
+        },
+        {
+          "budget": 16384,
+          "cases": 60,
+          "evidenceEfficiency": 0.64044189453125,
+          "payloadEvidenceEfficiency": 0.634716796875,
+          "evidenceRecall": 0.6666666666666666,
+          "mrr": 0.5684994553376905,
+          "tokensToFirstEvidence": 4456.9
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-256-32\",\"retriever\":{\"kind\":\"hybrid-rrf\",\"embeddingModel\":\"voyage-4-large\",\"rrfK\":60,\"vectorWeight\":1,\"bm25Weight\":1},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"},\"routingPolicy\":{\"kind\":\"flat\"}}",
+      "label": "Hybrid voyage-4-large v1:b1 · flat library",
+      "strategyId": "fixed-token-cl100k_base-256-32",
+      "retriever": {
+        "kind": "hybrid-rrf",
+        "embeddingModel": "voyage-4-large",
+        "rrfK": 60,
+        "vectorWeight": 1,
+        "bm25Weight": 1
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "six-book-library-screen-v1-b295d3f6f8c25e1a.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 60,
+          "evidenceEfficiency": 0.258349609375,
+          "payloadEvidenceEfficiency": 0.15,
+          "evidenceRecall": 0.4,
+          "mrr": 0.36666666666666664,
+          "tokensToFirstEvidence": 372.98333333333335
+        },
+        {
+          "budget": 1024,
+          "cases": 60,
+          "evidenceEfficiency": 0.3522542317708333,
+          "payloadEvidenceEfficiency": 0.28671875,
+          "evidenceRecall": 0.48333333333333334,
+          "mrr": 0.3916666666666666,
+          "tokensToFirstEvidence": 644.1833333333333
+        },
+        {
+          "budget": 2048,
+          "cases": 60,
+          "evidenceEfficiency": 0.43852132161458335,
+          "payloadEvidenceEfficiency": 0.3980631510416667,
+          "evidenceRecall": 0.575,
+          "mrr": 0.4082341269841269,
+          "tokensToFirstEvidence": 1105.2833333333333
+        },
+        {
+          "budget": 4096,
+          "cases": 60,
+          "evidenceEfficiency": 0.5372477213541667,
+          "payloadEvidenceEfficiency": 0.51395263671875,
+          "evidenceRecall": 0.6666666666666666,
+          "mrr": 0.4172784922049627,
+          "tokensToFirstEvidence": 1753.1166666666666
+        },
+        {
+          "budget": 8192,
+          "cases": 60,
+          "evidenceEfficiency": 0.609423828125,
+          "payloadEvidenceEfficiency": 0.5971211751302083,
+          "evidenceRecall": 0.7083333333333334,
+          "mrr": 0.41987168216912046,
+          "tokensToFirstEvidence": 2794.5666666666666
+        },
+        {
+          "budget": 16384,
+          "cases": 60,
+          "evidenceEfficiency": 0.6697016398111979,
+          "payloadEvidenceEfficiency": 0.6633636474609375,
+          "evidenceRecall": 0.7416666666666667,
+          "mrr": 0.42097510772906777,
+          "tokensToFirstEvidence": 4307.566666666667
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-256-32\",\"retriever\":{\"kind\":\"hybrid-rrf\",\"embeddingModel\":\"text-embedding-3-large\",\"rrfK\":60,\"vectorWeight\":1,\"bm25Weight\":1,\"reranker\":{\"kind\":\"voyage\",\"model\":\"rerank-2.5-lite\"}},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"},\"routingPolicy\":{\"kind\":\"flat\"}}",
+      "label": "Hybrid text-embedding-3-large v1:b1 + rerank-2.5-lite · flat library",
+      "strategyId": "fixed-token-cl100k_base-256-32",
+      "retriever": {
+        "kind": "hybrid-rrf",
+        "embeddingModel": "text-embedding-3-large",
+        "rrfK": 60,
+        "vectorWeight": 1,
+        "bm25Weight": 1,
+        "reranker": {
+          "kind": "voyage",
+          "model": "rerank-2.5-lite"
+        }
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "six-book-library-rerank-lite-v1-936f357b8a3a9f93.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 60,
+          "evidenceEfficiency": 0.3557942708333333,
+          "payloadEvidenceEfficiency": 0.21770833333333334,
+          "evidenceRecall": 0.48333333333333334,
+          "mrr": 0.49166666666666664,
+          "tokensToFirstEvidence": 316.03333333333336
+        },
+        {
+          "budget": 1024,
+          "cases": 60,
+          "evidenceEfficiency": 0.4276611328125,
+          "payloadEvidenceEfficiency": 0.35546875,
+          "evidenceRecall": 0.5083333333333333,
+          "mrr": 0.5013888888888889,
+          "tokensToFirstEvidence": 554.6833333333333
+        },
+        {
+          "budget": 2048,
+          "cases": 60,
+          "evidenceEfficiency": 0.4943603515625,
+          "payloadEvidenceEfficiency": 0.450390625,
+          "evidenceRecall": 0.6,
+          "mrr": 0.5173809523809524,
+          "tokensToFirstEvidence": 956.2166666666667
+        },
+        {
+          "budget": 4096,
+          "cases": 60,
+          "evidenceEfficiency": 0.554730224609375,
+          "payloadEvidenceEfficiency": 0.5321614583333333,
+          "evidenceRecall": 0.625,
+          "mrr": 0.52008658008658,
+          "tokensToFirstEvidence": 1637.2166666666667
+        },
+        {
+          "budget": 8192,
+          "cases": 60,
+          "evidenceEfficiency": 0.5982126871744792,
+          "payloadEvidenceEfficiency": 0.5865234375,
+          "evidenceRecall": 0.65,
+          "mrr": 0.521475468975469,
+          "tokensToFirstEvidence": 2863.4666666666667
+        },
+        {
+          "budget": 16384,
+          "cases": 60,
+          "evidenceEfficiency": 0.6241063435872396,
+          "payloadEvidenceEfficiency": 0.61826171875,
+          "evidenceRecall": 0.65,
+          "mrr": 0.521475468975469,
+          "tokensToFirstEvidence": 5184.533333333334
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-256-32\",\"retriever\":{\"kind\":\"bge-m3\",\"model\":\"BAAI/bge-m3\",\"mode\":\"hybrid-all-rrf\",\"shortlist\":200,\"reranker\":{\"kind\":\"voyage\",\"model\":\"rerank-2.5-lite\"}},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"},\"routingPolicy\":{\"kind\":\"flat\"}}",
+      "label": "BGE-M3 hybrid-all-rrf + rerank-2.5-lite · flat library",
+      "strategyId": "fixed-token-cl100k_base-256-32",
+      "retriever": {
+        "kind": "bge-m3",
+        "model": "BAAI/bge-m3",
+        "mode": "hybrid-all-rrf",
+        "shortlist": 200,
+        "reranker": {
+          "kind": "voyage",
+          "model": "rerank-2.5-lite"
+        }
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "six-book-library-rerank-lite-v1-936f357b8a3a9f93.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 60,
+          "evidenceEfficiency": 0.3546875,
+          "payloadEvidenceEfficiency": 0.21354166666666666,
+          "evidenceRecall": 0.5,
+          "mrr": 0.5083333333333333,
+          "tokensToFirstEvidence": 311.5833333333333
+        },
+        {
+          "budget": 1024,
+          "cases": 60,
+          "evidenceEfficiency": 0.44418131510416664,
+          "payloadEvidenceEfficiency": 0.36796875,
+          "evidenceRecall": 0.5416666666666666,
+          "mrr": 0.5249999999999999,
+          "tokensToFirstEvidence": 522.0833333333334
+        },
+        {
+          "budget": 2048,
+          "cases": 60,
+          "evidenceEfficiency": 0.5062906901041667,
+          "payloadEvidenceEfficiency": 0.46484375,
+          "evidenceRecall": 0.575,
+          "mrr": 0.5311111111111111,
+          "tokensToFirstEvidence": 902.9166666666666
+        },
+        {
+          "budget": 4096,
+          "cases": 60,
+          "evidenceEfficiency": 0.5539021809895833,
+          "payloadEvidenceEfficiency": 0.5321614583333333,
+          "evidenceRecall": 0.6083333333333333,
+          "mrr": 0.5342450142450142,
+          "tokensToFirstEvidence": 1605.7833333333333
+        },
+        {
+          "budget": 8192,
+          "cases": 60,
+          "evidenceEfficiency": 0.5879923502604166,
+          "payloadEvidenceEfficiency": 0.5770833333333333,
+          "evidenceRecall": 0.625,
+          "mrr": 0.535964590964591,
+          "tokensToFirstEvidence": 2858.483333333333
+        },
+        {
+          "budget": 16384,
+          "cases": 60,
+          "evidenceEfficiency": 0.610010274251302,
+          "payloadEvidenceEfficiency": 0.604541015625,
+          "evidenceRecall": 0.6333333333333333,
+          "mrr": 0.536403187455819,
+          "tokensToFirstEvidence": 5200.933333333333
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-256-32\",\"retriever\":{\"kind\":\"bge-m3\",\"model\":\"BAAI/bge-m3\",\"mode\":\"hybrid-all-rrf\",\"shortlist\":200,\"reranker\":{\"kind\":\"voyage\",\"model\":\"rerank-2.5-lite\"}},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"},\"routingPolicy\":{\"kind\":\"bge-profile\",\"topK\":5}}",
+      "label": "BGE-M3 hybrid-all-rrf + rerank-2.5-lite · route top 5",
+      "strategyId": "fixed-token-cl100k_base-256-32",
+      "retriever": {
+        "kind": "bge-m3",
+        "model": "BAAI/bge-m3",
+        "mode": "hybrid-all-rrf",
+        "shortlist": 200,
+        "reranker": {
+          "kind": "voyage",
+          "model": "rerank-2.5-lite"
+        }
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "six-book-library-rerank-lite-v1-936f357b8a3a9f93.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 60,
+          "evidenceEfficiency": 0.34739583333333335,
+          "payloadEvidenceEfficiency": 0.209375,
+          "evidenceRecall": 0.48333333333333334,
+          "mrr": 0.5,
+          "tokensToFirstEvidence": 313.18333333333334
+        },
+        {
+          "budget": 1024,
+          "cases": 60,
+          "evidenceEfficiency": 0.4314371744791667,
+          "payloadEvidenceEfficiency": 0.35546875,
+          "evidenceRecall": 0.5333333333333333,
+          "mrr": 0.5208333333333334,
+          "tokensToFirstEvidence": 529.5166666666667
+        },
+        {
+          "budget": 2048,
+          "cases": 60,
+          "evidenceEfficiency": 0.4889729817708333,
+          "payloadEvidenceEfficiency": 0.44830729166666666,
+          "evidenceRecall": 0.5583333333333333,
+          "mrr": 0.5232142857142857,
+          "tokensToFirstEvidence": 930.1166666666667
+        },
+        {
+          "budget": 4096,
+          "cases": 60,
+          "evidenceEfficiency": 0.53638916015625,
+          "payloadEvidenceEfficiency": 0.5150390625,
+          "evidenceRecall": 0.5916666666666667,
+          "mrr": 0.5263481888481888,
+          "tokensToFirstEvidence": 1667.1166666666666
+        },
+        {
+          "budget": 8192,
+          "cases": 60,
+          "evidenceEfficiency": 0.5696980794270833,
+          "payloadEvidenceEfficiency": 0.558984375,
+          "evidenceRecall": 0.6083333333333333,
+          "mrr": 0.5279151404151404,
+          "tokensToFirstEvidence": 3007.8166666666666
+        },
+        {
+          "budget": 16384,
+          "cases": 60,
+          "evidenceEfficiency": 0.592578633626302,
+          "payloadEvidenceEfficiency": 0.58720703125,
+          "evidenceRecall": 0.6166666666666667,
+          "mrr": 0.5283537369063686,
+          "tokensToFirstEvidence": 5485.2
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-256-32\",\"retriever\":{\"kind\":\"vector\",\"embeddingModel\":\"text-embedding-3-large\",\"reranker\":{\"kind\":\"voyage\",\"model\":\"rerank-2.5-lite\"}},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"},\"routingPolicy\":{\"kind\":\"flat\"}}",
+      "label": "Vector text-embedding-3-large + rerank-2.5-lite · flat library",
+      "strategyId": "fixed-token-cl100k_base-256-32",
+      "retriever": {
+        "kind": "vector",
+        "embeddingModel": "text-embedding-3-large",
+        "reranker": {
+          "kind": "voyage",
+          "model": "rerank-2.5-lite"
+        }
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "six-book-library-rerank-lite-v1-936f357b8a3a9f93.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 60,
+          "evidenceEfficiency": 0.34222005208333334,
+          "payloadEvidenceEfficiency": 0.209375,
+          "evidenceRecall": 0.4666666666666667,
+          "mrr": 0.475,
+          "tokensToFirstEvidence": 322.98333333333335
+        },
+        {
+          "budget": 1024,
+          "cases": 60,
+          "evidenceEfficiency": 0.4049560546875,
+          "payloadEvidenceEfficiency": 0.33828125,
+          "evidenceRecall": 0.475,
+          "mrr": 0.4791666666666667,
+          "tokensToFirstEvidence": 577.9333333333333
+        },
+        {
+          "budget": 2048,
+          "cases": 60,
+          "evidenceEfficiency": 0.44805501302083334,
+          "payloadEvidenceEfficiency": 0.41236979166666665,
+          "evidenceRecall": 0.5,
+          "mrr": 0.48488095238095236,
+          "tokensToFirstEvidence": 1048.9166666666667
+        },
+        {
+          "budget": 4096,
+          "cases": 60,
+          "evidenceEfficiency": 0.5033732096354167,
+          "payloadEvidenceEfficiency": 0.4830078125,
+          "evidenceRecall": 0.5666666666666667,
+          "mrr": 0.49343314093314095,
+          "tokensToFirstEvidence": 1820.75
+        },
+        {
+          "budget": 8192,
+          "cases": 60,
+          "evidenceEfficiency": 0.5408782958984375,
+          "payloadEvidenceEfficiency": 0.5303385416666667,
+          "evidenceRecall": 0.6,
+          "mrr": 0.49539576808926655,
+          "tokensToFirstEvidence": 3234.3333333333335
+        },
+        {
+          "budget": 16384,
+          "cases": 60,
+          "evidenceEfficiency": 0.5704391479492188,
+          "payloadEvidenceEfficiency": 0.5651692708333333,
+          "evidenceRecall": 0.6,
+          "mrr": 0.49539576808926655,
+          "tokensToFirstEvidence": 5828.466666666666
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-256-32\",\"retriever\":{\"kind\":\"bge-m3\",\"model\":\"BAAI/bge-m3\",\"mode\":\"sparse\",\"shortlist\":200},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"},\"routingPolicy\":{\"kind\":\"flat\"}}",
+      "label": "BGE-M3 sparse · flat library",
+      "strategyId": "fixed-token-cl100k_base-256-32",
+      "retriever": {
+        "kind": "bge-m3",
+        "model": "BAAI/bge-m3",
+        "mode": "sparse",
+        "shortlist": 200
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "six-book-library-screen-v1-b295d3f6f8c25e1a.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 60,
+          "evidenceEfficiency": 0.169677734375,
+          "payloadEvidenceEfficiency": 0.09166666666666666,
+          "evidenceRecall": 0.2833333333333333,
+          "mrr": 0.25,
+          "tokensToFirstEvidence": 419.35
+        },
+        {
+          "budget": 1024,
+          "cases": 60,
+          "evidenceEfficiency": 0.24657389322916667,
+          "payloadEvidenceEfficiency": 0.19609375,
+          "evidenceRecall": 0.35,
+          "mrr": 0.275,
+          "tokensToFirstEvidence": 748.7833333333333
+        },
+        {
+          "budget": 2048,
+          "cases": 60,
+          "evidenceEfficiency": 0.3533243815104167,
+          "payloadEvidenceEfficiency": 0.3179443359375,
+          "evidenceRecall": 0.525,
+          "mrr": 0.304781746031746,
+          "tokensToFirstEvidence": 1270.4833333333333
+        },
+        {
+          "budget": 4096,
+          "cases": 60,
+          "evidenceEfficiency": 0.4465576171875,
+          "payloadEvidenceEfficiency": 0.42798258463541666,
+          "evidenceRecall": 0.55,
+          "mrr": 0.3061706349206349,
+          "tokensToFirstEvidence": 2138.3
+        },
+        {
+          "budget": 8192,
+          "cases": 60,
+          "evidenceEfficiency": 0.5305745442708333,
+          "payloadEvidenceEfficiency": 0.519732666015625,
+          "evidenceRecall": 0.6583333333333333,
+          "mrr": 0.31172020803270795,
+          "tokensToFirstEvidence": 3570.6833333333334
+        },
+        {
+          "budget": 16384,
+          "cases": 60,
+          "evidenceEfficiency": 0.5999745686848958,
+          "payloadEvidenceEfficiency": 0.5944427490234375,
+          "evidenceRecall": 0.675,
+          "mrr": 0.31245716948395513,
+          "tokensToFirstEvidence": 5710.85
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-256-32\",\"retriever\":{\"kind\":\"bge-m3\",\"model\":\"BAAI/bge-m3\",\"mode\":\"colbert-dense-shortlist\",\"shortlist\":200},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"},\"routingPolicy\":{\"kind\":\"flat\"}}",
+      "label": "BGE-M3 colbert-dense-shortlist · flat library",
+      "strategyId": "fixed-token-cl100k_base-256-32",
+      "retriever": {
+        "kind": "bge-m3",
+        "model": "BAAI/bge-m3",
+        "mode": "colbert-dense-shortlist",
+        "shortlist": 200
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "six-book-library-screen-v1-b295d3f6f8c25e1a.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 60,
+          "evidenceEfficiency": 0.2620930989583333,
+          "payloadEvidenceEfficiency": 0.16666666666666666,
+          "evidenceRecall": 0.35833333333333334,
+          "mrr": 0.35,
+          "tokensToFirstEvidence": 377.4166666666667
+        },
+        {
+          "budget": 1024,
+          "cases": 60,
+          "evidenceEfficiency": 0.3283935546875,
+          "payloadEvidenceEfficiency": 0.2721354166666667,
+          "evidenceRecall": 0.4083333333333333,
+          "mrr": 0.3708333333333333,
+          "tokensToFirstEvidence": 676.0666666666667
+        },
+        {
+          "budget": 2048,
+          "cases": 60,
+          "evidenceEfficiency": 0.3881632486979167,
+          "payloadEvidenceEfficiency": 0.35546875,
+          "evidenceRecall": 0.475,
+          "mrr": 0.385297619047619,
+          "tokensToFirstEvidence": 1200.6833333333334
+        },
+        {
+          "budget": 4096,
+          "cases": 60,
+          "evidenceEfficiency": 0.4644978841145833,
+          "payloadEvidenceEfficiency": 0.445794677734375,
+          "evidenceRecall": 0.5583333333333333,
+          "mrr": 0.3949803437303437,
+          "tokensToFirstEvidence": 2030.05
+        },
+        {
+          "budget": 8192,
+          "cases": 60,
+          "evidenceEfficiency": 0.5284515380859375,
+          "payloadEvidenceEfficiency": 0.5183725992838542,
+          "evidenceRecall": 0.6083333333333333,
+          "mrr": 0.3978056048889381,
+          "tokensToFirstEvidence": 3451.4
+        },
+        {
+          "budget": 16384,
+          "cases": 60,
+          "evidenceEfficiency": 0.5944890340169271,
+          "payloadEvidenceEfficiency": 0.5891372680664062,
+          "evidenceRecall": 0.6666666666666666,
+          "mrr": 0.4000750906366848,
+          "tokensToFirstEvidence": 5451.75
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-256-32\",\"retriever\":{\"kind\":\"hybrid-rrf\",\"embeddingModel\":\"text-embedding-3-large\",\"rrfK\":60,\"vectorWeight\":1,\"bm25Weight\":1},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"},\"routingPolicy\":{\"kind\":\"flat\"}}",
+      "label": "Hybrid text-embedding-3-large v1:b1 · flat library",
+      "strategyId": "fixed-token-cl100k_base-256-32",
+      "retriever": {
+        "kind": "hybrid-rrf",
+        "embeddingModel": "text-embedding-3-large",
+        "rrfK": 60,
+        "vectorWeight": 1,
+        "bm25Weight": 1
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "six-book-library-screen-v1-b295d3f6f8c25e1a.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 60,
+          "evidenceEfficiency": 0.20042317708333332,
+          "payloadEvidenceEfficiency": 0.121875,
+          "evidenceRecall": 0.2916666666666667,
+          "mrr": 0.275,
+          "tokensToFirstEvidence": 405.9
+        },
+        {
+          "budget": 1024,
+          "cases": 60,
+          "evidenceEfficiency": 0.27188313802083336,
+          "payloadEvidenceEfficiency": 0.21848958333333332,
+          "evidenceRecall": 0.38333333333333336,
+          "mrr": 0.30833333333333335,
+          "tokensToFirstEvidence": 731.0666666666667
+        },
+        {
+          "budget": 2048,
+          "cases": 60,
+          "evidenceEfficiency": 0.3521728515625,
+          "payloadEvidenceEfficiency": 0.32083333333333336,
+          "evidenceRecall": 0.44166666666666665,
+          "mrr": 0.32111111111111107,
+          "tokensToFirstEvidence": 1268.4666666666667
+        },
+        {
+          "budget": 4096,
+          "cases": 60,
+          "evidenceEfficiency": 0.42361653645833336,
+          "payloadEvidenceEfficiency": 0.40464680989583335,
+          "evidenceRecall": 0.5166666666666667,
+          "mrr": 0.3288746438746439,
+          "tokensToFirstEvidence": 2201.5833333333335
+        },
+        {
+          "budget": 8192,
+          "cases": 60,
+          "evidenceEfficiency": 0.5052032470703125,
+          "payloadEvidenceEfficiency": 0.4943440755208333,
+          "evidenceRecall": 0.6083333333333333,
+          "mrr": 0.3337379510984543,
+          "tokensToFirstEvidence": 3677.5
+        },
+        {
+          "budget": 16384,
+          "cases": 60,
+          "evidenceEfficiency": 0.5713536580403645,
+          "payloadEvidenceEfficiency": 0.565557861328125,
+          "evidenceRecall": 0.65,
+          "mrr": 0.3348413766584016,
+          "tokensToFirstEvidence": 6145.55
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-256-32\",\"retriever\":{\"kind\":\"bge-m3\",\"model\":\"BAAI/bge-m3\",\"mode\":\"hybrid-all-rrf\",\"shortlist\":200},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"},\"routingPolicy\":{\"kind\":\"bge-profile\",\"topK\":5}}",
+      "label": "BGE-M3 hybrid-all-rrf · route top 5",
+      "strategyId": "fixed-token-cl100k_base-256-32",
+      "retriever": {
+        "kind": "bge-m3",
+        "model": "BAAI/bge-m3",
+        "mode": "hybrid-all-rrf",
+        "shortlist": 200
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "six-book-library-screen-v1-b295d3f6f8c25e1a.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 60,
+          "evidenceEfficiency": 0.19596354166666666,
+          "payloadEvidenceEfficiency": 0.1125,
+          "evidenceRecall": 0.325,
+          "mrr": 0.3,
+          "tokensToFirstEvidence": 401.46666666666664
+        },
+        {
+          "budget": 1024,
+          "cases": 60,
+          "evidenceEfficiency": 0.2709879557291667,
+          "payloadEvidenceEfficiency": 0.22291666666666668,
+          "evidenceRecall": 0.375,
+          "mrr": 0.3194444444444444,
+          "tokensToFirstEvidence": 716.3
+        },
+        {
+          "budget": 2048,
+          "cases": 60,
+          "evidenceEfficiency": 0.34323323567708336,
+          "payloadEvidenceEfficiency": 0.31419270833333335,
+          "evidenceRecall": 0.45,
+          "mrr": 0.33240079365079367,
+          "tokensToFirstEvidence": 1271.45
+        },
+        {
+          "budget": 4096,
+          "cases": 60,
+          "evidenceEfficiency": 0.4057535807291667,
+          "payloadEvidenceEfficiency": 0.3907552083333333,
+          "evidenceRecall": 0.475,
+          "mrr": 0.33591931216931215,
+          "tokensToFirstEvidence": 2237.0833333333335
+        },
+        {
+          "budget": 8192,
+          "cases": 60,
+          "evidenceEfficiency": 0.4870686848958333,
+          "payloadEvidenceEfficiency": 0.47731119791666665,
+          "evidenceRecall": 0.6083333333333333,
+          "mrr": 0.34267763992347866,
+          "tokensToFirstEvidence": 3785.45
+        },
+        {
+          "budget": 16384,
+          "cases": 60,
+          "evidenceEfficiency": 0.5516118367513021,
+          "payloadEvidenceEfficiency": 0.5467122395833334,
+          "evidenceRecall": 0.6166666666666667,
+          "mrr": 0.34315383039966907,
+          "tokensToFirstEvidence": 6251.433333333333
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-256-32\",\"retriever\":{\"kind\":\"bge-m3\",\"model\":\"BAAI/bge-m3\",\"mode\":\"dense\",\"shortlist\":200},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"},\"routingPolicy\":{\"kind\":\"flat\"}}",
+      "label": "BGE-M3 dense · flat library",
+      "strategyId": "fixed-token-cl100k_base-256-32",
+      "retriever": {
+        "kind": "bge-m3",
+        "model": "BAAI/bge-m3",
+        "mode": "dense",
+        "shortlist": 200
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "six-book-library-screen-v1-b295d3f6f8c25e1a.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 60,
+          "evidenceEfficiency": 0.18603515625,
+          "payloadEvidenceEfficiency": 0.1125,
+          "evidenceRecall": 0.2916666666666667,
+          "mrr": 0.26666666666666666,
+          "tokensToFirstEvidence": 413.26666666666665
+        },
+        {
+          "budget": 1024,
+          "cases": 60,
+          "evidenceEfficiency": 0.26165364583333334,
+          "payloadEvidenceEfficiency": 0.21536458333333333,
+          "evidenceRecall": 0.35,
+          "mrr": 0.29305555555555557,
+          "tokensToFirstEvidence": 740.2833333333333
+        },
+        {
+          "budget": 2048,
+          "cases": 60,
+          "evidenceEfficiency": 0.332861328125,
+          "payloadEvidenceEfficiency": 0.3021158854166667,
+          "evidenceRecall": 0.44166666666666665,
+          "mrr": 0.30908730158730163,
+          "tokensToFirstEvidence": 1312.0166666666667
+        },
+        {
+          "budget": 4096,
+          "cases": 60,
+          "evidenceEfficiency": 0.40992635091145835,
+          "payloadEvidenceEfficiency": 0.391748046875,
+          "evidenceRecall": 0.5416666666666666,
+          "mrr": 0.31938450438450433,
+          "tokensToFirstEvidence": 2246.45
+        },
+        {
+          "budget": 8192,
+          "cases": 60,
+          "evidenceEfficiency": 0.4855092366536458,
+          "payloadEvidenceEfficiency": 0.47581583658854165,
+          "evidenceRecall": 0.5916666666666667,
+          "mrr": 0.32124725934961434,
+          "tokensToFirstEvidence": 3741.7166666666667
+        },
+        {
+          "budget": 16384,
+          "cases": 60,
+          "evidenceEfficiency": 0.5535298665364583,
+          "payloadEvidenceEfficiency": 0.5483840942382813,
+          "evidenceRecall": 0.625,
+          "mrr": 0.3225988707012257,
+          "tokensToFirstEvidence": 6112.583333333333
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-256-32\",\"retriever\":{\"kind\":\"vector\",\"embeddingModel\":\"text-embedding-3-large\"},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"},\"routingPolicy\":{\"kind\":\"flat\"}}",
+      "label": "Vector text-embedding-3-large · flat library",
+      "strategyId": "fixed-token-cl100k_base-256-32",
+      "retriever": {
+        "kind": "vector",
+        "embeddingModel": "text-embedding-3-large"
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "six-book-library-screen-v1-b295d3f6f8c25e1a.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 60,
+          "evidenceEfficiency": 0.212353515625,
+          "payloadEvidenceEfficiency": 0.125,
+          "evidenceRecall": 0.3,
+          "mrr": 0.2916666666666667,
+          "tokensToFirstEvidence": 395.6
+        },
+        {
+          "budget": 1024,
+          "cases": 60,
+          "evidenceEfficiency": 0.2711669921875,
+          "payloadEvidenceEfficiency": 0.22135416666666666,
+          "evidenceRecall": 0.36666666666666664,
+          "mrr": 0.3111111111111111,
+          "tokensToFirstEvidence": 730.1166666666667
+        },
+        {
+          "budget": 2048,
+          "cases": 60,
+          "evidenceEfficiency": 0.3451619466145833,
+          "payloadEvidenceEfficiency": 0.3136067708333333,
+          "evidenceRecall": 0.4583333333333333,
+          "mrr": 0.3267063492063491,
+          "tokensToFirstEvidence": 1304.5166666666667
+        },
+        {
+          "budget": 4096,
+          "cases": 60,
+          "evidenceEfficiency": 0.41357828776041666,
+          "payloadEvidenceEfficiency": 0.3956705729166667,
+          "evidenceRecall": 0.5166666666666667,
+          "mrr": 0.3327899877899877,
+          "tokensToFirstEvidence": 2287.983333333333
+        },
+        {
+          "budget": 8192,
+          "cases": 60,
+          "evidenceEfficiency": 0.48046671549479164,
+          "payloadEvidenceEfficiency": 0.47068684895833335,
+          "evidenceRecall": 0.575,
+          "mrr": 0.33686527661699467,
+          "tokensToFirstEvidence": 3849.4166666666665
+        },
+        {
+          "budget": 16384,
+          "cases": 60,
+          "evidenceEfficiency": 0.5388712565104167,
+          "payloadEvidenceEfficiency": 0.5337809244791667,
+          "evidenceRecall": 0.6,
+          "mrr": 0.3373157270674451,
+          "tokensToFirstEvidence": 6457.216666666666
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-256-32\",\"retriever\":{\"kind\":\"bge-m3\",\"model\":\"BAAI/bge-m3\",\"mode\":\"hybrid-all-rrf\",\"shortlist\":200},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"},\"routingPolicy\":{\"kind\":\"flat\"}}",
+      "label": "BGE-M3 hybrid-all-rrf · flat library",
+      "strategyId": "fixed-token-cl100k_base-256-32",
+      "retriever": {
+        "kind": "bge-m3",
+        "model": "BAAI/bge-m3",
+        "mode": "hybrid-all-rrf",
+        "shortlist": 200
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "six-book-library-screen-v1-b295d3f6f8c25e1a.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 60,
+          "evidenceEfficiency": 0.17879231770833334,
+          "payloadEvidenceEfficiency": 0.1,
+          "evidenceRecall": 0.3,
+          "mrr": 0.26666666666666666,
+          "tokensToFirstEvidence": 414.45
+        },
+        {
+          "budget": 1024,
+          "cases": 60,
+          "evidenceEfficiency": 0.2611897786458333,
+          "payloadEvidenceEfficiency": 0.2125,
+          "evidenceRecall": 0.375,
+          "mrr": 0.2972222222222223,
+          "tokensToFirstEvidence": 732.7333333333333
+        },
+        {
+          "budget": 2048,
+          "cases": 60,
+          "evidenceEfficiency": 0.3342814127604167,
+          "payloadEvidenceEfficiency": 0.3046875,
+          "evidenceRecall": 0.4583333333333333,
+          "mrr": 0.30922619047619043,
+          "tokensToFirstEvidence": 1296.9166666666667
+        },
+        {
+          "budget": 4096,
+          "cases": 60,
+          "evidenceEfficiency": 0.4047770182291667,
+          "payloadEvidenceEfficiency": 0.38938802083333335,
+          "evidenceRecall": 0.49166666666666664,
+          "mrr": 0.3137489824989824,
+          "tokensToFirstEvidence": 2255.75
+        },
+        {
+          "budget": 8192,
+          "cases": 60,
+          "evidenceEfficiency": 0.47975565592447916,
+          "payloadEvidenceEfficiency": 0.46984456380208334,
+          "evidenceRecall": 0.6083333333333333,
+          "mrr": 0.318501592493528,
+          "tokensToFirstEvidence": 3870.6
+        },
+        {
+          "budget": 16384,
+          "cases": 60,
+          "evidenceEfficiency": 0.5545516967773437,
+          "payloadEvidenceEfficiency": 0.549554443359375,
+          "evidenceRecall": 0.6333333333333333,
+          "mrr": 0.3198198186143857,
+          "tokensToFirstEvidence": 6256.966666666666
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-256-32\",\"retriever\":{\"kind\":\"bge-m3\",\"model\":\"BAAI/bge-m3\",\"mode\":\"hybrid-dense-sparse-rrf\",\"shortlist\":200},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"},\"routingPolicy\":{\"kind\":\"flat\"}}",
+      "label": "BGE-M3 hybrid-dense-sparse-rrf · flat library",
+      "strategyId": "fixed-token-cl100k_base-256-32",
+      "retriever": {
+        "kind": "bge-m3",
+        "model": "BAAI/bge-m3",
+        "mode": "hybrid-dense-sparse-rrf",
+        "shortlist": 200
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "six-book-library-screen-v1-b295d3f6f8c25e1a.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 60,
+          "evidenceEfficiency": 0.14933268229166666,
+          "payloadEvidenceEfficiency": 0.075,
+          "evidenceRecall": 0.26666666666666666,
+          "mrr": 0.23333333333333334,
+          "tokensToFirstEvidence": 425.65
+        },
+        {
+          "budget": 1024,
+          "cases": 60,
+          "evidenceEfficiency": 0.2242431640625,
+          "payloadEvidenceEfficiency": 0.17916666666666667,
+          "evidenceRecall": 0.35,
+          "mrr": 0.2569444444444445,
+          "tokensToFirstEvidence": 767.4166666666666
+        },
+        {
+          "budget": 2048,
+          "cases": 60,
+          "evidenceEfficiency": 0.3067830403645833,
+          "payloadEvidenceEfficiency": 0.27981770833333336,
+          "evidenceRecall": 0.425,
+          "mrr": 0.26990079365079367,
+          "tokensToFirstEvidence": 1358.0166666666667
+        },
+        {
+          "budget": 4096,
+          "cases": 60,
+          "evidenceEfficiency": 0.38856608072916665,
+          "payloadEvidenceEfficiency": 0.3731770833333333,
+          "evidenceRecall": 0.49166666666666664,
+          "mrr": 0.2773650192400192,
+          "tokensToFirstEvidence": 2344.8166666666666
+        },
+        {
+          "budget": 8192,
+          "cases": 60,
+          "evidenceEfficiency": 0.4665802001953125,
+          "payloadEvidenceEfficiency": 0.4571940104166667,
+          "evidenceRecall": 0.5833333333333334,
+          "mrr": 0.28084796651282157,
+          "tokensToFirstEvidence": 4002.2
+        },
+        {
+          "budget": 16384,
+          "cases": 60,
+          "evidenceEfficiency": 0.54656982421875,
+          "payloadEvidenceEfficiency": 0.541552734375,
+          "evidenceRecall": 0.6333333333333333,
+          "mrr": 0.28266640601935955,
+          "tokensToFirstEvidence": 6526.583333333333
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-256-32\",\"retriever\":{\"kind\":\"bge-m3\",\"model\":\"BAAI/bge-m3\",\"mode\":\"hybrid-all-rrf\",\"shortlist\":200},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"},\"routingPolicy\":{\"kind\":\"bge-profile\",\"topK\":3}}",
+      "label": "BGE-M3 hybrid-all-rrf · route top 3",
+      "strategyId": "fixed-token-cl100k_base-256-32",
+      "retriever": {
+        "kind": "bge-m3",
+        "model": "BAAI/bge-m3",
+        "mode": "hybrid-all-rrf",
+        "shortlist": 200
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "six-book-library-screen-v1-b295d3f6f8c25e1a.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 60,
+          "evidenceEfficiency": 0.18590494791666667,
+          "payloadEvidenceEfficiency": 0.11666666666666667,
+          "evidenceRecall": 0.2916666666666667,
+          "mrr": 0.2833333333333333,
+          "tokensToFirstEvidence": 409.21666666666664
+        },
+        {
+          "budget": 1024,
+          "cases": 60,
+          "evidenceEfficiency": 0.25613606770833336,
+          "payloadEvidenceEfficiency": 0.21302083333333333,
+          "evidenceRecall": 0.35833333333333334,
+          "mrr": 0.3027777777777778,
+          "tokensToFirstEvidence": 741.3166666666667
+        },
+        {
+          "budget": 2048,
+          "cases": 60,
+          "evidenceEfficiency": 0.3166015625,
+          "payloadEvidenceEfficiency": 0.292578125,
+          "evidenceRecall": 0.4,
+          "mrr": 0.31240079365079365,
+          "tokensToFirstEvidence": 1347.15
+        },
+        {
+          "budget": 4096,
+          "cases": 60,
+          "evidenceEfficiency": 0.39087117513020836,
+          "payloadEvidenceEfficiency": 0.374609375,
+          "evidenceRecall": 0.5083333333333333,
+          "mrr": 0.3193524531024531,
+          "tokensToFirstEvidence": 2374.983333333333
+        },
+        {
+          "budget": 8192,
+          "cases": 60,
+          "evidenceEfficiency": 0.46192525227864584,
+          "payloadEvidenceEfficiency": 0.453125,
+          "evidenceRecall": 0.5666666666666667,
+          "mrr": 0.32339566297899636,
+          "tokensToFirstEvidence": 4098.433333333333
+        },
+        {
+          "budget": 16384,
+          "cases": 60,
+          "evidenceEfficiency": 0.5319325764973958,
+          "payloadEvidenceEfficiency": 0.5271692911783854,
+          "evidenceRecall": 0.6166666666666667,
+          "mrr": 0.32529103623237426,
+          "tokensToFirstEvidence": 6632.766666666666
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-256-32\",\"retriever\":{\"kind\":\"colbertv2\",\"model\":\"lightonai/colbertv2.0\"},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"},\"routingPolicy\":{\"kind\":\"flat\"}}",
+      "label": "ColBERTv2 · flat library",
+      "strategyId": "fixed-token-cl100k_base-256-32",
+      "retriever": {
+        "kind": "colbertv2",
+        "model": "lightonai/colbertv2.0"
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "six-book-library-screen-v1-b295d3f6f8c25e1a.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 60,
+          "evidenceEfficiency": 0.21767578125,
+          "payloadEvidenceEfficiency": 0.134375,
+          "evidenceRecall": 0.3,
+          "mrr": 0.2833333333333333,
+          "tokensToFirstEvidence": 400.55
+        },
+        {
+          "budget": 1024,
+          "cases": 60,
+          "evidenceEfficiency": 0.282470703125,
+          "payloadEvidenceEfficiency": 0.23020833333333332,
+          "evidenceRecall": 0.36666666666666664,
+          "mrr": 0.30416666666666664,
+          "tokensToFirstEvidence": 734.75
+        },
+        {
+          "budget": 2048,
+          "cases": 60,
+          "evidenceEfficiency": 0.33791910807291664,
+          "payloadEvidenceEfficiency": 0.30625,
+          "evidenceRecall": 0.425,
+          "mrr": 0.3134920634920635,
+          "tokensToFirstEvidence": 1353.5833333333333
+        },
+        {
+          "budget": 4096,
+          "cases": 60,
+          "evidenceEfficiency": 0.40219523111979166,
+          "payloadEvidenceEfficiency": 0.3843505859375,
+          "evidenceRecall": 0.49166666666666664,
+          "mrr": 0.32116402116402115,
+          "tokensToFirstEvidence": 2395.6
+        },
+        {
+          "budget": 8192,
+          "cases": 60,
+          "evidenceEfficiency": 0.457659912109375,
+          "payloadEvidenceEfficiency": 0.4480997721354167,
+          "evidenceRecall": 0.5333333333333333,
+          "mrr": 0.32261329652633997,
+          "tokensToFirstEvidence": 4288.966666666666
+        },
+        {
+          "budget": 16384,
+          "cases": 60,
+          "evidenceEfficiency": 0.5136886596679687,
+          "payloadEvidenceEfficiency": 0.508587646484375,
+          "evidenceRecall": 0.575,
+          "mrr": 0.3243586685882082,
+          "tokensToFirstEvidence": 7514.433333333333
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-256-32\",\"retriever\":{\"kind\":\"bge-m3\",\"model\":\"BAAI/bge-m3\",\"mode\":\"hybrid-all-rrf\",\"shortlist\":200},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"},\"routingPolicy\":{\"kind\":\"bge-profile\",\"topK\":1}}",
+      "label": "BGE-M3 hybrid-all-rrf · route top 1",
+      "strategyId": "fixed-token-cl100k_base-256-32",
+      "retriever": {
+        "kind": "bge-m3",
+        "model": "BAAI/bge-m3",
+        "mode": "hybrid-all-rrf",
+        "shortlist": 200
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "six-book-library-screen-v1-b295d3f6f8c25e1a.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 60,
+          "evidenceEfficiency": 0.162109375,
+          "payloadEvidenceEfficiency": 0.10520833333333333,
+          "evidenceRecall": 0.25833333333333336,
+          "mrr": 0.24166666666666667,
+          "tokensToFirstEvidence": 425.75
+        },
+        {
+          "budget": 1024,
+          "cases": 60,
+          "evidenceEfficiency": 0.226416015625,
+          "payloadEvidenceEfficiency": 0.190625,
+          "evidenceRecall": 0.30833333333333335,
+          "mrr": 0.2625,
+          "tokensToFirstEvidence": 779.0666666666667
+        },
+        {
+          "budget": 2048,
+          "cases": 60,
+          "evidenceEfficiency": 0.28441162109375,
+          "payloadEvidenceEfficiency": 0.262109375,
+          "evidenceRecall": 0.36666666666666664,
+          "mrr": 0.27281746031746035,
+          "tokensToFirstEvidence": 1424.2
+        },
+        {
+          "budget": 4096,
+          "cases": 60,
+          "evidenceEfficiency": 0.34796549479166666,
+          "payloadEvidenceEfficiency": 0.335546875,
+          "evidenceRecall": 0.425,
+          "mrr": 0.28117021867021863,
+          "tokensToFirstEvidence": 2518.0833333333335
+        },
+        {
+          "budget": 8192,
+          "cases": 60,
+          "evidenceEfficiency": 0.3944010416666667,
+          "payloadEvidenceEfficiency": 0.3877482096354167,
+          "evidenceRecall": 0.4583333333333333,
+          "mrr": 0.28250250707147256,
+          "tokensToFirstEvidence": 4569.483333333334
+        },
+        {
+          "budget": 16384,
+          "cases": 60,
+          "evidenceEfficiency": 0.43905181884765626,
+          "payloadEvidenceEfficiency": 0.43546600341796876,
+          "evidenceRecall": 0.49166666666666664,
+          "mrr": 0.2836934334325634,
+          "tokensToFirstEvidence": 8215.816666666668
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-256-32\",\"retriever\":{\"kind\":\"bm25\"},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"},\"routingPolicy\":{\"kind\":\"flat\"}}",
+      "label": "BM25 · flat library",
+      "strategyId": "fixed-token-cl100k_base-256-32",
+      "retriever": {
+        "kind": "bm25"
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "six-book-library-screen-v1-b295d3f6f8c25e1a.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 60,
+          "evidenceEfficiency": 0.13056640625,
+          "payloadEvidenceEfficiency": 0.075,
+          "evidenceRecall": 0.18333333333333332,
+          "mrr": 0.16666666666666666,
+          "tokensToFirstEvidence": 445.15
+        },
+        {
+          "budget": 1024,
+          "cases": 60,
+          "evidenceEfficiency": 0.1819091796875,
+          "payloadEvidenceEfficiency": 0.14453125,
+          "evidenceRecall": 0.25833333333333336,
+          "mrr": 0.1930555555555556,
+          "tokensToFirstEvidence": 833.5
+        },
+        {
+          "budget": 2048,
+          "cases": 60,
+          "evidenceEfficiency": 0.23755289713541666,
+          "payloadEvidenceEfficiency": 0.21549479166666666,
+          "evidenceRecall": 0.31666666666666665,
+          "mrr": 0.20392857142857146,
+          "tokensToFirstEvidence": 1544.95
+        },
+        {
+          "budget": 4096,
+          "cases": 60,
+          "evidenceEfficiency": 0.293994140625,
+          "payloadEvidenceEfficiency": 0.2806884765625,
+          "evidenceRecall": 0.38333333333333336,
+          "mrr": 0.21041895604395605,
+          "tokensToFirstEvidence": 2835.75
+        },
+        {
+          "budget": 8192,
+          "cases": 60,
+          "evidenceEfficiency": 0.34597880045572915,
+          "payloadEvidenceEfficiency": 0.33891194661458335,
+          "evidenceRecall": 0.425,
+          "mrr": 0.21166895604395605,
+          "tokensToFirstEvidence": 5173.466666666666
+        },
+        {
+          "budget": 16384,
+          "cases": 60,
+          "evidenceEfficiency": 0.40162760416666665,
+          "payloadEvidenceEfficiency": 0.39767862955729166,
+          "evidenceRecall": 0.4666666666666667,
+          "mrr": 0.212962253389885,
+          "tokensToFirstEvidence": 9340.533333333333
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-256-32\",\"retriever\":{\"kind\":\"random\",\"seed\":42},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"},\"routingPolicy\":{\"kind\":\"flat\"}}",
+      "label": "Random seed 42 · flat library",
+      "strategyId": "fixed-token-cl100k_base-256-32",
+      "retriever": {
+        "kind": "random",
+        "seed": 42
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "six-book-library-screen-v1-b295d3f6f8c25e1a.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 60,
+          "evidenceEfficiency": 0,
+          "payloadEvidenceEfficiency": 0,
+          "evidenceRecall": 0,
+          "mrr": 0,
+          "tokensToFirstEvidence": 512
+        },
+        {
+          "budget": 1024,
+          "cases": 60,
+          "evidenceEfficiency": 0,
+          "payloadEvidenceEfficiency": 0,
+          "evidenceRecall": 0,
+          "mrr": 0,
+          "tokensToFirstEvidence": 1024
+        },
+        {
+          "budget": 2048,
+          "cases": 60,
+          "evidenceEfficiency": 0,
+          "payloadEvidenceEfficiency": 0,
+          "evidenceRecall": 0,
+          "mrr": 0,
+          "tokensToFirstEvidence": 2048
+        },
+        {
+          "budget": 4096,
+          "cases": 60,
+          "evidenceEfficiency": 0,
+          "payloadEvidenceEfficiency": 0,
+          "evidenceRecall": 0,
+          "mrr": 0,
+          "tokensToFirstEvidence": 4096
+        },
+        {
+          "budget": 8192,
+          "cases": 60,
+          "evidenceEfficiency": 0,
+          "payloadEvidenceEfficiency": 0,
+          "evidenceRecall": 0,
+          "mrr": 0,
+          "tokensToFirstEvidence": 8192
+        },
+        {
+          "budget": 16384,
+          "cases": 60,
+          "evidenceEfficiency": 0.003826904296875,
+          "payloadEvidenceEfficiency": 0.0036458333333333334,
+          "evidenceRecall": 0.016666666666666666,
+          "mrr": 0.0003333333333333333,
+          "tokensToFirstEvidence": 16321.3
+        }
+      ]
+    }
+  ],
+  "categoryBreakdowns": [
+    {
+      "category": "attributed",
+      "cases": 24,
+      "leaderboard": [
+        {
+          "label": "BGE-M3 hybrid-all-rrf + rerank-2.5-lite · oracle books",
+          "evidenceEfficiency": 0.8609822591145834,
+          "evidenceRecall": 0.9166666666666666,
+          "mrr": 0.687584175084175
+        },
+        {
+          "label": "Hybrid voyage-4-large v1:b1 + rerank-2.5-lite · flat library",
+          "evidenceEfficiency": 0.8358815511067709,
+          "evidenceRecall": 0.875,
+          "mrr": 0.6869212962962963
+        },
+        {
+          "label": "BGE-M3 colbert-dense-shortlist + rerank-2.5-lite · flat library",
+          "evidenceEfficiency": 0.8345794677734375,
+          "evidenceRecall": 0.875,
+          "mrr": 0.6863425925925926
+        },
+        {
+          "label": "Hybrid text-embedding-3-large v1:b1 + rerank-2.5-lite · flat library",
+          "evidenceEfficiency": 0.8314463297526041,
+          "evidenceRecall": 0.875,
+          "mrr": 0.6770517676767677
+        },
+        {
+          "label": "Vector voyage-4-large + rerank-2.5-lite · flat library",
+          "evidenceEfficiency": 0.7947743733723959,
+          "evidenceRecall": 0.8333333333333334,
+          "mrr": 0.6750841750841751
+        },
+        {
+          "label": "Vector voyage-4-large · flat library",
+          "evidenceEfficiency": 0.7859242757161459,
+          "evidenceRecall": 0.8333333333333334,
+          "mrr": 0.6614267676767677
+        },
+        {
+          "label": "Vector text-embedding-3-large + rerank-2.5-lite · flat library",
+          "evidenceEfficiency": 0.7849680582682291,
+          "evidenceRecall": 0.8333333333333334,
+          "mrr": 0.6584175084175083
+        },
+        {
+          "label": "BGE-M3 hybrid-all-rrf · oracle books",
+          "evidenceEfficiency": 0.7826588948567709,
+          "evidenceRecall": 0.875,
+          "mrr": 0.5642921892921893
+        },
+        {
+          "label": "Hybrid voyage-4-large v1:b1 · flat library",
+          "evidenceEfficiency": 0.7653554280598959,
+          "evidenceRecall": 0.875,
+          "mrr": 0.46985600048100057
+        },
+        {
+          "label": "BGE-M3 hybrid-all-rrf · route top 1",
+          "evidenceEfficiency": 0.741363525390625,
+          "evidenceRecall": 0.8333333333333334,
+          "mrr": 0.5226255226255226
+        },
+        {
+          "label": "Vector text-embedding-3-large · flat library",
+          "evidenceEfficiency": 0.7410227457682291,
+          "evidenceRecall": 0.8333333333333334,
+          "mrr": 0.5171924603174604
+        },
+        {
+          "label": "BGE-M3 colbert-dense-shortlist · flat library",
+          "evidenceEfficiency": 0.733428955078125,
+          "evidenceRecall": 0.8333333333333334,
+          "mrr": 0.5218118686868687
+        },
+        {
+          "label": "BGE-M3 hybrid-all-rrf + rerank-2.5-lite · flat library",
+          "evidenceEfficiency": 0.718048095703125,
+          "evidenceRecall": 0.75,
+          "mrr": 0.5879629629629629
+        },
+        {
+          "label": "BGE-M3 hybrid-all-rrf + rerank-2.5-lite · route top 5",
+          "evidenceEfficiency": 0.7167460123697916,
+          "evidenceRecall": 0.75,
+          "mrr": 0.5869708994708995
+        },
+        {
+          "label": "BGE-M3 sparse + rerank-2.5-lite · flat library",
+          "evidenceEfficiency": 0.7124176025390625,
+          "evidenceRecall": 0.75,
+          "mrr": 0.5649305555555556
+        },
+        {
+          "label": "Hybrid text-embedding-3-large v1:b1 · flat library",
+          "evidenceEfficiency": 0.6951548258463541,
+          "evidenceRecall": 0.8333333333333334,
+          "mrr": 0.4284956147701245
+        },
+        {
+          "label": "BGE-M3 hybrid-all-rrf · route top 3",
+          "evidenceEfficiency": 0.6835479736328125,
+          "evidenceRecall": 0.7916666666666666,
+          "mrr": 0.4741251803751804
+        },
+        {
+          "label": "BGE-M3 dense · flat library",
+          "evidenceEfficiency": 0.6657307942708334,
+          "evidenceRecall": 0.8333333333333334,
+          "mrr": 0.4313355529501363
+        },
+        {
+          "label": "ColBERTv2 · flat library",
+          "evidenceEfficiency": 0.650726318359375,
+          "evidenceRecall": 0.75,
+          "mrr": 0.39858738785369224
+        },
+        {
+          "label": "BGE-M3 hybrid-all-rrf · route top 5",
+          "evidenceEfficiency": 0.640411376953125,
+          "evidenceRecall": 0.75,
+          "mrr": 0.4021968729012073
+        },
+        {
+          "label": "BGE-M3 sparse · flat library",
+          "evidenceEfficiency": 0.624542236328125,
+          "evidenceRecall": 0.75,
+          "mrr": 0.26866402116402116
+        },
+        {
+          "label": "BGE-M3 hybrid-all-rrf · flat library",
+          "evidenceEfficiency": 0.6109517415364584,
+          "evidenceRecall": 0.75,
+          "mrr": 0.3662535381285381
+        },
+        {
+          "label": "BGE-M3 hybrid-dense-sparse-rrf · flat library",
+          "evidenceEfficiency": 0.57733154296875,
+          "evidenceRecall": 0.7083333333333334,
+          "mrr": 0.30989360478490907
+        },
+        {
+          "label": "BM25 · flat library",
+          "evidenceEfficiency": 0.368438720703125,
+          "evidenceRecall": 0.4583333333333333,
+          "mrr": 0.19903846153846153
+        },
+        {
+          "label": "Random seed 42 · flat library",
+          "evidenceEfficiency": 0,
+          "evidenceRecall": 0,
+          "mrr": 0
+        }
+      ]
+    },
+    {
+      "category": "comparative",
+      "cases": 18,
+      "leaderboard": [
+        {
+          "label": "BGE-M3 hybrid-all-rrf + rerank-2.5-lite · oracle books",
+          "evidenceEfficiency": 0.4074300130208333,
+          "evidenceRecall": 0.5277777777777778,
+          "mrr": 0.4168011488186927
+        },
+        {
+          "label": "BGE-M3 sparse + rerank-2.5-lite · flat library",
+          "evidenceEfficiency": 0.3856404622395833,
+          "evidenceRecall": 0.4722222222222222,
+          "mrr": 0.36706349206349204
+        },
+        {
+          "label": "BGE-M3 hybrid-all-rrf · oracle books",
+          "evidenceEfficiency": 0.3611178927951389,
+          "evidenceRecall": 0.5833333333333334,
+          "mrr": 0.3381839361989089
+        },
+        {
+          "label": "BGE-M3 hybrid-all-rrf + rerank-2.5-lite · flat library",
+          "evidenceEfficiency": 0.3482530381944444,
+          "evidenceRecall": 0.4166666666666667,
+          "mrr": 0.3729683896350563
+        },
+        {
+          "label": "BGE-M3 hybrid-all-rrf + rerank-2.5-lite · route top 5",
+          "evidenceEfficiency": 0.34521484375,
+          "evidenceRecall": 0.4166666666666667,
+          "mrr": 0.40764482431149096
+        },
+        {
+          "label": "Vector voyage-4-large · flat library",
+          "evidenceEfficiency": 0.3326483832465278,
+          "evidenceRecall": 0.4722222222222222,
+          "mrr": 0.3381537946755338
+        },
+        {
+          "label": "Vector voyage-4-large + rerank-2.5-lite · flat library",
+          "evidenceEfficiency": 0.3303392198350694,
+          "evidenceRecall": 0.4722222222222222,
+          "mrr": 0.39379586960232127
+        },
+        {
+          "label": "Hybrid voyage-4-large v1:b1 + rerank-2.5-lite · flat library",
+          "evidenceEfficiency": 0.3221808539496528,
+          "evidenceRecall": 0.4722222222222222,
+          "mrr": 0.34655501089324614
+        },
+        {
+          "label": "Hybrid voyage-4-large v1:b1 · flat library",
+          "evidenceEfficiency": 0.3050062391493056,
+          "evidenceRecall": 0.4166666666666667,
+          "mrr": 0.18239895339041445
+        },
+        {
+          "label": "BGE-M3 colbert-dense-shortlist + rerank-2.5-lite · flat library",
+          "evidenceEfficiency": 0.288726806640625,
+          "evidenceRecall": 0.3333333333333333,
+          "mrr": 0.3563271604938272
+        },
+        {
+          "label": "Vector text-embedding-3-large + rerank-2.5-lite · flat library",
+          "evidenceEfficiency": 0.2628682454427083,
+          "evidenceRecall": 0.3888888888888889,
+          "mrr": 0.27342921574087725
+        },
+        {
+          "label": "BGE-M3 hybrid-all-rrf · route top 5",
+          "evidenceEfficiency": 0.2483859592013889,
+          "evidenceRecall": 0.4166666666666667,
+          "mrr": 0.23013573609451743
+        },
+        {
+          "label": "Hybrid text-embedding-3-large v1:b1 + rerank-2.5-lite · flat library",
+          "evidenceEfficiency": 0.24809773763020834,
+          "evidenceRecall": 0.3333333333333333,
+          "mrr": 0.26375661375661374
+        },
+        {
+          "label": "BGE-M3 hybrid-dense-sparse-rrf · flat library",
+          "evidenceEfficiency": 0.2441372341579861,
+          "evidenceRecall": 0.3888888888888889,
+          "mrr": 0.19743931480042592
+        },
+        {
+          "label": "BGE-M3 sparse · flat library",
+          "evidenceEfficiency": 0.24308268229166666,
+          "evidenceRecall": 0.4166666666666667,
+          "mrr": 0.17390422077922077
+        },
+        {
+          "label": "BGE-M3 hybrid-all-rrf · route top 3",
+          "evidenceEfficiency": 0.2376132541232639,
+          "evidenceRecall": 0.3888888888888889,
+          "mrr": 0.17333186360964137
+        },
+        {
+          "label": "BGE-M3 hybrid-all-rrf · flat library",
+          "evidenceEfficiency": 0.2209710015190972,
+          "evidenceRecall": 0.3611111111111111,
+          "mrr": 0.18069723983702476
+        },
+        {
+          "label": "BGE-M3 dense · flat library",
+          "evidenceEfficiency": 0.21327379014756945,
+          "evidenceRecall": 0.3055555555555556,
+          "mrr": 0.13539266691440605
+        },
+        {
+          "label": "Hybrid text-embedding-3-large v1:b1 · flat library",
+          "evidenceEfficiency": 0.19975789388020834,
+          "evidenceRecall": 0.25,
+          "mrr": 0.13216262239250745
+        },
+        {
+          "label": "BGE-M3 colbert-dense-shortlist · flat library",
+          "evidenceEfficiency": 0.19428507486979166,
+          "evidenceRecall": 0.3055555555555556,
+          "mrr": 0.10381449825894268
+        },
+        {
+          "label": "Vector text-embedding-3-large · flat library",
+          "evidenceEfficiency": 0.16544596354166666,
+          "evidenceRecall": 0.3055555555555556,
+          "mrr": 0.14202446703019425
+        },
+        {
+          "label": "BGE-M3 hybrid-all-rrf · route top 1",
+          "evidenceEfficiency": 0.1593356662326389,
+          "evidenceRecall": 0.19444444444444445,
+          "mrr": 0.11792528459195124
+        },
+        {
+          "label": "BM25 · flat library",
+          "evidenceEfficiency": 0.09757826063368055,
+          "evidenceRecall": 0.19444444444444445,
+          "mrr": 0.03594576719576719
+        },
+        {
+          "label": "ColBERTv2 · flat library",
+          "evidenceEfficiency": 0.0810818142361111,
+          "evidenceRecall": 0.16666666666666666,
+          "mrr": 0.02170558239398819
+        },
+        {
+          "label": "Random seed 42 · flat library",
+          "evidenceEfficiency": 0,
+          "evidenceRecall": 0,
+          "mrr": 0
+        }
+      ]
+    },
+    {
+      "category": "discovery",
+      "cases": 18,
+      "leaderboard": [
+        {
+          "label": "Hybrid voyage-4-large v1:b1 + rerank-2.5-lite · flat library",
+          "evidenceEfficiency": 0.7692667643229166,
+          "evidenceRecall": 0.8333333333333334,
+          "mrr": 0.6873677248677248
+        },
+        {
+          "label": "Vector voyage-4-large · flat library",
+          "evidenceEfficiency": 0.7540757921006944,
+          "evidenceRecall": 0.8333333333333334,
+          "mrr": 0.5789923039923041
+        },
+        {
+          "label": "Vector voyage-4-large + rerank-2.5-lite · flat library",
+          "evidenceEfficiency": 0.7540757921006944,
+          "evidenceRecall": 0.8333333333333334,
+          "mrr": 0.6847860791826309
+        },
+        {
+          "label": "BGE-M3 hybrid-all-rrf + rerank-2.5-lite · oracle books",
+          "evidenceEfficiency": 0.7465955946180556,
+          "evidenceRecall": 0.7777777777777778,
+          "mrr": 0.656084656084656
+        },
+        {
+          "label": "BGE-M3 sparse + rerank-2.5-lite · flat library",
+          "evidenceEfficiency": 0.7429063585069444,
+          "evidenceRecall": 0.7777777777777778,
+          "mrr": 0.6578282828282829
+        },
+        {
+          "label": "Hybrid voyage-4-large v1:b1 · flat library",
+          "evidenceEfficiency": 0.7059326171875,
+          "evidenceRecall": 0.7777777777777778,
+          "mrr": 0.5906986531986533
+        },
+        {
+          "label": "BGE-M3 sparse · flat library",
+          "evidenceEfficiency": 0.6927761501736112,
+          "evidenceRecall": 0.7777777777777778,
+          "mrr": 0.5069444444444444
+        },
+        {
+          "label": "BGE-M3 hybrid-all-rrf · oracle books",
+          "evidenceEfficiency": 0.6786295572916666,
+          "evidenceRecall": 0.7777777777777778,
+          "mrr": 0.5579614604462475
+        },
+        {
+          "label": "BGE-M3 hybrid-all-rrf + rerank-2.5-lite · flat library",
+          "evidenceEfficiency": 0.6543240017361112,
+          "evidenceRecall": 0.6666666666666666,
+          "mrr": 0.6296296296296295
+        },
+        {
+          "label": "BGE-M3 colbert-dense-shortlist + rerank-2.5-lite · flat library",
+          "evidenceEfficiency": 0.6491156684027778,
+          "evidenceRecall": 0.6666666666666666,
+          "mrr": 0.6203703703703705
+        },
+        {
+          "label": "Hybrid text-embedding-3-large v1:b1 + rerank-2.5-lite · flat library",
+          "evidenceEfficiency": 0.6373494466145834,
+          "evidenceRecall": 0.6666666666666666,
+          "mrr": 0.5717592592592592
+        },
+        {
+          "label": "BGE-M3 hybrid-all-rrf + rerank-2.5-lite · route top 5",
+          "evidenceEfficiency": 0.5981174045138888,
+          "evidenceRecall": 0.6111111111111112,
+          "mrr": 0.5694444444444444
+        },
+        {
+          "label": "BGE-M3 colbert-dense-shortlist · flat library",
+          "evidenceEfficiency": 0.5893147786458334,
+          "evidenceRecall": 0.6111111111111112,
+          "mrr": 0.5264550264550265
+        },
+        {
+          "label": "ColBERTv2 · flat library",
+          "evidenceEfficiency": 0.5768161349826388,
+          "evidenceRecall": 0.6111111111111112,
+          "mrr": 0.5222222222222221
+        },
+        {
+          "label": "BM25 · flat library",
+          "evidenceEfficiency": 0.5644327799479166,
+          "evidenceRecall": 0.6111111111111112,
+          "mrr": 0.4042328042328042
+        },
+        {
+          "label": "BGE-M3 hybrid-all-rrf · flat library",
+          "evidenceEfficiency": 0.5636121961805556,
+          "evidenceRecall": 0.6666666666666666,
+          "mrr": 0.39263668430335097
+        },
+        {
+          "label": "Hybrid text-embedding-3-large v1:b1 · flat library",
+          "evidenceEfficiency": 0.5573798285590278,
+          "evidenceRecall": 0.6666666666666666,
+          "mrr": 0.40896972824217404
+        },
+        {
+          "label": "BGE-M3 hybrid-dense-sparse-rrf · flat library",
+          "evidenceEfficiency": 0.5413547092013888,
+          "evidenceRecall": 0.6111111111111112,
+          "mrr": 0.3255291005291005
+        },
+        {
+          "label": "BGE-M3 hybrid-all-rrf · route top 5",
+          "evidenceEfficiency": 0.5212944878472222,
+          "evidenceRecall": 0.6111111111111112,
+          "mrr": 0.3758605664488017
+        },
+        {
+          "label": "BGE-M3 dense · flat library",
+          "evidenceEfficiency": 0.5174492730034722,
+          "evidenceRecall": 0.5555555555555556,
+          "mrr": 0.3603174603174603
+        },
+        {
+          "label": "Vector text-embedding-3-large + rerank-2.5-lite · flat library",
+          "evidenceEfficiency": 0.4934353298611111,
+          "evidenceRecall": 0.5,
+          "mrr": 0.5
+        },
+        {
+          "label": "Vector text-embedding-3-large · flat library",
+          "evidenceEfficiency": 0.4480794270833333,
+          "evidenceRecall": 0.5,
+          "mrr": 0.2912698412698413
+        },
+        {
+          "label": "BGE-M3 hybrid-all-rrf · route top 3",
+          "evidenceEfficiency": 0.3907402886284722,
+          "evidenceRecall": 0.4444444444444444,
+          "mrr": 0.2724867724867725
+        },
+        {
+          "label": "BGE-M3 hybrid-all-rrf · route top 1",
+          "evidenceEfficiency": 0.16684977213541666,
+          "evidenceRecall": 0.2222222222222222,
+          "mrr": 0.12691570881226052
+        },
+        {
+          "label": "Random seed 42 · flat library",
+          "evidenceEfficiency": 0,
+          "evidenceRecall": 0,
+          "mrr": 0
+        }
+      ]
+    }
+  ],
+  "routingDiagnostics": [
+    {
+      "label": "BGE-M3 hybrid-all-rrf + rerank-2.5-lite · oracle books",
+      "requiredBookRecall": 1,
+      "allRequiredBooks": 1,
+      "evidenceEfficiency": 0.6906005859375,
+      "evidenceRecall": 0.7583333333333333
+    },
+    {
+      "label": "BGE-M3 hybrid-all-rrf · oracle books",
+      "requiredBookRecall": 1,
+      "allRequiredBooks": 1,
+      "evidenceEfficiency": 0.62498779296875,
+      "evidenceRecall": 0.7583333333333333
+    },
+    {
+      "label": "BGE-M3 hybrid-all-rrf + rerank-2.5-lite · route top 5",
+      "requiredBookRecall": 0.9833333333333333,
+      "allRequiredBooks": 0.9833333333333333,
+      "evidenceEfficiency": 0.5696980794270833,
+      "evidenceRecall": 0.6083333333333333
+    },
+    {
+      "label": "BGE-M3 hybrid-all-rrf · route top 5",
+      "requiredBookRecall": 0.9833333333333333,
+      "allRequiredBooks": 0.9833333333333333,
+      "evidenceEfficiency": 0.4870686848958333,
+      "evidenceRecall": 0.6083333333333333
+    },
+    {
+      "label": "BGE-M3 hybrid-all-rrf · route top 3",
+      "requiredBookRecall": 0.875,
+      "allRequiredBooks": 0.85,
+      "evidenceEfficiency": 0.46192525227864584,
+      "evidenceRecall": 0.5666666666666667
+    },
+    {
+      "label": "BGE-M3 hybrid-all-rrf · route top 1",
+      "requiredBookRecall": 0.6,
+      "allRequiredBooks": 0.4666666666666667,
+      "evidenceEfficiency": 0.3944010416666667,
+      "evidenceRecall": 0.4583333333333333
+    }
+  ]
+}

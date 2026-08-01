@@ -1,0 +1,263 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1141" viewBox="0 0 1200 1141">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="72" y="22" font-family="sans-serif" font-size="16" font-weight="700">Evidence Efficiency curve (headline 8,192 tokens)</text>
+<line x1="72" y1="596" x2="832" y2="596" stroke="#e7e7e7"/>
+<text x="62" y="600" text-anchor="end" font-family="sans-serif" font-size="11" fill="#555">0.0</text>
+<line x1="72" y1="540" x2="832" y2="540" stroke="#e7e7e7"/>
+<text x="62" y="544" text-anchor="end" font-family="sans-serif" font-size="11" fill="#555">0.1</text>
+<line x1="72" y1="484" x2="832" y2="484" stroke="#e7e7e7"/>
+<text x="62" y="488" text-anchor="end" font-family="sans-serif" font-size="11" fill="#555">0.2</text>
+<line x1="72" y1="428" x2="832" y2="428" stroke="#e7e7e7"/>
+<text x="62" y="432" text-anchor="end" font-family="sans-serif" font-size="11" fill="#555">0.3</text>
+<line x1="72" y1="372" x2="832" y2="372" stroke="#e7e7e7"/>
+<text x="62" y="376" text-anchor="end" font-family="sans-serif" font-size="11" fill="#555">0.4</text>
+<line x1="72" y1="316" x2="832" y2="316" stroke="#e7e7e7"/>
+<text x="62" y="320" text-anchor="end" font-family="sans-serif" font-size="11" fill="#555">0.5</text>
+<line x1="72" y1="260" x2="832" y2="260" stroke="#e7e7e7"/>
+<text x="62" y="264" text-anchor="end" font-family="sans-serif" font-size="11" fill="#555">0.6</text>
+<line x1="72" y1="204.00000000000003" x2="832" y2="204.00000000000003" stroke="#e7e7e7"/>
+<text x="62" y="208.00000000000003" text-anchor="end" font-family="sans-serif" font-size="11" fill="#555">0.7</text>
+<line x1="72" y1="147.99999999999997" x2="832" y2="147.99999999999997" stroke="#e7e7e7"/>
+<text x="62" y="151.99999999999997" text-anchor="end" font-family="sans-serif" font-size="11" fill="#555">0.8</text>
+<line x1="72" y1="91.99999999999999" x2="832" y2="91.99999999999999" stroke="#e7e7e7"/>
+<text x="62" y="95.99999999999999" text-anchor="end" font-family="sans-serif" font-size="11" fill="#555">0.9</text>
+<line x1="72" y1="36" x2="832" y2="36" stroke="#e7e7e7"/>
+<text x="62" y="40" text-anchor="end" font-family="sans-serif" font-size="11" fill="#555">1.0</text>
+<line x1="72" y1="36" x2="72" y2="596" stroke="#f1f1f1"/>
+<text x="72" y="618" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#555">512</text>
+<line x1="224" y1="36" x2="224" y2="596" stroke="#f1f1f1"/>
+<text x="224" y="618" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#555">1,024</text>
+<line x1="376" y1="36" x2="376" y2="596" stroke="#f1f1f1"/>
+<text x="376" y="618" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#555">2,048</text>
+<line x1="528" y1="36" x2="528" y2="596" stroke="#f1f1f1"/>
+<text x="528" y="618" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#555">4,096</text>
+<line x1="680" y1="36" x2="680" y2="596" stroke="#f1f1f1"/>
+<text x="680" y="618" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#555">8,192</text>
+<line x1="832" y1="36" x2="832" y2="596" stroke="#f1f1f1"/>
+<text x="832" y="618" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#555">16,384</text>
+<polyline points="72,376.484375 224,325.38346354166663 376,285.59375 528,241.25699869791669 680,209.26367187500003 832,184.39794921875003" fill="none" stroke="#0b6e4f" stroke-width="2.5"/>
+<circle cx="72" cy="376.484375" r="3" fill="#0b6e4f"/>
+<circle cx="224" cy="325.38346354166663" r="3" fill="#0b6e4f"/>
+<circle cx="376" cy="285.59375" r="3" fill="#0b6e4f"/>
+<circle cx="528" cy="241.25699869791669" r="3" fill="#0b6e4f"/>
+<circle cx="680" cy="209.26367187500003" r="3" fill="#0b6e4f"/>
+<circle cx="832" cy="184.39794921875003" r="3" fill="#0b6e4f"/>
+<line x1="860" y1="36" x2="886" y2="36" stroke="#0b6e4f" stroke-width="3"/>
+<text x="894" y="40" font-family="sans-serif" font-size="11" fill="#222">BGE-M3 hybrid-all-rrf + rerank-2.5-lite · oracle books</text>
+<polyline points="72,374.5065104166667 224,326.71875 376,289.6360677083333 528,254.75569661458331 680,225.39933268229166 832,203.03299967447916" fill="none" stroke="#1976d2" stroke-width="2.5"/>
+<circle cx="72" cy="374.5065104166667" r="3" fill="#1976d2"/>
+<circle cx="224" cy="326.71875" r="3" fill="#1976d2"/>
+<circle cx="376" cy="289.6360677083333" r="3" fill="#1976d2"/>
+<circle cx="528" cy="254.75569661458331" r="3" fill="#1976d2"/>
+<circle cx="680" cy="225.39933268229166" r="3" fill="#1976d2"/>
+<circle cx="832" cy="203.03299967447916" r="3" fill="#1976d2"/>
+<line x1="860" y1="79" x2="886" y2="79" stroke="#1976d2" stroke-width="3"/>
+<text x="894" y="83" font-family="sans-serif" font-size="11" fill="#222">Hybrid voyage-4-large v1:b1 + rerank-2.5-lite · flat l</text>
+<polyline points="72,371.453125 224,324.32161458333337 376,295.4967447916667 528,261.36149088541663 680,235.788818359375 832,210.74507649739581" fill="none" stroke="#b55d00" stroke-width="2.5"/>
+<circle cx="72" cy="371.453125" r="3" fill="#b55d00"/>
+<circle cx="224" cy="324.32161458333337" r="3" fill="#b55d00"/>
+<circle cx="376" cy="295.4967447916667" r="3" fill="#b55d00"/>
+<circle cx="528" cy="261.36149088541663" r="3" fill="#b55d00"/>
+<circle cx="680" cy="235.788818359375" r="3" fill="#b55d00"/>
+<circle cx="832" cy="210.74507649739581" r="3" fill="#b55d00"/>
+<line x1="860" y1="122" x2="886" y2="122" stroke="#b55d00" stroke-width="3"/>
+<text x="894" y="126" font-family="sans-serif" font-size="11" fill="#222">Vector voyage-4-large + rerank-2.5-lite · flat library</text>
+<polyline points="72,397.6848958333333 224,349.0266927083333 376,308.3323567708333 528,271.6416015625 680,237.38330078125 832,211.77787272135416" fill="none" stroke="#8e44ad" stroke-width="2.5"/>
+<circle cx="72" cy="397.6848958333333" r="3" fill="#8e44ad"/>
+<circle cx="224" cy="349.0266927083333" r="3" fill="#8e44ad"/>
+<circle cx="376" cy="308.3323567708333" r="3" fill="#8e44ad"/>
+<circle cx="528" cy="271.6416015625" r="3" fill="#8e44ad"/>
+<circle cx="680" cy="237.38330078125" r="3" fill="#8e44ad"/>
+<circle cx="832" cy="211.77787272135416" r="3" fill="#8e44ad"/>
+<line x1="860" y1="165" x2="886" y2="165" stroke="#8e44ad" stroke-width="3"/>
+<text x="894" y="169" font-family="sans-serif" font-size="11" fill="#222">Vector voyage-4-large · flat library</text>
+<polyline points="72,428.13671875 224,381.87109375 376,336.8792317708333 528,290.6477864583333 680,246.00683593750003 832,203.45682779947913" fill="none" stroke="#c62828" stroke-width="2.5"/>
+<circle cx="72" cy="428.13671875" r="3" fill="#c62828"/>
+<circle cx="224" cy="381.87109375" r="3" fill="#c62828"/>
+<circle cx="376" cy="336.8792317708333" r="3" fill="#c62828"/>
+<circle cx="528" cy="290.6477864583333" r="3" fill="#c62828"/>
+<circle cx="680" cy="246.00683593750003" r="3" fill="#c62828"/>
+<circle cx="832" cy="203.45682779947913" r="3" fill="#c62828"/>
+<line x1="860" y1="208" x2="886" y2="208" stroke="#c62828" stroke-width="3"/>
+<text x="894" y="212" font-family="sans-serif" font-size="11" fill="#222">BGE-M3 hybrid-all-rrf · oracle books</text>
+<polyline points="72,403.07161458333337 224,349.4869791666667 376,309.57649739583337 528,272.2443033854167 680,246.82259114583337 832,232.41129557291663" fill="none" stroke="#00838f" stroke-width="2.5"/>
+<circle cx="72" cy="403.07161458333337" r="3" fill="#00838f"/>
+<circle cx="224" cy="349.4869791666667" r="3" fill="#00838f"/>
+<circle cx="376" cy="309.57649739583337" r="3" fill="#00838f"/>
+<circle cx="528" cy="272.2443033854167" r="3" fill="#00838f"/>
+<circle cx="680" cy="246.82259114583337" r="3" fill="#00838f"/>
+<circle cx="832" cy="232.41129557291663" r="3" fill="#00838f"/>
+<line x1="860" y1="251" x2="886" y2="251" stroke="#00838f" stroke-width="3"/>
+<text x="894" y="255" font-family="sans-serif" font-size="11" fill="#222">BGE-M3 sparse + rerank-2.5-lite · flat library</text>
+<polyline points="72,384.26822916666663 224,337.4329427083333 376,302.5035807291667 528,270.6025390625 680,251.49666341145837 832,237.3525390625" fill="none" stroke="#5d6d1d" stroke-width="2.5"/>
+<circle cx="72" cy="384.26822916666663" r="3" fill="#5d6d1d"/>
+<circle cx="224" cy="337.4329427083333" r="3" fill="#5d6d1d"/>
+<circle cx="376" cy="302.5035807291667" r="3" fill="#5d6d1d"/>
+<circle cx="528" cy="270.6025390625" r="3" fill="#5d6d1d"/>
+<circle cx="680" cy="251.49666341145837" r="3" fill="#5d6d1d"/>
+<circle cx="832" cy="237.3525390625" r="3" fill="#5d6d1d"/>
+<line x1="860" y1="294" x2="886" y2="294" stroke="#5d6d1d" stroke-width="3"/>
+<text x="894" y="298" font-family="sans-serif" font-size="11" fill="#222">BGE-M3 colbert-dense-shortlist + rerank-2.5-lite · fla</text>
+<polyline points="72,451.32421875 224,398.73763020833337 376,350.4280598958333 528,295.1412760416667 680,254.72265625000003 832,220.96708170572919" fill="none" stroke="#6d4c41" stroke-width="2.5"/>
+<circle cx="72" cy="451.32421875" r="3" fill="#6d4c41"/>
+<circle cx="224" cy="398.73763020833337" r="3" fill="#6d4c41"/>
+<circle cx="376" cy="350.4280598958333" r="3" fill="#6d4c41"/>
+<circle cx="528" cy="295.1412760416667" r="3" fill="#6d4c41"/>
+<circle cx="680" cy="254.72265625000003" r="3" fill="#6d4c41"/>
+<circle cx="832" cy="220.96708170572919" r="3" fill="#6d4c41"/>
+<line x1="860" y1="337" x2="886" y2="337" stroke="#6d4c41" stroke-width="3"/>
+<text x="894" y="341" font-family="sans-serif" font-size="11" fill="#222">Hybrid voyage-4-large v1:b1 · flat library</text>
+<polyline points="72,396.75520833333337 224,356.509765625 376,319.158203125 528,285.35107421875 680,261.00089518229163 832,246.50044759114581" fill="none" stroke="#455a64" stroke-width="2.5"/>
+<circle cx="72" cy="396.75520833333337" r="3" fill="#455a64"/>
+<circle cx="224" cy="356.509765625" r="3" fill="#455a64"/>
+<circle cx="376" cy="319.158203125" r="3" fill="#455a64"/>
+<circle cx="528" cy="285.35107421875" r="3" fill="#455a64"/>
+<circle cx="680" cy="261.00089518229163" r="3" fill="#455a64"/>
+<circle cx="832" cy="246.50044759114581" r="3" fill="#455a64"/>
+<line x1="860" y1="380" x2="886" y2="380" stroke="#455a64" stroke-width="3"/>
+<text x="894" y="384" font-family="sans-serif" font-size="11" fill="#222">Hybrid text-embedding-3-large v1:b1 + rerank-2.5-lite </text>
+<polyline points="72,397.375 224,347.25846354166663 376,312.47721354166663 528,285.81477864583337 680,266.7242838541667 832,254.39424641927084" fill="none" stroke="#ad1457" stroke-width="2.5"/>
+<circle cx="72" cy="397.375" r="3" fill="#ad1457"/>
+<circle cx="224" cy="347.25846354166663" r="3" fill="#ad1457"/>
+<circle cx="376" cy="312.47721354166663" r="3" fill="#ad1457"/>
+<circle cx="528" cy="285.81477864583337" r="3" fill="#ad1457"/>
+<circle cx="680" cy="266.7242838541667" r="3" fill="#ad1457"/>
+<circle cx="832" cy="254.39424641927084" r="3" fill="#ad1457"/>
+<line x1="860" y1="423" x2="886" y2="423" stroke="#ad1457" stroke-width="3"/>
+<text x="894" y="427" font-family="sans-serif" font-size="11" fill="#222">BGE-M3 hybrid-all-rrf + rerank-2.5-lite · flat library</text>
+<polyline points="72,401.4583333333333 224,354.39518229166663 376,322.17513020833337 528,295.6220703125 680,276.96907552083337 832,264.15596516927087" fill="none" stroke="#2e7d32" stroke-width="2.5"/>
+<circle cx="72" cy="401.4583333333333" r="3" fill="#2e7d32"/>
+<circle cx="224" cy="354.39518229166663" r="3" fill="#2e7d32"/>
+<circle cx="376" cy="322.17513020833337" r="3" fill="#2e7d32"/>
+<circle cx="528" cy="295.6220703125" r="3" fill="#2e7d32"/>
+<circle cx="680" cy="276.96907552083337" r="3" fill="#2e7d32"/>
+<circle cx="832" cy="264.15596516927087" r="3" fill="#2e7d32"/>
+<line x1="860" y1="466" x2="886" y2="466" stroke="#2e7d32" stroke-width="3"/>
+<text x="894" y="470" font-family="sans-serif" font-size="11" fill="#222">BGE-M3 hybrid-all-rrf + rerank-2.5-lite · route top 5</text>
+<polyline points="72,404.3567708333333 224,369.224609375 376,345.0891927083333 528,314.1110026041667 680,293.108154296875 832,276.5540771484375" fill="none" stroke="#283593" stroke-width="2.5"/>
+<circle cx="72" cy="404.3567708333333" r="3" fill="#283593"/>
+<circle cx="224" cy="369.224609375" r="3" fill="#283593"/>
+<circle cx="376" cy="345.0891927083333" r="3" fill="#283593"/>
+<circle cx="528" cy="314.1110026041667" r="3" fill="#283593"/>
+<circle cx="680" cy="293.108154296875" r="3" fill="#283593"/>
+<circle cx="832" cy="276.5540771484375" r="3" fill="#283593"/>
+<line x1="860" y1="509" x2="886" y2="509" stroke="#283593" stroke-width="3"/>
+<text x="894" y="513" font-family="sans-serif" font-size="11" fill="#222">Vector text-embedding-3-large + rerank-2.5-lite · flat</text>
+<polyline points="72,500.98046875 224,457.9186197916667 376,398.1383463541667 528,345.927734375 680,298.87825520833337 832,260.0142415364583" fill="none" stroke="#0b6e4f" stroke-width="2.5"/>
+<circle cx="72" cy="500.98046875" r="3" fill="#0b6e4f"/>
+<circle cx="224" cy="457.9186197916667" r="3" fill="#0b6e4f"/>
+<circle cx="376" cy="398.1383463541667" r="3" fill="#0b6e4f"/>
+<circle cx="528" cy="345.927734375" r="3" fill="#0b6e4f"/>
+<circle cx="680" cy="298.87825520833337" r="3" fill="#0b6e4f"/>
+<circle cx="832" cy="260.0142415364583" r="3" fill="#0b6e4f"/>
+<line x1="860" y1="552" x2="886" y2="552" stroke="#0b6e4f" stroke-width="3"/>
+<text x="894" y="556" font-family="sans-serif" font-size="11" fill="#222">BGE-M3 sparse · flat library</text>
+<polyline points="72,449.2278645833333 224,412.099609375 376,378.62858072916663 528,335.88118489583337 680,300.067138671875 832,263.0861409505208" fill="none" stroke="#1976d2" stroke-width="2.5"/>
+<circle cx="72" cy="449.2278645833333" r="3" fill="#1976d2"/>
+<circle cx="224" cy="412.099609375" r="3" fill="#1976d2"/>
+<circle cx="376" cy="378.62858072916663" r="3" fill="#1976d2"/>
+<circle cx="528" cy="335.88118489583337" r="3" fill="#1976d2"/>
+<circle cx="680" cy="300.067138671875" r="3" fill="#1976d2"/>
+<circle cx="832" cy="263.0861409505208" r="3" fill="#1976d2"/>
+<line x1="860" y1="595" x2="886" y2="595" stroke="#1976d2" stroke-width="3"/>
+<text x="894" y="599" font-family="sans-serif" font-size="11" fill="#222">BGE-M3 colbert-dense-shortlist · flat library</text>
+<polyline points="72,483.7630208333333 224,443.74544270833337 376,398.783203125 528,358.77473958333337 680,313.086181640625 832,276.04195149739587" fill="none" stroke="#b55d00" stroke-width="2.5"/>
+<circle cx="72" cy="483.7630208333333" r="3" fill="#b55d00"/>
+<circle cx="224" cy="443.74544270833337" r="3" fill="#b55d00"/>
+<circle cx="376" cy="398.783203125" r="3" fill="#b55d00"/>
+<circle cx="528" cy="358.77473958333337" r="3" fill="#b55d00"/>
+<circle cx="680" cy="313.086181640625" r="3" fill="#b55d00"/>
+<circle cx="832" cy="276.04195149739587" r="3" fill="#b55d00"/>
+<line x1="860" y1="638" x2="886" y2="638" stroke="#b55d00" stroke-width="3"/>
+<text x="894" y="642" font-family="sans-serif" font-size="11" fill="#222">Hybrid text-embedding-3-large v1:b1 · flat library</text>
+<polyline points="72,486.2604166666667 224,444.2467447916667 376,403.78938802083337 528,368.7779947916667 680,323.2415364583333 832,287.0973714192708" fill="none" stroke="#8e44ad" stroke-width="2.5"/>
+<circle cx="72" cy="486.2604166666667" r="3" fill="#8e44ad"/>
+<circle cx="224" cy="444.2467447916667" r="3" fill="#8e44ad"/>
+<circle cx="376" cy="403.78938802083337" r="3" fill="#8e44ad"/>
+<circle cx="528" cy="368.7779947916667" r="3" fill="#8e44ad"/>
+<circle cx="680" cy="323.2415364583333" r="3" fill="#8e44ad"/>
+<circle cx="832" cy="287.0973714192708" r="3" fill="#8e44ad"/>
+<line x1="860" y1="681" x2="886" y2="681" stroke="#8e44ad" stroke-width="3"/>
+<text x="894" y="685" font-family="sans-serif" font-size="11" fill="#222">BGE-M3 hybrid-all-rrf · route top 5</text>
+<polyline points="72,491.8203125 224,449.4739583333333 376,409.59765625 528,366.4412434895833 680,324.11482747395837 832,286.02327473958337" fill="none" stroke="#c62828" stroke-width="2.5"/>
+<circle cx="72" cy="491.8203125" r="3" fill="#c62828"/>
+<circle cx="224" cy="449.4739583333333" r="3" fill="#c62828"/>
+<circle cx="376" cy="409.59765625" r="3" fill="#c62828"/>
+<circle cx="528" cy="366.4412434895833" r="3" fill="#c62828"/>
+<circle cx="680" cy="324.11482747395837" r="3" fill="#c62828"/>
+<circle cx="832" cy="286.02327473958337" r="3" fill="#c62828"/>
+<line x1="860" y1="724" x2="886" y2="724" stroke="#c62828" stroke-width="3"/>
+<text x="894" y="728" font-family="sans-serif" font-size="11" fill="#222">BGE-M3 dense · flat library</text>
+<polyline points="72,477.08203125 224,444.146484375 376,402.7093098958333 528,364.3961588541667 680,326.93863932291663 832,294.2320963541667" fill="none" stroke="#00838f" stroke-width="2.5"/>
+<circle cx="72" cy="477.08203125" r="3" fill="#00838f"/>
+<circle cx="224" cy="444.146484375" r="3" fill="#00838f"/>
+<circle cx="376" cy="402.7093098958333" r="3" fill="#00838f"/>
+<circle cx="528" cy="364.3961588541667" r="3" fill="#00838f"/>
+<circle cx="680" cy="326.93863932291663" r="3" fill="#00838f"/>
+<circle cx="832" cy="294.2320963541667" r="3" fill="#00838f"/>
+<line x1="860" y1="767" x2="886" y2="767" stroke="#00838f" stroke-width="3"/>
+<text x="894" y="771" font-family="sans-serif" font-size="11" fill="#222">Vector text-embedding-3-large · flat library</text>
+<polyline points="72,495.8763020833333 224,449.73372395833337 376,408.8024088541667 528,369.3248697916667 680,327.3368326822917 832,285.4510498046875" fill="none" stroke="#5d6d1d" stroke-width="2.5"/>
+<circle cx="72" cy="495.8763020833333" r="3" fill="#5d6d1d"/>
+<circle cx="224" cy="449.73372395833337" r="3" fill="#5d6d1d"/>
+<circle cx="376" cy="408.8024088541667" r="3" fill="#5d6d1d"/>
+<circle cx="528" cy="369.3248697916667" r="3" fill="#5d6d1d"/>
+<circle cx="680" cy="327.3368326822917" r="3" fill="#5d6d1d"/>
+<circle cx="832" cy="285.4510498046875" r="3" fill="#5d6d1d"/>
+<line x1="860" y1="810" x2="886" y2="810" stroke="#5d6d1d" stroke-width="3"/>
+<text x="894" y="814" font-family="sans-serif" font-size="11" fill="#222">BGE-M3 hybrid-all-rrf · flat library</text>
+<polyline points="72,512.3736979166667 224,470.423828125 376,424.20149739583337 528,378.4029947916667 680,334.715087890625 832,289.9208984375" fill="none" stroke="#6d4c41" stroke-width="2.5"/>
+<circle cx="72" cy="512.3736979166667" r="3" fill="#6d4c41"/>
+<circle cx="224" cy="470.423828125" r="3" fill="#6d4c41"/>
+<circle cx="376" cy="424.20149739583337" r="3" fill="#6d4c41"/>
+<circle cx="528" cy="378.4029947916667" r="3" fill="#6d4c41"/>
+<circle cx="680" cy="334.715087890625" r="3" fill="#6d4c41"/>
+<circle cx="832" cy="289.9208984375" r="3" fill="#6d4c41"/>
+<line x1="860" y1="853" x2="886" y2="853" stroke="#6d4c41" stroke-width="3"/>
+<text x="894" y="857" font-family="sans-serif" font-size="11" fill="#222">BGE-M3 hybrid-dense-sparse-rrf · flat library</text>
+<polyline points="72,491.8932291666667 224,452.56380208333337 376,418.703125 528,377.11214192708337 680,337.3218587239583 832,298.11775716145837" fill="none" stroke="#455a64" stroke-width="2.5"/>
+<circle cx="72" cy="491.8932291666667" r="3" fill="#455a64"/>
+<circle cx="224" cy="452.56380208333337" r="3" fill="#455a64"/>
+<circle cx="376" cy="418.703125" r="3" fill="#455a64"/>
+<circle cx="528" cy="377.11214192708337" r="3" fill="#455a64"/>
+<circle cx="680" cy="337.3218587239583" r="3" fill="#455a64"/>
+<circle cx="832" cy="298.11775716145837" r="3" fill="#455a64"/>
+<line x1="860" y1="896" x2="886" y2="896" stroke="#455a64" stroke-width="3"/>
+<text x="894" y="900" font-family="sans-serif" font-size="11" fill="#222">BGE-M3 hybrid-all-rrf · route top 3</text>
+<polyline points="72,474.1015625 224,437.81640625 376,406.76529947916663 528,370.7706705729167 680,339.71044921875 832,308.3343505859375" fill="none" stroke="#ad1457" stroke-width="2.5"/>
+<circle cx="72" cy="474.1015625" r="3" fill="#ad1457"/>
+<circle cx="224" cy="437.81640625" r="3" fill="#ad1457"/>
+<circle cx="376" cy="406.76529947916663" r="3" fill="#ad1457"/>
+<circle cx="528" cy="370.7706705729167" r="3" fill="#ad1457"/>
+<circle cx="680" cy="339.71044921875" r="3" fill="#ad1457"/>
+<circle cx="832" cy="308.3343505859375" r="3" fill="#ad1457"/>
+<line x1="860" y1="939" x2="886" y2="939" stroke="#ad1457" stroke-width="3"/>
+<text x="894" y="943" font-family="sans-serif" font-size="11" fill="#222">ColBERTv2 · flat library</text>
+<polyline points="72,505.21875 224,469.20703125 376,436.7294921875 528,401.1393229166667 680,375.1354166666667 832,350.1309814453125" fill="none" stroke="#2e7d32" stroke-width="2.5"/>
+<circle cx="72" cy="505.21875" r="3" fill="#2e7d32"/>
+<circle cx="224" cy="469.20703125" r="3" fill="#2e7d32"/>
+<circle cx="376" cy="436.7294921875" r="3" fill="#2e7d32"/>
+<circle cx="528" cy="401.1393229166667" r="3" fill="#2e7d32"/>
+<circle cx="680" cy="375.1354166666667" r="3" fill="#2e7d32"/>
+<circle cx="832" cy="350.1309814453125" r="3" fill="#2e7d32"/>
+<line x1="860" y1="982" x2="886" y2="982" stroke="#2e7d32" stroke-width="3"/>
+<text x="894" y="986" font-family="sans-serif" font-size="11" fill="#222">BGE-M3 hybrid-all-rrf · route top 1</text>
+<polyline points="72,522.8828125 224,494.130859375 376,462.9703776041667 528,431.36328125 680,402.2518717447917 832,371.0885416666667" fill="none" stroke="#283593" stroke-width="2.5"/>
+<circle cx="72" cy="522.8828125" r="3" fill="#283593"/>
+<circle cx="224" cy="494.130859375" r="3" fill="#283593"/>
+<circle cx="376" cy="462.9703776041667" r="3" fill="#283593"/>
+<circle cx="528" cy="431.36328125" r="3" fill="#283593"/>
+<circle cx="680" cy="402.2518717447917" r="3" fill="#283593"/>
+<circle cx="832" cy="371.0885416666667" r="3" fill="#283593"/>
+<line x1="860" y1="1025" x2="886" y2="1025" stroke="#283593" stroke-width="3"/>
+<text x="894" y="1029" font-family="sans-serif" font-size="11" fill="#222">BM25 · flat library</text>
+<polyline points="72,596 224,596 376,596 528,596 680,596 832,593.85693359375" fill="none" stroke="#0b6e4f" stroke-width="2.5"/>
+<circle cx="72" cy="596" r="3" fill="#0b6e4f"/>
+<circle cx="224" cy="596" r="3" fill="#0b6e4f"/>
+<circle cx="376" cy="596" r="3" fill="#0b6e4f"/>
+<circle cx="528" cy="596" r="3" fill="#0b6e4f"/>
+<circle cx="680" cy="596" r="3" fill="#0b6e4f"/>
+<circle cx="832" cy="593.85693359375" r="3" fill="#0b6e4f"/>
+<line x1="860" y1="1068" x2="886" y2="1068" stroke="#0b6e4f" stroke-width="3"/>
+<text x="894" y="1072" font-family="sans-serif" font-size="11" fill="#222">Random seed 42 · flat library</text>
+</svg>

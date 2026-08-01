@@ -125,9 +125,13 @@ images. Legacy pilot sets are validated and migrated when loaded.
 The six-book development harness is operational. It supports fixed and
 structural token chunking; random and BM25 controls; OpenAI and Voyage dense
 retrieval; weighted hybrid RRF; Voyage reranking; local ColBERTv2; and BGE-M3
-dense, sparse, multi-vector, and hybrid modes. The current 145 text cases are
-explicitly provisional development data. Human review and a locked test split
-remain the release gate before publishing benchmark claims.
+dense, sparse, multi-vector, and hybrid modes. There are separate experiment
+lineages for 145 within-book cases and 60 library-wide cases over the same six
+books. The library suite includes attributed, source-discovery, and two-book
+comparative questions; flat global retrieval is compared with BGE-M3 book
+routing at top 1/3/5 and an oracle-book diagnostic. All cases remain explicitly
+provisional development data. Human review and a locked test split remain the
+release gate before publishing benchmark claims.
 The exact holdout procedure is documented in
 [`benchmarks/LOCKED_TEST_PROTOCOL.md`](benchmarks/LOCKED_TEST_PROTOCOL.md).
 
@@ -173,6 +177,8 @@ npm run rag-eval -- export-eval <book-id> <set-id> benchmarks/evals/<set>.json
 npm run rag-eval -- sample-evidence benchmarks/corpora/six-book-smoke.json .rag-eval/review.json -- --per-book 25
 npm run rag-eval -- report .rag-eval/runs/<run>.json
 npm run rag-eval -- tournament .rag-eval/runs/<run>.json -- --budget 8192 --top 12
+npm run rag-eval -- generate-library-cases benchmarks/corpora/six-book-smoke.json -- --source-evals .rag-eval/provisional-evals/six-book-smoke-v1 --output-evals .rag-eval/provisional-evals/six-book-library-v1 --run .rag-eval/eval-drafts/six-book-library-cases-v1.json --max-usd 1
+npm run rag-eval -- run-library experiments/six-book-library-screen-v1.yaml -- --max-usd 2 --library-dir <library-dir>
 npm run rag-eval -- plan-drafts .rag-eval/draft-generation.yaml
 npm run rag-eval -- run-drafts .rag-eval/draft-generation.yaml -- --max-usd 5
 npm run rag-eval -- retry-draft-failures .rag-eval/eval-drafts/<run>.json -- --max-usd 5 --additional-attempts 2
@@ -219,6 +225,13 @@ and local index build/storage accounting. `tournament` discovers all compatible
 completed runs for the target case set and metric version, deduplicates their
 strategy cells, and emits a ranked Markdown report, full JSON curves, and an
 SVG Evidence Efficiency plot.
+
+`run-library` federates the existing per-book indexes into one searchable
+corpus, merges globally ranked candidates, and optionally routes each query to
+top-k book profiles before passage retrieval. Library runs have their own case
+set and fingerprint, so they never mix with within-book results. Completed base
+traces are reused by later reranking experiments; document indexes, embedding
+artifacts, and paid query vectors are not rebuilt merely to test a reranker.
 
 Canonical eval drafting is configured from
 `benchmarks/authoring/draft-generation.template.yaml`. `plan-drafts` requires

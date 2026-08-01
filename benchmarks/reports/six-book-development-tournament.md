@@ -1,4 +1,4 @@
-# Six-book retrieval tournament
+# Six-book within-book retrieval tournament
 
 > Development result: the questions and evidence are provisional and unreviewed. Do not present these values as a locked benchmark.
 
@@ -6,7 +6,7 @@
 - Headline: Evidence Efficiency @ 8,192 tokens
 - Compatible completed runs: 7
 - Metered API cost in compatible scoring runs: $0.288934
-- Cumulative metered API cost in the run directory (including earlier artifact-building runs): $1.309325
+- Cumulative metered API cost in the run directory (including earlier artifact-building runs): $1.458082
 
 ![Evidence Efficiency curves](six-book-development-tournament.evidence-efficiency.svg)
 
