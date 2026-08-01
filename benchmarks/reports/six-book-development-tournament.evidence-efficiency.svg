@@ -1,0 +1,146 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="680" viewBox="0 0 1200 680">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="72" y="22" font-family="sans-serif" font-size="16" font-weight="700">Evidence Efficiency curve (headline 8,192 tokens)</text>
+<line x1="72" y1="596" x2="832" y2="596" stroke="#e7e7e7"/>
+<text x="62" y="600" text-anchor="end" font-family="sans-serif" font-size="11" fill="#555">0.0</text>
+<line x1="72" y1="540" x2="832" y2="540" stroke="#e7e7e7"/>
+<text x="62" y="544" text-anchor="end" font-family="sans-serif" font-size="11" fill="#555">0.1</text>
+<line x1="72" y1="484" x2="832" y2="484" stroke="#e7e7e7"/>
+<text x="62" y="488" text-anchor="end" font-family="sans-serif" font-size="11" fill="#555">0.2</text>
+<line x1="72" y1="428" x2="832" y2="428" stroke="#e7e7e7"/>
+<text x="62" y="432" text-anchor="end" font-family="sans-serif" font-size="11" fill="#555">0.3</text>
+<line x1="72" y1="372" x2="832" y2="372" stroke="#e7e7e7"/>
+<text x="62" y="376" text-anchor="end" font-family="sans-serif" font-size="11" fill="#555">0.4</text>
+<line x1="72" y1="316" x2="832" y2="316" stroke="#e7e7e7"/>
+<text x="62" y="320" text-anchor="end" font-family="sans-serif" font-size="11" fill="#555">0.5</text>
+<line x1="72" y1="260" x2="832" y2="260" stroke="#e7e7e7"/>
+<text x="62" y="264" text-anchor="end" font-family="sans-serif" font-size="11" fill="#555">0.6</text>
+<line x1="72" y1="204.00000000000003" x2="832" y2="204.00000000000003" stroke="#e7e7e7"/>
+<text x="62" y="208.00000000000003" text-anchor="end" font-family="sans-serif" font-size="11" fill="#555">0.7</text>
+<line x1="72" y1="147.99999999999997" x2="832" y2="147.99999999999997" stroke="#e7e7e7"/>
+<text x="62" y="151.99999999999997" text-anchor="end" font-family="sans-serif" font-size="11" fill="#555">0.8</text>
+<line x1="72" y1="91.99999999999999" x2="832" y2="91.99999999999999" stroke="#e7e7e7"/>
+<text x="62" y="95.99999999999999" text-anchor="end" font-family="sans-serif" font-size="11" fill="#555">0.9</text>
+<line x1="72" y1="36" x2="832" y2="36" stroke="#e7e7e7"/>
+<text x="62" y="40" text-anchor="end" font-family="sans-serif" font-size="11" fill="#555">1.0</text>
+<line x1="72" y1="36" x2="72" y2="596" stroke="#f1f1f1"/>
+<text x="72" y="618" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#555">512</text>
+<line x1="224" y1="36" x2="224" y2="596" stroke="#f1f1f1"/>
+<text x="224" y="618" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#555">1,024</text>
+<line x1="376" y1="36" x2="376" y2="596" stroke="#f1f1f1"/>
+<text x="376" y="618" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#555">2,048</text>
+<line x1="528" y1="36" x2="528" y2="596" stroke="#f1f1f1"/>
+<text x="528" y="618" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#555">4,096</text>
+<line x1="680" y1="36" x2="680" y2="596" stroke="#f1f1f1"/>
+<text x="680" y="618" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#555">8,192</text>
+<line x1="832" y1="36" x2="832" y2="596" stroke="#f1f1f1"/>
+<text x="832" y="618" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#555">16,384</text>
+<polyline points="72,221.88469827586206 224,143.3685344827586 376,97.26508620689656 528,66.54202586206895 680,51.27101293103448 832,43.63550646551724" fill="none" stroke="#0b6e4f" stroke-width="2.5"/>
+<circle cx="72" cy="221.88469827586206" r="3" fill="#0b6e4f"/>
+<circle cx="224" cy="143.3685344827586" r="3" fill="#0b6e4f"/>
+<circle cx="376" cy="97.26508620689656" r="3" fill="#0b6e4f"/>
+<circle cx="528" cy="66.54202586206895" r="3" fill="#0b6e4f"/>
+<circle cx="680" cy="51.27101293103448" r="3" fill="#0b6e4f"/>
+<circle cx="832" cy="43.63550646551724" r="3" fill="#0b6e4f"/>
+<line x1="860" y1="36" x2="886" y2="36" stroke="#0b6e4f" stroke-width="3"/>
+<text x="894" y="40" font-family="sans-serif" font-size="11" fill="#222">BGE-M3 hybrid-all-rrf + rerank-2.5-lite</text>
+<polyline points="72,225.31681034482762 224,146.20851293103448 376,100.20689655172413 528,71.08957435344826 680,55.47582165948279 832,47.668945312499986" fill="none" stroke="#1976d2" stroke-width="2.5"/>
+<circle cx="72" cy="225.31681034482762" r="3" fill="#1976d2"/>
+<circle cx="224" cy="146.20851293103448" r="3" fill="#1976d2"/>
+<circle cx="376" cy="100.20689655172413" r="3" fill="#1976d2"/>
+<circle cx="528" cy="71.08957435344826" r="3" fill="#1976d2"/>
+<circle cx="680" cy="55.47582165948279" r="3" fill="#1976d2"/>
+<circle cx="832" cy="47.668945312499986" r="3" fill="#1976d2"/>
+<line x1="860" y1="79" x2="886" y2="79" stroke="#1976d2" stroke-width="3"/>
+<text x="894" y="83" font-family="sans-serif" font-size="11" fill="#222">Hybrid voyage-4-large v1:b1 + rerank-2.5-lite</text>
+<polyline points="72,244.22737068965515 224,165.3793103448276 376,110.53906249999997 528,77.13160021551724 680,58.886718750000014 832,49.3743938577586" fill="none" stroke="#b55d00" stroke-width="2.5"/>
+<circle cx="72" cy="244.22737068965515" r="3" fill="#b55d00"/>
+<circle cx="224" cy="165.3793103448276" r="3" fill="#b55d00"/>
+<circle cx="376" cy="110.53906249999997" r="3" fill="#b55d00"/>
+<circle cx="528" cy="77.13160021551724" r="3" fill="#b55d00"/>
+<circle cx="680" cy="58.886718750000014" r="3" fill="#b55d00"/>
+<circle cx="832" cy="49.3743938577586" r="3" fill="#b55d00"/>
+<line x1="860" y1="122" x2="886" y2="122" stroke="#b55d00" stroke-width="3"/>
+<text x="894" y="126" font-family="sans-serif" font-size="11" fill="#222">Hybrid voyage-4-large v1:b1 + rerank-2.5</text>
+<polyline points="72,227.04418103448273 224,151.74137931034483 376,107.85748922413792 528,79.94046336206895 680,65.69436961206897 832,58.57132273706898" fill="none" stroke="#8e44ad" stroke-width="2.5"/>
+<circle cx="72" cy="227.04418103448273" r="3" fill="#8e44ad"/>
+<circle cx="224" cy="151.74137931034483" r="3" fill="#8e44ad"/>
+<circle cx="376" cy="107.85748922413792" r="3" fill="#8e44ad"/>
+<circle cx="528" cy="79.94046336206895" r="3" fill="#8e44ad"/>
+<circle cx="680" cy="65.69436961206897" r="3" fill="#8e44ad"/>
+<circle cx="832" cy="58.57132273706898" r="3" fill="#8e44ad"/>
+<line x1="860" y1="165" x2="886" y2="165" stroke="#8e44ad" stroke-width="3"/>
+<text x="894" y="169" font-family="sans-serif" font-size="11" fill="#222">BM25 + rerank-2.5-lite</text>
+<polyline points="72,232.3092672413793 224,154.21174568965517 376,109.03609913793105 528,82.11664870689653 680,68.7134967672414 832,62.011920797413815" fill="none" stroke="#c62828" stroke-width="2.5"/>
+<circle cx="72" cy="232.3092672413793" r="3" fill="#c62828"/>
+<circle cx="224" cy="154.21174568965517" r="3" fill="#c62828"/>
+<circle cx="376" cy="109.03609913793105" r="3" fill="#c62828"/>
+<circle cx="528" cy="82.11664870689653" r="3" fill="#c62828"/>
+<circle cx="680" cy="68.7134967672414" r="3" fill="#c62828"/>
+<circle cx="832" cy="62.011920797413815" r="3" fill="#c62828"/>
+<line x1="860" y1="208" x2="886" y2="208" stroke="#c62828" stroke-width="3"/>
+<text x="894" y="212" font-family="sans-serif" font-size="11" fill="#222">Hybrid voyage-4-large v0.75:b0.25 + rerank-2.5-lite</text>
+<polyline points="72,232.3092672413793 224,154.21174568965517 376,109.03609913793105 528,82.11664870689653 680,68.7134967672414 832,62.011920797413815" fill="none" stroke="#00838f" stroke-width="2.5"/>
+<circle cx="72" cy="232.3092672413793" r="3" fill="#00838f"/>
+<circle cx="224" cy="154.21174568965517" r="3" fill="#00838f"/>
+<circle cx="376" cy="109.03609913793105" r="3" fill="#00838f"/>
+<circle cx="528" cy="82.11664870689653" r="3" fill="#00838f"/>
+<circle cx="680" cy="68.7134967672414" r="3" fill="#00838f"/>
+<circle cx="832" cy="62.011920797413815" r="3" fill="#00838f"/>
+<line x1="860" y1="251" x2="886" y2="251" stroke="#00838f" stroke-width="3"/>
+<text x="894" y="255" font-family="sans-serif" font-size="11" fill="#222">Vector voyage-4-large + rerank-2.5-lite</text>
+<polyline points="72,320.239224137931 224,228.33405172413796 376,154.50592672413796 528,106.33943965517243 680,74.5061287715517 832,55.25306438577585" fill="none" stroke="#5d6d1d" stroke-width="2.5"/>
+<circle cx="72" cy="320.239224137931" r="3" fill="#5d6d1d"/>
+<circle cx="224" cy="228.33405172413796" r="3" fill="#5d6d1d"/>
+<circle cx="376" cy="154.50592672413796" r="3" fill="#5d6d1d"/>
+<circle cx="528" cy="106.33943965517243" r="3" fill="#5d6d1d"/>
+<circle cx="680" cy="74.5061287715517" r="3" fill="#5d6d1d"/>
+<circle cx="832" cy="55.25306438577585" r="3" fill="#5d6d1d"/>
+<line x1="860" y1="294" x2="886" y2="294" stroke="#5d6d1d" stroke-width="3"/>
+<text x="894" y="298" font-family="sans-serif" font-size="11" fill="#222">Hybrid voyage-4-large v1:b1</text>
+<polyline points="72,433.9515086206896 224,274.77693965517244 376,169.99380387931035 528,110.96336206896552 680,77.20561691810344 832,58.53384294181035" fill="none" stroke="#6d4c41" stroke-width="2.5"/>
+<circle cx="72" cy="433.9515086206896" r="3" fill="#6d4c41"/>
+<circle cx="224" cy="274.77693965517244" r="3" fill="#6d4c41"/>
+<circle cx="376" cy="169.99380387931035" r="3" fill="#6d4c41"/>
+<circle cx="528" cy="110.96336206896552" r="3" fill="#6d4c41"/>
+<circle cx="680" cy="77.20561691810344" r="3" fill="#6d4c41"/>
+<circle cx="832" cy="58.53384294181035" r="3" fill="#6d4c41"/>
+<line x1="860" y1="337" x2="886" y2="337" stroke="#6d4c41" stroke-width="3"/>
+<text x="894" y="341" font-family="sans-serif" font-size="11" fill="#222">Hybrid voyage-4-large v1:b1 + rerank-2.5-lite + ±1 nei</text>
+<polyline points="72,320.239224137931 224,228.6810344827586 376,155.84671336206898 528,108.97103987068968 680,77.75296336206895 832,58.807516163793096" fill="none" stroke="#455a64" stroke-width="2.5"/>
+<circle cx="72" cy="320.239224137931" r="3" fill="#455a64"/>
+<circle cx="224" cy="228.6810344827586" r="3" fill="#455a64"/>
+<circle cx="376" cy="155.84671336206898" r="3" fill="#455a64"/>
+<circle cx="528" cy="108.97103987068968" r="3" fill="#455a64"/>
+<circle cx="680" cy="77.75296336206895" r="3" fill="#455a64"/>
+<circle cx="832" cy="58.807516163793096" r="3" fill="#455a64"/>
+<line x1="860" y1="380" x2="886" y2="380" stroke="#455a64" stroke-width="3"/>
+<text x="894" y="384" font-family="sans-serif" font-size="11" fill="#222">Hybrid voyage-4-large v1:b1</text>
+<polyline points="72,297.28556034482756 224,200.70366379310346 376,137.48491379310346 528,100.26629849137927 680,77.78832165948276 832,66.54933324353448" fill="none" stroke="#ad1457" stroke-width="2.5"/>
+<circle cx="72" cy="297.28556034482756" r="3" fill="#ad1457"/>
+<circle cx="224" cy="200.70366379310346" r="3" fill="#ad1457"/>
+<circle cx="376" cy="137.48491379310346" r="3" fill="#ad1457"/>
+<circle cx="528" cy="100.26629849137927" r="3" fill="#ad1457"/>
+<circle cx="680" cy="77.78832165948276" r="3" fill="#ad1457"/>
+<circle cx="832" cy="66.54933324353448" r="3" fill="#ad1457"/>
+<line x1="860" y1="423" x2="886" y2="423" stroke="#ad1457" stroke-width="3"/>
+<text x="894" y="427" font-family="sans-serif" font-size="11" fill="#222">Hybrid voyage-4-large v0.75:b0.25</text>
+<polyline points="72,278.5711206896552 224,196.6643318965517 376,143.24784482758622 528,105.06371228448276 680,81.02761314655174 832,68.16897898706895" fill="none" stroke="#2e7d32" stroke-width="2.5"/>
+<circle cx="72" cy="278.5711206896552" r="3" fill="#2e7d32"/>
+<circle cx="224" cy="196.6643318965517" r="3" fill="#2e7d32"/>
+<circle cx="376" cy="143.24784482758622" r="3" fill="#2e7d32"/>
+<circle cx="528" cy="105.06371228448276" r="3" fill="#2e7d32"/>
+<circle cx="680" cy="81.02761314655174" r="3" fill="#2e7d32"/>
+<circle cx="832" cy="68.16897898706895" r="3" fill="#2e7d32"/>
+<line x1="860" y1="466" x2="886" y2="466" stroke="#2e7d32" stroke-width="3"/>
+<text x="894" y="470" font-family="sans-serif" font-size="11" fill="#222">Vector voyage-4-large</text>
+<polyline points="72,346.2101293103449 224,256.7979525862069 376,177.70285560344828 528,121.2191540948276 680,85.2819234913793 832,62.653084590517224" fill="none" stroke="#283593" stroke-width="2.5"/>
+<circle cx="72" cy="346.2101293103449" r="3" fill="#283593"/>
+<circle cx="224" cy="256.7979525862069" r="3" fill="#283593"/>
+<circle cx="376" cy="177.70285560344828" r="3" fill="#283593"/>
+<circle cx="528" cy="121.2191540948276" r="3" fill="#283593"/>
+<circle cx="680" cy="85.2819234913793" r="3" fill="#283593"/>
+<circle cx="832" cy="62.653084590517224" r="3" fill="#283593"/>
+<line x1="860" y1="509" x2="886" y2="509" stroke="#283593" stroke-width="3"/>
+<text x="894" y="513" font-family="sans-serif" font-size="11" fill="#222">Hybrid text-embedding-3-large v1:b1</text>
+</svg>

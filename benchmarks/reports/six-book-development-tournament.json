@@ -1,0 +1,3723 @@
+{
+  "schemaVersion": 1,
+  "provisional": true,
+  "metricVersion": 2,
+  "caseSet": [
+    "225822fed9ed520c7a4c36efcc06eb110912c9305c695334d5411ae106b242be|case-01e85f5bd6a20629fa63",
+    "225822fed9ed520c7a4c36efcc06eb110912c9305c695334d5411ae106b242be|case-11581ac8617481f9d6e4",
+    "225822fed9ed520c7a4c36efcc06eb110912c9305c695334d5411ae106b242be|case-15f64ab78e2205ccaac4",
+    "225822fed9ed520c7a4c36efcc06eb110912c9305c695334d5411ae106b242be|case-1930d0095a24c998023c",
+    "225822fed9ed520c7a4c36efcc06eb110912c9305c695334d5411ae106b242be|case-3355c5e93e1186b217ff",
+    "225822fed9ed520c7a4c36efcc06eb110912c9305c695334d5411ae106b242be|case-368eab3e5d27f908a78d",
+    "225822fed9ed520c7a4c36efcc06eb110912c9305c695334d5411ae106b242be|case-74ef366193a12090606e",
+    "225822fed9ed520c7a4c36efcc06eb110912c9305c695334d5411ae106b242be|case-7841dcf0c0e445ae0e5b",
+    "225822fed9ed520c7a4c36efcc06eb110912c9305c695334d5411ae106b242be|case-806e7a434164e3f46759",
+    "225822fed9ed520c7a4c36efcc06eb110912c9305c695334d5411ae106b242be|case-899ba6bdfc20d53857a5",
+    "225822fed9ed520c7a4c36efcc06eb110912c9305c695334d5411ae106b242be|case-93a0e7de8603638c83b9",
+    "225822fed9ed520c7a4c36efcc06eb110912c9305c695334d5411ae106b242be|case-9e225c2bd4daef51d975",
+    "225822fed9ed520c7a4c36efcc06eb110912c9305c695334d5411ae106b242be|case-9f2b2eabaecf6f1d9b0f",
+    "225822fed9ed520c7a4c36efcc06eb110912c9305c695334d5411ae106b242be|case-aacde39a936a6981b316",
+    "225822fed9ed520c7a4c36efcc06eb110912c9305c695334d5411ae106b242be|case-ad0e79888841cc64b775",
+    "225822fed9ed520c7a4c36efcc06eb110912c9305c695334d5411ae106b242be|case-b45ced6492b973741a3d",
+    "225822fed9ed520c7a4c36efcc06eb110912c9305c695334d5411ae106b242be|case-b5cd55387416311c9660",
+    "225822fed9ed520c7a4c36efcc06eb110912c9305c695334d5411ae106b242be|case-c24b482b78a69e4c5224",
+    "225822fed9ed520c7a4c36efcc06eb110912c9305c695334d5411ae106b242be|case-c5a97ecad4979556d93c",
+    "225822fed9ed520c7a4c36efcc06eb110912c9305c695334d5411ae106b242be|case-d4ccb0a66642266e0767",
+    "225822fed9ed520c7a4c36efcc06eb110912c9305c695334d5411ae106b242be|case-e7c7f9a6310b1fc8af1e",
+    "225822fed9ed520c7a4c36efcc06eb110912c9305c695334d5411ae106b242be|case-ee2ebc67f08ed7ab6897",
+    "225822fed9ed520c7a4c36efcc06eb110912c9305c695334d5411ae106b242be|case-f4517b1ea458641c7abc",
+    "225822fed9ed520c7a4c36efcc06eb110912c9305c695334d5411ae106b242be|case-f707e121fac3309b95c9",
+    "2da38dab93cf1edb422868a0fcaf1ec923618d29f7f8d3676ab7c97d224616df|case-2be6a985ddfa50455f8d",
+    "2da38dab93cf1edb422868a0fcaf1ec923618d29f7f8d3676ab7c97d224616df|case-358aec2a07583435d7d0",
+    "2da38dab93cf1edb422868a0fcaf1ec923618d29f7f8d3676ab7c97d224616df|case-38aa6faf1b18d32977e4",
+    "2da38dab93cf1edb422868a0fcaf1ec923618d29f7f8d3676ab7c97d224616df|case-3e354d3e388d77d77661",
+    "2da38dab93cf1edb422868a0fcaf1ec923618d29f7f8d3676ab7c97d224616df|case-4a2197d05937c4af8242",
+    "2da38dab93cf1edb422868a0fcaf1ec923618d29f7f8d3676ab7c97d224616df|case-60e4f22cc1b9b84d167a",
+    "2da38dab93cf1edb422868a0fcaf1ec923618d29f7f8d3676ab7c97d224616df|case-63dde9fed551bfc2c38a",
+    "2da38dab93cf1edb422868a0fcaf1ec923618d29f7f8d3676ab7c97d224616df|case-6883c7388ad2dfd18c42",
+    "2da38dab93cf1edb422868a0fcaf1ec923618d29f7f8d3676ab7c97d224616df|case-6ef811d227c2fe105b81",
+    "2da38dab93cf1edb422868a0fcaf1ec923618d29f7f8d3676ab7c97d224616df|case-7070e32c5424d6373f2f",
+    "2da38dab93cf1edb422868a0fcaf1ec923618d29f7f8d3676ab7c97d224616df|case-7ff09deeba6ab5b41156",
+    "2da38dab93cf1edb422868a0fcaf1ec923618d29f7f8d3676ab7c97d224616df|case-806854ce36a1f6c4efdd",
+    "2da38dab93cf1edb422868a0fcaf1ec923618d29f7f8d3676ab7c97d224616df|case-82055f5a91f5c9a9bd1d",
+    "2da38dab93cf1edb422868a0fcaf1ec923618d29f7f8d3676ab7c97d224616df|case-8ad507cfaa7e9dc7e2d6",
+    "2da38dab93cf1edb422868a0fcaf1ec923618d29f7f8d3676ab7c97d224616df|case-9d4130bd436eb0dc2f71",
+    "2da38dab93cf1edb422868a0fcaf1ec923618d29f7f8d3676ab7c97d224616df|case-a00bbe8cec712cc83fc1",
+    "2da38dab93cf1edb422868a0fcaf1ec923618d29f7f8d3676ab7c97d224616df|case-b5d6683761ecd3d5c96f",
+    "2da38dab93cf1edb422868a0fcaf1ec923618d29f7f8d3676ab7c97d224616df|case-db165c9f37c718c6bcae",
+    "2da38dab93cf1edb422868a0fcaf1ec923618d29f7f8d3676ab7c97d224616df|case-eed81f3636f5b58a4fe9",
+    "2da38dab93cf1edb422868a0fcaf1ec923618d29f7f8d3676ab7c97d224616df|case-f77076581064b0ccb3ef",
+    "2da38dab93cf1edb422868a0fcaf1ec923618d29f7f8d3676ab7c97d224616df|case-f83fb664feb618cad305",
+    "83c5b63c365f1d48a841789c8517c19f1416d3be4932c229b34981d491fbf6f1|case-2118e660422bbe2d5427",
+    "83c5b63c365f1d48a841789c8517c19f1416d3be4932c229b34981d491fbf6f1|case-2d87f6b53723ea71d7a0",
+    "83c5b63c365f1d48a841789c8517c19f1416d3be4932c229b34981d491fbf6f1|case-39c56ee8447f5249c85f",
+    "83c5b63c365f1d48a841789c8517c19f1416d3be4932c229b34981d491fbf6f1|case-3e9685ca1f81935f5901",
+    "83c5b63c365f1d48a841789c8517c19f1416d3be4932c229b34981d491fbf6f1|case-3ef6e0c8d10c787b32ad",
+    "83c5b63c365f1d48a841789c8517c19f1416d3be4932c229b34981d491fbf6f1|case-40d47e251ec1fac12b4f",
+    "83c5b63c365f1d48a841789c8517c19f1416d3be4932c229b34981d491fbf6f1|case-4955318987598f24ddce",
+    "83c5b63c365f1d48a841789c8517c19f1416d3be4932c229b34981d491fbf6f1|case-5116d486a6fff052597f",
+    "83c5b63c365f1d48a841789c8517c19f1416d3be4932c229b34981d491fbf6f1|case-58d52da2b558c271edd7",
+    "83c5b63c365f1d48a841789c8517c19f1416d3be4932c229b34981d491fbf6f1|case-62853c6287a1f51c45c4",
+    "83c5b63c365f1d48a841789c8517c19f1416d3be4932c229b34981d491fbf6f1|case-6cfe1d9acf163a73ff39",
+    "83c5b63c365f1d48a841789c8517c19f1416d3be4932c229b34981d491fbf6f1|case-6d61bb8880c1f8c41a5c",
+    "83c5b63c365f1d48a841789c8517c19f1416d3be4932c229b34981d491fbf6f1|case-767daaad2ae8f83d459a",
+    "83c5b63c365f1d48a841789c8517c19f1416d3be4932c229b34981d491fbf6f1|case-7f3c920776cf9ca5e3d2",
+    "83c5b63c365f1d48a841789c8517c19f1416d3be4932c229b34981d491fbf6f1|case-7fc63dbcd63c030b2b05",
+    "83c5b63c365f1d48a841789c8517c19f1416d3be4932c229b34981d491fbf6f1|case-a2ce50d573b394d3e4a8",
+    "83c5b63c365f1d48a841789c8517c19f1416d3be4932c229b34981d491fbf6f1|case-b205726cfa7a4b665faa",
+    "83c5b63c365f1d48a841789c8517c19f1416d3be4932c229b34981d491fbf6f1|case-bfa48562bde94a748df9",
+    "83c5b63c365f1d48a841789c8517c19f1416d3be4932c229b34981d491fbf6f1|case-c355e8496b75f155d3fd",
+    "83c5b63c365f1d48a841789c8517c19f1416d3be4932c229b34981d491fbf6f1|case-c61f306aab1ca95c4cf8",
+    "83c5b63c365f1d48a841789c8517c19f1416d3be4932c229b34981d491fbf6f1|case-cf53ebe2687ebc105afb",
+    "83c5b63c365f1d48a841789c8517c19f1416d3be4932c229b34981d491fbf6f1|case-da26de15db19cd7b2d68",
+    "83c5b63c365f1d48a841789c8517c19f1416d3be4932c229b34981d491fbf6f1|case-e10832f595685a2568c5",
+    "83c5b63c365f1d48a841789c8517c19f1416d3be4932c229b34981d491fbf6f1|case-e69322c063aec34d24a1",
+    "83c5b63c365f1d48a841789c8517c19f1416d3be4932c229b34981d491fbf6f1|case-f693162d39eab7cba59c",
+    "89837bc58f2f7a00efba19501669db603e8a18d1f50e0f350b57f4e6220ae2e3|case-0145f9f8175cd474a555",
+    "89837bc58f2f7a00efba19501669db603e8a18d1f50e0f350b57f4e6220ae2e3|case-073c8faa0c43b285fc12",
+    "89837bc58f2f7a00efba19501669db603e8a18d1f50e0f350b57f4e6220ae2e3|case-08046670b68a69eb0e07",
+    "89837bc58f2f7a00efba19501669db603e8a18d1f50e0f350b57f4e6220ae2e3|case-0e6106ae36398062699a",
+    "89837bc58f2f7a00efba19501669db603e8a18d1f50e0f350b57f4e6220ae2e3|case-159679d434a383abbe87",
+    "89837bc58f2f7a00efba19501669db603e8a18d1f50e0f350b57f4e6220ae2e3|case-1ad25891f2e5e37c5c90",
+    "89837bc58f2f7a00efba19501669db603e8a18d1f50e0f350b57f4e6220ae2e3|case-1e230d767e50295caa82",
+    "89837bc58f2f7a00efba19501669db603e8a18d1f50e0f350b57f4e6220ae2e3|case-26d2a0b92712c08bce03",
+    "89837bc58f2f7a00efba19501669db603e8a18d1f50e0f350b57f4e6220ae2e3|case-30de50029efa91aba732",
+    "89837bc58f2f7a00efba19501669db603e8a18d1f50e0f350b57f4e6220ae2e3|case-3dd93631b5a057042387",
+    "89837bc58f2f7a00efba19501669db603e8a18d1f50e0f350b57f4e6220ae2e3|case-473ef280675a80116aae",
+    "89837bc58f2f7a00efba19501669db603e8a18d1f50e0f350b57f4e6220ae2e3|case-4e3eaf62d890b66083ec",
+    "89837bc58f2f7a00efba19501669db603e8a18d1f50e0f350b57f4e6220ae2e3|case-53572c492a59162e6f68",
+    "89837bc58f2f7a00efba19501669db603e8a18d1f50e0f350b57f4e6220ae2e3|case-5e6248661788a8e06ccc",
+    "89837bc58f2f7a00efba19501669db603e8a18d1f50e0f350b57f4e6220ae2e3|case-68601b4dfaf826fcf174",
+    "89837bc58f2f7a00efba19501669db603e8a18d1f50e0f350b57f4e6220ae2e3|case-727738f843e591c2aba5",
+    "89837bc58f2f7a00efba19501669db603e8a18d1f50e0f350b57f4e6220ae2e3|case-793514537aa412d5805e",
+    "89837bc58f2f7a00efba19501669db603e8a18d1f50e0f350b57f4e6220ae2e3|case-9ca6b461960be2753a0b",
+    "89837bc58f2f7a00efba19501669db603e8a18d1f50e0f350b57f4e6220ae2e3|case-9cbcc5f94ec7a405289a",
+    "89837bc58f2f7a00efba19501669db603e8a18d1f50e0f350b57f4e6220ae2e3|case-bd6d31567cb593a893a1",
+    "89837bc58f2f7a00efba19501669db603e8a18d1f50e0f350b57f4e6220ae2e3|case-dce67518269867548de7",
+    "89837bc58f2f7a00efba19501669db603e8a18d1f50e0f350b57f4e6220ae2e3|case-e1e2f02536e5e6d16381",
+    "89837bc58f2f7a00efba19501669db603e8a18d1f50e0f350b57f4e6220ae2e3|case-e3eba22bee0932aea351",
+    "89837bc58f2f7a00efba19501669db603e8a18d1f50e0f350b57f4e6220ae2e3|case-e749bf60ce2f15a6e3fb",
+    "89837bc58f2f7a00efba19501669db603e8a18d1f50e0f350b57f4e6220ae2e3|case-e90da37cabca847313b2",
+    "b431f705db5c5c17f0ccd512fd689b52724be51ca2847f2f190a273b5eac6db2|case-1547ee2cbf8018f1c917",
+    "b431f705db5c5c17f0ccd512fd689b52724be51ca2847f2f190a273b5eac6db2|case-164fdc55d92afb613433",
+    "b431f705db5c5c17f0ccd512fd689b52724be51ca2847f2f190a273b5eac6db2|case-172a5d3670e26f757957",
+    "b431f705db5c5c17f0ccd512fd689b52724be51ca2847f2f190a273b5eac6db2|case-1b3b46e452858755d140",
+    "b431f705db5c5c17f0ccd512fd689b52724be51ca2847f2f190a273b5eac6db2|case-2dd08c5537a9c0aabf75",
+    "b431f705db5c5c17f0ccd512fd689b52724be51ca2847f2f190a273b5eac6db2|case-3391b17c9a35e486b6b8",
+    "b431f705db5c5c17f0ccd512fd689b52724be51ca2847f2f190a273b5eac6db2|case-41eb0597403484457aca",
+    "b431f705db5c5c17f0ccd512fd689b52724be51ca2847f2f190a273b5eac6db2|case-4d5fa1e8858573c4b921",
+    "b431f705db5c5c17f0ccd512fd689b52724be51ca2847f2f190a273b5eac6db2|case-64413764969b5586f039",
+    "b431f705db5c5c17f0ccd512fd689b52724be51ca2847f2f190a273b5eac6db2|case-65b3229e9c0cc02b1f33",
+    "b431f705db5c5c17f0ccd512fd689b52724be51ca2847f2f190a273b5eac6db2|case-6a5044c3a2169d52c6fc",
+    "b431f705db5c5c17f0ccd512fd689b52724be51ca2847f2f190a273b5eac6db2|case-72d2cac7a36c0823ca0c",
+    "b431f705db5c5c17f0ccd512fd689b52724be51ca2847f2f190a273b5eac6db2|case-89eaf04140b44565bba2",
+    "b431f705db5c5c17f0ccd512fd689b52724be51ca2847f2f190a273b5eac6db2|case-967a3f6339933b00801a",
+    "b431f705db5c5c17f0ccd512fd689b52724be51ca2847f2f190a273b5eac6db2|case-9b36cc484f11056bd0bb",
+    "b431f705db5c5c17f0ccd512fd689b52724be51ca2847f2f190a273b5eac6db2|case-a283db0eeaf0cff1e90d",
+    "b431f705db5c5c17f0ccd512fd689b52724be51ca2847f2f190a273b5eac6db2|case-b4a5101514902be57c9a",
+    "b431f705db5c5c17f0ccd512fd689b52724be51ca2847f2f190a273b5eac6db2|case-b68e31d2fb7bed067d29",
+    "b431f705db5c5c17f0ccd512fd689b52724be51ca2847f2f190a273b5eac6db2|case-b7c51caef4e0a2ec8a89",
+    "b431f705db5c5c17f0ccd512fd689b52724be51ca2847f2f190a273b5eac6db2|case-bec8e9fd7956b0f9ac0e",
+    "b431f705db5c5c17f0ccd512fd689b52724be51ca2847f2f190a273b5eac6db2|case-c48da4edece0851702aa",
+    "b431f705db5c5c17f0ccd512fd689b52724be51ca2847f2f190a273b5eac6db2|case-e210bc3b7b63264e1eec",
+    "b431f705db5c5c17f0ccd512fd689b52724be51ca2847f2f190a273b5eac6db2|case-f232be2c07cabe1d32fe",
+    "b431f705db5c5c17f0ccd512fd689b52724be51ca2847f2f190a273b5eac6db2|case-f5d630b675080f9ad356",
+    "b431f705db5c5c17f0ccd512fd689b52724be51ca2847f2f190a273b5eac6db2|case-f8cfaa3a79cb19dc1f91",
+    "b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32|case-09f1daa55c1c7b6e1a12",
+    "b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32|case-2a8218e75bd06407f9b5",
+    "b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32|case-3ee916d89fe20efc6e38",
+    "b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32|case-493ef0449dcbf194bc8f",
+    "b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32|case-5cca37614a4327b7513f",
+    "b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32|case-62d1827d1c8219d120c0",
+    "b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32|case-645134722a52500cf614",
+    "b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32|case-6470194d6e73ae856c93",
+    "b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32|case-66d5fff34792b82fcc96",
+    "b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32|case-6f5c0a7901716c34bf2f",
+    "b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32|case-7920331983816bc2c9b1",
+    "b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32|case-7ee40a82440b28958484",
+    "b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32|case-81554a68df2996acbb44",
+    "b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32|case-832a4be927152ada3a54",
+    "b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32|case-92cd3be96bf1b11bc6f7",
+    "b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32|case-9bdc2a1ea8d0791ae967",
+    "b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32|case-9e40e6ac0c545dd8c437",
+    "b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32|case-9f29b358940a4ce68afe",
+    "b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32|case-b00ff742e48b0da18112",
+    "b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32|case-ba672832074b335543db",
+    "b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32|case-c16913bfe3c876e92239",
+    "b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32|case-f2ee70371489798abb90",
+    "b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32|case-f6164564add9815788ca",
+    "b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32|case-fe098668aac70f9572df",
+    "b87f2c17bbf67107cc0621cedf95f0bd4d599cc3dff4af24eab8c03dcf7a3b32|case-fe64c6ffa38b7adc076c"
+  ],
+  "headlineBudget": 8192,
+  "compatibleRuns": [
+    {
+      "path": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-text-retrieval-v2-7e926e58f70352fd.json",
+      "name": "six-book-text-retrieval-v2",
+      "costUsd": 0,
+      "resultCells": 20880
+    },
+    {
+      "path": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-weighted-hybrid-v2-ae6ccfcc34835be8.json",
+      "name": "six-book-weighted-hybrid-v2",
+      "costUsd": 0,
+      "resultCells": 10440
+    },
+    {
+      "path": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-voyage-rerank-lite-v2-e8e57cf01724c10f.json",
+      "name": "six-book-voyage-rerank-lite-v2",
+      "costUsd": 0.15398001999999983,
+      "resultCells": 3480
+    },
+    {
+      "path": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-voyage-rerank-full-v2-ce251964e056f367.json",
+      "name": "six-book-voyage-rerank-full-v2",
+      "costUsd": 0.09635989999999998,
+      "resultCells": 870
+    },
+    {
+      "path": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-local-retrieval-v2-7807eb89f95fa7d8.json",
+      "name": "six-book-local-retrieval-v2",
+      "costUsd": 0,
+      "resultCells": 5220
+    },
+    {
+      "path": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-context-expansion-v2-26916520d5144b6c.json",
+      "name": "six-book-context-expansion-v2",
+      "costUsd": 0,
+      "resultCells": 1740
+    },
+    {
+      "path": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-bge-m3-rerank-lite-v2-f6ceb25df9ff35c7.json",
+      "name": "six-book-bge-m3-rerank-lite-v2",
+      "costUsd": 0.03859430000000001,
+      "resultCells": 870
+    }
+  ],
+  "totalMeteredCostUsd": 0.28893421999999985,
+  "runDirectoryMeteredCostUsd": 1.309324800000003,
+  "strategies": [
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-256-32\",\"retriever\":{\"kind\":\"bge-m3\",\"model\":\"BAAI/bge-m3\",\"mode\":\"hybrid-all-rrf\",\"shortlist\":200,\"reranker\":{\"kind\":\"voyage\",\"model\":\"rerank-2.5-lite\"}},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"}}",
+      "label": "BGE-M3 hybrid-all-rrf + rerank-2.5-lite",
+      "strategyId": "fixed-token-cl100k_base-256-32",
+      "retriever": {
+        "kind": "bge-m3",
+        "model": "BAAI/bge-m3",
+        "mode": "hybrid-all-rrf",
+        "shortlist": 200,
+        "reranker": {
+          "kind": "voyage",
+          "model": "rerank-2.5-lite"
+        }
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-bge-m3-rerank-lite-v2-f6ceb25df9ff35c7.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 145,
+          "evidenceEfficiency": 0.6680630387931035,
+          "payloadEvidenceEfficiency": 0.41551724137931034,
+          "evidenceRecall": 0.9241379310344827,
+          "mrr": 0.8758620689655172,
+          "tokensToFirstEvidence": 169.95172413793102
+        },
+        {
+          "budget": 1024,
+          "cases": 145,
+          "evidenceEfficiency": 0.8082704741379311,
+          "payloadEvidenceEfficiency": 0.6775862068965517,
+          "evidenceRecall": 0.9655172413793104,
+          "mrr": 0.8885057471264366,
+          "tokensToFirstEvidence": 196.3310344827586
+        },
+        {
+          "budget": 2048,
+          "cases": 145,
+          "evidenceEfficiency": 0.8905980603448276,
+          "payloadEvidenceEfficiency": 0.8246228448275862,
+          "evidenceRecall": 0.9793103448275862,
+          "mrr": 0.8907471264367816,
+          "tokensToFirstEvidence": 224.05517241379312
+        },
+        {
+          "budget": 4096,
+          "cases": 145,
+          "evidenceEfficiency": 0.9454606681034483,
+          "payloadEvidenceEfficiency": 0.9117238011853448,
+          "evidenceRecall": 1,
+          "mrr": 0.8930459770114944,
+          "tokensToFirstEvidence": 223.39310344827587
+        },
+        {
+          "budget": 8192,
+          "cases": 145,
+          "evidenceEfficiency": 0.9727303340517242,
+          "payloadEvidenceEfficiency": 0.9558619005926724,
+          "evidenceRecall": 1,
+          "mrr": 0.8930459770114944,
+          "tokensToFirstEvidence": 223.39310344827587
+        },
+        {
+          "budget": 16384,
+          "cases": 145,
+          "evidenceEfficiency": 0.9863651670258621,
+          "payloadEvidenceEfficiency": 0.9779309502963363,
+          "evidenceRecall": 1,
+          "mrr": 0.8930459770114944,
+          "tokensToFirstEvidence": 223.39310344827587
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-256-32\",\"retriever\":{\"kind\":\"hybrid-rrf\",\"embeddingModel\":\"voyage-4-large\",\"rrfK\":60,\"vectorWeight\":1,\"bm25Weight\":1,\"reranker\":{\"kind\":\"voyage\",\"model\":\"rerank-2.5-lite\"}},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"}}",
+      "label": "Hybrid voyage-4-large v1:b1 + rerank-2.5-lite",
+      "strategyId": "fixed-token-cl100k_base-256-32",
+      "retriever": {
+        "kind": "hybrid-rrf",
+        "embeddingModel": "voyage-4-large",
+        "rrfK": 60,
+        "vectorWeight": 1,
+        "bm25Weight": 1,
+        "reranker": {
+          "kind": "voyage",
+          "model": "rerank-2.5-lite"
+        }
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-context-expansion-v2-26916520d5144b6c.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 145,
+          "evidenceEfficiency": 0.6619342672413793,
+          "payloadEvidenceEfficiency": 0.41206896551724137,
+          "evidenceRecall": 0.9172413793103448,
+          "mrr": 0.8689655172413793,
+          "tokensToFirstEvidence": 173.08965517241379
+        },
+        {
+          "budget": 1024,
+          "cases": 145,
+          "evidenceEfficiency": 0.8031990840517241,
+          "payloadEvidenceEfficiency": 0.6727370689655172,
+          "evidenceRecall": 0.9655172413793104,
+          "mrr": 0.8833333333333332,
+          "tokensToFirstEvidence": 201.5241379310345
+        },
+        {
+          "budget": 2048,
+          "cases": 145,
+          "evidenceEfficiency": 0.8853448275862069,
+          "payloadEvidenceEfficiency": 0.8199993265086207,
+          "evidenceRecall": 0.9793103448275862,
+          "mrr": 0.8850574712643677,
+          "tokensToFirstEvidence": 234.81379310344826
+        },
+        {
+          "budget": 4096,
+          "cases": 145,
+          "evidenceEfficiency": 0.9373400457974138,
+          "payloadEvidenceEfficiency": 0.9039382408405172,
+          "evidenceRecall": 0.993103448275862,
+          "mrr": 0.8863163656267105,
+          "tokensToFirstEvidence": 256.6551724137931
+        },
+        {
+          "budget": 8192,
+          "cases": 145,
+          "evidenceEfficiency": 0.9652217470366379,
+          "payloadEvidenceEfficiency": 0.9485208445581896,
+          "evidenceRecall": 0.993103448275862,
+          "mrr": 0.8863163656267105,
+          "tokensToFirstEvidence": 284.90344827586205
+        },
+        {
+          "budget": 16384,
+          "cases": 145,
+          "evidenceEfficiency": 0.97916259765625,
+          "payloadEvidenceEfficiency": 0.9708121464170258,
+          "evidenceRecall": 0.993103448275862,
+          "mrr": 0.8863163656267105,
+          "tokensToFirstEvidence": 341.4
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-256-32\",\"retriever\":{\"kind\":\"hybrid-rrf\",\"embeddingModel\":\"voyage-4-large\",\"rrfK\":60,\"vectorWeight\":1,\"bm25Weight\":1,\"reranker\":{\"kind\":\"voyage\",\"model\":\"rerank-2.5\"}},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"}}",
+      "label": "Hybrid voyage-4-large v1:b1 + rerank-2.5",
+      "strategyId": "fixed-token-cl100k_base-256-32",
+      "retriever": {
+        "kind": "hybrid-rrf",
+        "embeddingModel": "voyage-4-large",
+        "rrfK": 60,
+        "vectorWeight": 1,
+        "bm25Weight": 1,
+        "reranker": {
+          "kind": "voyage",
+          "model": "rerank-2.5"
+        }
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-voyage-rerank-full-v2-ce251964e056f367.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 145,
+          "evidenceEfficiency": 0.6281654094827587,
+          "payloadEvidenceEfficiency": 0.388995150862069,
+          "evidenceRecall": 0.8827586206896552,
+          "mrr": 0.8275862068965517,
+          "tokensToFirstEvidence": 190.3793103448276
+        },
+        {
+          "budget": 1024,
+          "cases": 145,
+          "evidenceEfficiency": 0.7689655172413793,
+          "payloadEvidenceEfficiency": 0.645575161637931,
+          "evidenceRecall": 0.9241379310344827,
+          "mrr": 0.8408045977011495,
+          "tokensToFirstEvidence": 236.57931034482758
+        },
+        {
+          "budget": 2048,
+          "cases": 145,
+          "evidenceEfficiency": 0.86689453125,
+          "payloadEvidenceEfficiency": 0.8004377693965518,
+          "evidenceRecall": 0.9862068965517241,
+          "mrr": 0.8510591133004927,
+          "tokensToFirstEvidence": 272.6
+        },
+        {
+          "budget": 4096,
+          "cases": 145,
+          "evidenceEfficiency": 0.9265507139008621,
+          "payloadEvidenceEfficiency": 0.8933223329741379,
+          "evidenceRecall": 0.9862068965517241,
+          "mrr": 0.8510591133004927,
+          "tokensToFirstEvidence": 300.848275862069
+        },
+        {
+          "budget": 8192,
+          "cases": 145,
+          "evidenceEfficiency": 0.959130859375,
+          "payloadEvidenceEfficiency": 0.9423373518318966,
+          "evidenceRecall": 0.993103448275862,
+          "mrr": 0.8513875205254516,
+          "tokensToFirstEvidence": 334.8
+        },
+        {
+          "budget": 16384,
+          "cases": 145,
+          "evidenceEfficiency": 0.9761171538254311,
+          "payloadEvidenceEfficiency": 0.9677204000538793,
+          "evidenceRecall": 0.993103448275862,
+          "mrr": 0.8513875205254516,
+          "tokensToFirstEvidence": 391.29655172413794
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-256-32\",\"retriever\":{\"kind\":\"bm25\",\"reranker\":{\"kind\":\"voyage\",\"model\":\"rerank-2.5-lite\"}},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"}}",
+      "label": "BM25 + rerank-2.5-lite",
+      "strategyId": "fixed-token-cl100k_base-256-32",
+      "retriever": {
+        "kind": "bm25",
+        "reranker": {
+          "kind": "voyage",
+          "model": "rerank-2.5-lite"
+        }
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-voyage-rerank-lite-v2-e8e57cf01724c10f.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 145,
+          "evidenceEfficiency": 0.658849676724138,
+          "payloadEvidenceEfficiency": 0.41206896551724137,
+          "evidenceRecall": 0.903448275862069,
+          "mrr": 0.8620689655172413,
+          "tokensToFirstEvidence": 174.6689655172414
+        },
+        {
+          "budget": 1024,
+          "cases": 145,
+          "evidenceEfficiency": 0.7933189655172413,
+          "payloadEvidenceEfficiency": 0.6655172413793103,
+          "evidenceRecall": 0.9448275862068966,
+          "mrr": 0.8747126436781608,
+          "tokensToFirstEvidence": 211.64137931034483
+        },
+        {
+          "budget": 2048,
+          "cases": 145,
+          "evidenceEfficiency": 0.8716830549568966,
+          "payloadEvidenceEfficiency": 0.80625,
+          "evidenceRecall": 0.9655172413793104,
+          "mrr": 0.8772988505747125,
+          "tokensToFirstEvidence": 262.7931034482759
+        },
+        {
+          "budget": 4096,
+          "cases": 145,
+          "evidenceEfficiency": 0.9215348868534483,
+          "payloadEvidenceEfficiency": 0.8887981546336207,
+          "evidenceRecall": 0.9724137931034482,
+          "mrr": 0.8779885057471265,
+          "tokensToFirstEvidence": 321.39310344827584
+        },
+        {
+          "budget": 8192,
+          "cases": 145,
+          "evidenceEfficiency": 0.9469743399784483,
+          "payloadEvidenceEfficiency": 0.9306059738685345,
+          "evidenceRecall": 0.9724137931034482,
+          "mrr": 0.8779885057471265,
+          "tokensToFirstEvidence": 434.3862068965517
+        },
+        {
+          "budget": 16384,
+          "cases": 145,
+          "evidenceEfficiency": 0.9596940665409482,
+          "payloadEvidenceEfficiency": 0.9515098834859914,
+          "evidenceRecall": 0.9724137931034482,
+          "mrr": 0.8779885057471265,
+          "tokensToFirstEvidence": 660.3724137931034
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-256-32\",\"retriever\":{\"kind\":\"hybrid-rrf\",\"embeddingModel\":\"voyage-4-large\",\"rrfK\":60,\"vectorWeight\":0.75,\"bm25Weight\":0.25,\"reranker\":{\"kind\":\"voyage\",\"model\":\"rerank-2.5-lite\"}},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"}}",
+      "label": "Hybrid voyage-4-large v0.75:b0.25 + rerank-2.5-lite",
+      "strategyId": "fixed-token-cl100k_base-256-32",
+      "retriever": {
+        "kind": "hybrid-rrf",
+        "embeddingModel": "voyage-4-large",
+        "rrfK": 60,
+        "vectorWeight": 0.75,
+        "bm25Weight": 0.25,
+        "reranker": {
+          "kind": "voyage",
+          "model": "rerank-2.5-lite"
+        }
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-voyage-rerank-lite-v2-e8e57cf01724c10f.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 145,
+          "evidenceEfficiency": 0.6494477370689655,
+          "payloadEvidenceEfficiency": 0.4017241379310345,
+          "evidenceRecall": 0.903448275862069,
+          "mrr": 0.8517241379310345,
+          "tokensToFirstEvidence": 179.48275862068965
+        },
+        {
+          "budget": 1024,
+          "cases": 145,
+          "evidenceEfficiency": 0.7889075969827586,
+          "payloadEvidenceEfficiency": 0.6602370689655173,
+          "evidenceRecall": 0.9448275862068966,
+          "mrr": 0.8643678160919539,
+          "tokensToFirstEvidence": 216.15862068965518
+        },
+        {
+          "budget": 2048,
+          "cases": 145,
+          "evidenceEfficiency": 0.8695783943965517,
+          "payloadEvidenceEfficiency": 0.8051286368534483,
+          "evidenceRecall": 0.9586206896551724,
+          "mrr": 0.8663793103448276,
+          "tokensToFirstEvidence": 267.1034482758621
+        },
+        {
+          "budget": 4096,
+          "cases": 145,
+          "evidenceEfficiency": 0.9176488415948276,
+          "payloadEvidenceEfficiency": 0.8850535425646552,
+          "evidenceRecall": 0.9655172413793104,
+          "mrr": 0.8671455938697318,
+          "tokensToFirstEvidence": 337.3103448275862
+        },
+        {
+          "budget": 8192,
+          "cases": 145,
+          "evidenceEfficiency": 0.941583041487069,
+          "payloadEvidenceEfficiency": 0.9252853919719828,
+          "evidenceRecall": 0.9655172413793104,
+          "mrr": 0.8671455938697318,
+          "tokensToFirstEvidence": 478.55172413793105
+        },
+        {
+          "budget": 16384,
+          "cases": 145,
+          "evidenceEfficiency": 0.9535501414331896,
+          "payloadEvidenceEfficiency": 0.9454013166756465,
+          "evidenceRecall": 0.9655172413793104,
+          "mrr": 0.8671455938697318,
+          "tokensToFirstEvidence": 761.0344827586207
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-256-32\",\"retriever\":{\"kind\":\"vector\",\"embeddingModel\":\"voyage-4-large\",\"reranker\":{\"kind\":\"voyage\",\"model\":\"rerank-2.5-lite\"}},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"}}",
+      "label": "Vector voyage-4-large + rerank-2.5-lite",
+      "strategyId": "fixed-token-cl100k_base-256-32",
+      "retriever": {
+        "kind": "vector",
+        "embeddingModel": "voyage-4-large",
+        "reranker": {
+          "kind": "voyage",
+          "model": "rerank-2.5-lite"
+        }
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-voyage-rerank-lite-v2-e8e57cf01724c10f.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 145,
+          "evidenceEfficiency": 0.6494477370689655,
+          "payloadEvidenceEfficiency": 0.4017241379310345,
+          "evidenceRecall": 0.903448275862069,
+          "mrr": 0.8517241379310345,
+          "tokensToFirstEvidence": 179.48275862068965
+        },
+        {
+          "budget": 1024,
+          "cases": 145,
+          "evidenceEfficiency": 0.7889075969827586,
+          "payloadEvidenceEfficiency": 0.6602370689655173,
+          "evidenceRecall": 0.9448275862068966,
+          "mrr": 0.8643678160919539,
+          "tokensToFirstEvidence": 216.15862068965518
+        },
+        {
+          "budget": 2048,
+          "cases": 145,
+          "evidenceEfficiency": 0.8695783943965517,
+          "payloadEvidenceEfficiency": 0.8051286368534483,
+          "evidenceRecall": 0.9586206896551724,
+          "mrr": 0.8663793103448276,
+          "tokensToFirstEvidence": 267.1034482758621
+        },
+        {
+          "budget": 4096,
+          "cases": 145,
+          "evidenceEfficiency": 0.9176488415948276,
+          "payloadEvidenceEfficiency": 0.8850535425646552,
+          "evidenceRecall": 0.9655172413793104,
+          "mrr": 0.8671455938697318,
+          "tokensToFirstEvidence": 337.3103448275862
+        },
+        {
+          "budget": 8192,
+          "cases": 145,
+          "evidenceEfficiency": 0.941583041487069,
+          "payloadEvidenceEfficiency": 0.9252853919719828,
+          "evidenceRecall": 0.9655172413793104,
+          "mrr": 0.8671455938697318,
+          "tokensToFirstEvidence": 478.55172413793105
+        },
+        {
+          "budget": 16384,
+          "cases": 145,
+          "evidenceEfficiency": 0.9535501414331896,
+          "payloadEvidenceEfficiency": 0.9454013166756465,
+          "evidenceRecall": 0.9655172413793104,
+          "mrr": 0.8671455938697318,
+          "tokensToFirstEvidence": 761.0344827586207
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-256-32\",\"retriever\":{\"kind\":\"hybrid-rrf\",\"embeddingModel\":\"voyage-4-large\",\"rrfK\":60},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"}}",
+      "label": "Hybrid voyage-4-large v1:b1",
+      "strategyId": "fixed-token-cl100k_base-256-32",
+      "retriever": {
+        "kind": "hybrid-rrf",
+        "embeddingModel": "voyage-4-large",
+        "rrfK": 60
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-text-retrieval-v2-7e926e58f70352fd.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 145,
+          "evidenceEfficiency": 0.4924299568965517,
+          "payloadEvidenceEfficiency": 0.2952586206896552,
+          "evidenceRecall": 0.7862068965517242,
+          "mrr": 0.6862068965517242,
+          "tokensToFirstEvidence": 259.8758620689655
+        },
+        {
+          "budget": 1024,
+          "cases": 145,
+          "evidenceEfficiency": 0.6565463362068965,
+          "payloadEvidenceEfficiency": 0.5495891702586206,
+          "evidenceRecall": 0.8551724137931035,
+          "mrr": 0.7057471264367816,
+          "tokensToFirstEvidence": 351.6965517241379
+        },
+        {
+          "budget": 2048,
+          "cases": 145,
+          "evidenceEfficiency": 0.7883822737068965,
+          "payloadEvidenceEfficiency": 0.7277545797413794,
+          "evidenceRecall": 0.9448275862068966,
+          "mrr": 0.7212233169129721,
+          "tokensToFirstEvidence": 433.39310344827584
+        },
+        {
+          "budget": 4096,
+          "cases": 145,
+          "evidenceEfficiency": 0.8743938577586207,
+          "payloadEvidenceEfficiency": 0.8432415140086207,
+          "evidenceRecall": 0.9655172413793104,
+          "mrr": 0.7231146439767131,
+          "tokensToFirstEvidence": 514.4827586206897
+        },
+        {
+          "budget": 8192,
+          "cases": 145,
+          "evidenceEfficiency": 0.9312390557650863,
+          "payloadEvidenceEfficiency": 0.9150171740301725,
+          "evidenceRecall": 1,
+          "mrr": 0.7246693788163845,
+          "tokensToFirstEvidence": 563.2896551724137
+        },
+        {
+          "budget": 16384,
+          "cases": 145,
+          "evidenceEfficiency": 0.9656195278825431,
+          "payloadEvidenceEfficiency": 0.9575085870150862,
+          "evidenceRecall": 1,
+          "mrr": 0.7246693788163845,
+          "tokensToFirstEvidence": 563.2896551724137
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-256-32\",\"retriever\":{\"kind\":\"hybrid-rrf\",\"embeddingModel\":\"voyage-4-large\",\"rrfK\":60,\"vectorWeight\":1,\"bm25Weight\":1,\"reranker\":{\"kind\":\"voyage\",\"model\":\"rerank-2.5-lite\"}},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"neighbors\",\"window\":1}}",
+      "label": "Hybrid voyage-4-large v1:b1 + rerank-2.5-lite + ±1 neighbor",
+      "strategyId": "fixed-token-cl100k_base-256-32",
+      "retriever": {
+        "kind": "hybrid-rrf",
+        "embeddingModel": "voyage-4-large",
+        "rrfK": 60,
+        "vectorWeight": 1,
+        "bm25Weight": 1,
+        "reranker": {
+          "kind": "voyage",
+          "model": "rerank-2.5-lite"
+        }
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "neighbors",
+        "window": 1
+      },
+      "sourceRun": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-context-expansion-v2-26916520d5144b6c.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 145,
+          "evidenceEfficiency": 0.2893723060344828,
+          "payloadEvidenceEfficiency": 0.10043103448275863,
+          "evidenceRecall": 0.8344827586206897,
+          "mrr": 0.4724137931034483,
+          "tokensToFirstEvidence": 363.84137931034485
+        },
+        {
+          "budget": 1024,
+          "cases": 145,
+          "evidenceEfficiency": 0.5736126077586207,
+          "payloadEvidenceEfficiency": 0.475,
+          "evidenceRecall": 0.8689655172413793,
+          "mrr": 0.4827586206896552,
+          "tokensToFirstEvidence": 436.62068965517244
+        },
+        {
+          "budget": 2048,
+          "cases": 145,
+          "evidenceEfficiency": 0.7607253502155172,
+          "payloadEvidenceEfficiency": 0.70458984375,
+          "evidenceRecall": 0.9724137931034482,
+          "mrr": 0.5006595511767926,
+          "tokensToFirstEvidence": 490.0344827586207
+        },
+        {
+          "budget": 4096,
+          "cases": 145,
+          "evidenceEfficiency": 0.8661368534482758,
+          "payloadEvidenceEfficiency": 0.8378013873922414,
+          "evidenceRecall": 0.9862068965517241,
+          "mrr": 0.5013090481751741,
+          "tokensToFirstEvidence": 548.303448275862
+        },
+        {
+          "budget": 8192,
+          "cases": 145,
+          "evidenceEfficiency": 0.9264185412176724,
+          "payloadEvidenceEfficiency": 0.9120714911099138,
+          "evidenceRecall": 0.993103448275862,
+          "mrr": 0.5014556415451557,
+          "tokensToFirstEvidence": 602.7793103448275
+        },
+        {
+          "budget": 16384,
+          "cases": 145,
+          "evidenceEfficiency": 0.9597609947467672,
+          "payloadEvidenceEfficiency": 0.9525874696928879,
+          "evidenceRecall": 0.993103448275862,
+          "mrr": 0.5014556415451557,
+          "tokensToFirstEvidence": 659.2758620689655
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-256-32\",\"retriever\":{\"kind\":\"hybrid-rrf\",\"embeddingModel\":\"voyage-4-large\",\"rrfK\":60,\"vectorWeight\":1,\"bm25Weight\":1},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"}}",
+      "label": "Hybrid voyage-4-large v1:b1",
+      "strategyId": "fixed-token-cl100k_base-256-32",
+      "retriever": {
+        "kind": "hybrid-rrf",
+        "embeddingModel": "voyage-4-large",
+        "rrfK": 60,
+        "vectorWeight": 1,
+        "bm25Weight": 1
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-weighted-hybrid-v2-ae6ccfcc34835be8.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 145,
+          "evidenceEfficiency": 0.4924299568965517,
+          "payloadEvidenceEfficiency": 0.2952586206896552,
+          "evidenceRecall": 0.7862068965517242,
+          "mrr": 0.6862068965517242,
+          "tokensToFirstEvidence": 259.8758620689655
+        },
+        {
+          "budget": 1024,
+          "cases": 145,
+          "evidenceEfficiency": 0.6559267241379311,
+          "payloadEvidenceEfficiency": 0.5495891702586206,
+          "evidenceRecall": 0.8551724137931035,
+          "mrr": 0.7057471264367816,
+          "tokensToFirstEvidence": 352.33103448275864
+        },
+        {
+          "budget": 2048,
+          "cases": 145,
+          "evidenceEfficiency": 0.7859880118534482,
+          "payloadEvidenceEfficiency": 0.7260304418103448,
+          "evidenceRecall": 0.9379310344827586,
+          "mrr": 0.7199671592775041,
+          "tokensToFirstEvidence": 438.29655172413794
+        },
+        {
+          "budget": 4096,
+          "cases": 145,
+          "evidenceEfficiency": 0.8696945716594827,
+          "payloadEvidenceEfficiency": 0.8388772898706897,
+          "evidenceRecall": 0.9586206896551724,
+          "mrr": 0.7218828680897649,
+          "tokensToFirstEvidence": 533.7310344827587
+        },
+        {
+          "budget": 8192,
+          "cases": 145,
+          "evidenceEfficiency": 0.9254411368534483,
+          "payloadEvidenceEfficiency": 0.9093867860991379,
+          "evidenceRecall": 0.993103448275862,
+          "mrr": 0.7234357058526281,
+          "tokensToFirstEvidence": 610.7862068965517
+        },
+        {
+          "budget": 16384,
+          "cases": 145,
+          "evidenceEfficiency": 0.9592722925646552,
+          "payloadEvidenceEfficiency": 0.9512451171875,
+          "evidenceRecall": 0.993103448275862,
+          "mrr": 0.7234357058526281,
+          "tokensToFirstEvidence": 667.2827586206896
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-256-32\",\"retriever\":{\"kind\":\"hybrid-rrf\",\"embeddingModel\":\"voyage-4-large\",\"rrfK\":60,\"vectorWeight\":0.75,\"bm25Weight\":0.25},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"}}",
+      "label": "Hybrid voyage-4-large v0.75:b0.25",
+      "strategyId": "fixed-token-cl100k_base-256-32",
+      "retriever": {
+        "kind": "hybrid-rrf",
+        "embeddingModel": "voyage-4-large",
+        "rrfK": 60,
+        "vectorWeight": 0.75,
+        "bm25Weight": 0.25
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-weighted-hybrid-v2-ae6ccfcc34835be8.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 145,
+          "evidenceEfficiency": 0.5334186422413794,
+          "payloadEvidenceEfficiency": 0.3288793103448276,
+          "evidenceRecall": 0.7931034482758621,
+          "mrr": 0.7241379310344828,
+          "tokensToFirstEvidence": 238.8896551724138
+        },
+        {
+          "budget": 1024,
+          "cases": 145,
+          "evidenceEfficiency": 0.7058863146551724,
+          "payloadEvidenceEfficiency": 0.5876212284482759,
+          "evidenceRecall": 0.9103448275862069,
+          "mrr": 0.7609195402298848,
+          "tokensToFirstEvidence": 301.17241379310343
+        },
+        {
+          "budget": 2048,
+          "cases": 145,
+          "evidenceEfficiency": 0.8187769396551724,
+          "payloadEvidenceEfficiency": 0.7579269935344828,
+          "evidenceRecall": 0.9379310344827586,
+          "mrr": 0.7659770114942527,
+          "tokensToFirstEvidence": 371.1448275862069
+        },
+        {
+          "budget": 4096,
+          "cases": 145,
+          "evidenceEfficiency": 0.8852387526939656,
+          "payloadEvidenceEfficiency": 0.853936557112069,
+          "evidenceRecall": 0.9655172413793104,
+          "mrr": 0.768202917771883,
+          "tokensToFirstEvidence": 470.06206896551726
+        },
+        {
+          "budget": 8192,
+          "cases": 145,
+          "evidenceEfficiency": 0.9253779970366379,
+          "payloadEvidenceEfficiency": 0.9097268992456896,
+          "evidenceRecall": 0.9655172413793104,
+          "mrr": 0.768202917771883,
+          "tokensToFirstEvidence": 611.303448275862
+        },
+        {
+          "budget": 16384,
+          "cases": 145,
+          "evidenceEfficiency": 0.9454476192079742,
+          "payloadEvidenceEfficiency": 0.9376220703125,
+          "evidenceRecall": 0.9655172413793104,
+          "mrr": 0.768202917771883,
+          "tokensToFirstEvidence": 893.7862068965517
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-256-32\",\"retriever\":{\"kind\":\"vector\",\"embeddingModel\":\"voyage-4-large\"},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"}}",
+      "label": "Vector voyage-4-large",
+      "strategyId": "fixed-token-cl100k_base-256-32",
+      "retriever": {
+        "kind": "vector",
+        "embeddingModel": "voyage-4-large"
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-text-retrieval-v2-7e926e58f70352fd.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 145,
+          "evidenceEfficiency": 0.5668372844827586,
+          "payloadEvidenceEfficiency": 0.35,
+          "evidenceRecall": 0.8068965517241379,
+          "mrr": 0.7517241379310344,
+          "tokensToFirstEvidence": 221.7793103448276
+        },
+        {
+          "budget": 1024,
+          "cases": 145,
+          "evidenceEfficiency": 0.7130994073275863,
+          "payloadEvidenceEfficiency": 0.5927734375,
+          "evidenceRecall": 0.896551724137931,
+          "mrr": 0.7781609195402297,
+          "tokensToFirstEvidence": 293.78620689655173
+        },
+        {
+          "budget": 2048,
+          "cases": 145,
+          "evidenceEfficiency": 0.8084859913793103,
+          "payloadEvidenceEfficiency": 0.7474643049568965,
+          "evidenceRecall": 0.9103448275862069,
+          "mrr": 0.7802955665024629,
+          "tokensToFirstEvidence": 392.2206896551724
+        },
+        {
+          "budget": 4096,
+          "cases": 145,
+          "evidenceEfficiency": 0.8766719423491379,
+          "payloadEvidenceEfficiency": 0.8447147764008621,
+          "evidenceRecall": 0.9586206896551724,
+          "mrr": 0.784685352961215,
+          "tokensToFirstEvidence": 505.151724137931
+        },
+        {
+          "budget": 8192,
+          "cases": 145,
+          "evidenceEfficiency": 0.9195935479525862,
+          "payloadEvidenceEfficiency": 0.9035804485452587,
+          "evidenceRecall": 0.9655172413793104,
+          "mrr": 0.7849727092830541,
+          "tokensToFirstEvidence": 658.6896551724138
+        },
+        {
+          "budget": 16384,
+          "cases": 145,
+          "evidenceEfficiency": 0.9425553946659483,
+          "payloadEvidenceEfficiency": 0.9345488449622845,
+          "evidenceRecall": 0.9655172413793104,
+          "mrr": 0.7849727092830541,
+          "tokensToFirstEvidence": 941.1724137931035
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-256-32\",\"retriever\":{\"kind\":\"hybrid-rrf\",\"embeddingModel\":\"text-embedding-3-large\",\"rrfK\":60},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"}}",
+      "label": "Hybrid text-embedding-3-large v1:b1",
+      "strategyId": "fixed-token-cl100k_base-256-32",
+      "retriever": {
+        "kind": "hybrid-rrf",
+        "embeddingModel": "text-embedding-3-large",
+        "rrfK": 60
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-text-retrieval-v2-7e926e58f70352fd.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 145,
+          "evidenceEfficiency": 0.4460533405172414,
+          "payloadEvidenceEfficiency": 0.26297144396551725,
+          "evidenceRecall": 0.7034482758620689,
+          "mrr": 0.6103448275862069,
+          "tokensToFirstEvidence": 283.62068965517244
+        },
+        {
+          "budget": 1024,
+          "cases": 145,
+          "evidenceEfficiency": 0.6057179418103448,
+          "payloadEvidenceEfficiency": 0.5006667564655173,
+          "evidenceRecall": 0.8068965517241379,
+          "mrr": 0.6413793103448275,
+          "tokensToFirstEvidence": 403.7448275862069
+        },
+        {
+          "budget": 2048,
+          "cases": 145,
+          "evidenceEfficiency": 0.7469591864224138,
+          "payloadEvidenceEfficiency": 0.686590786637931,
+          "evidenceRecall": 0.9172413793103448,
+          "mrr": 0.6608292282430214,
+          "tokensToFirstEvidence": 518.2275862068966
+        },
+        {
+          "budget": 4096,
+          "cases": 145,
+          "evidenceEfficiency": 0.8478229391163793,
+          "payloadEvidenceEfficiency": 0.8157630657327586,
+          "evidenceRecall": 0.9724137931034482,
+          "mrr": 0.6655021893814997,
+          "tokensToFirstEvidence": 623.3172413793103
+        },
+        {
+          "budget": 8192,
+          "cases": 145,
+          "evidenceEfficiency": 0.9119965651939655,
+          "payloadEvidenceEfficiency": 0.8957367995689656,
+          "evidenceRecall": 0.9862068965517241,
+          "mrr": 0.6659698865673896,
+          "tokensToFirstEvidence": 720.9241379310345
+        },
+        {
+          "budget": 16384,
+          "cases": 145,
+          "evidenceEfficiency": 0.9524052060883621,
+          "payloadEvidenceEfficiency": 0.9442273370150862,
+          "evidenceRecall": 0.993103448275862,
+          "mrr": 0.6661614574486157,
+          "tokensToFirstEvidence": 779.7931034482758
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-256-32\",\"retriever\":{\"kind\":\"hybrid-rrf\",\"embeddingModel\":\"text-embedding-3-large\",\"rrfK\":60,\"vectorWeight\":0.75,\"bm25Weight\":0.25},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"}}",
+      "label": "Hybrid text-embedding-3-large v0.75:b0.25",
+      "strategyId": "fixed-token-cl100k_base-256-32",
+      "retriever": {
+        "kind": "hybrid-rrf",
+        "embeddingModel": "text-embedding-3-large",
+        "rrfK": 60,
+        "vectorWeight": 0.75,
+        "bm25Weight": 0.25
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-weighted-hybrid-v2-ae6ccfcc34835be8.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 145,
+          "evidenceEfficiency": 0.4619342672413793,
+          "payloadEvidenceEfficiency": 0.26383351293103446,
+          "evidenceRecall": 0.7310344827586207,
+          "mrr": 0.6241379310344828,
+          "tokensToFirstEvidence": 275.4896551724138
+        },
+        {
+          "budget": 1024,
+          "cases": 145,
+          "evidenceEfficiency": 0.6253569504310345,
+          "payloadEvidenceEfficiency": 0.5142443426724138,
+          "evidenceRecall": 0.8482758620689655,
+          "mrr": 0.658045977011494,
+          "tokensToFirstEvidence": 383.63448275862066
+        },
+        {
+          "budget": 2048,
+          "cases": 145,
+          "evidenceEfficiency": 0.7602471713362069,
+          "payloadEvidenceEfficiency": 0.7005994073275862,
+          "evidenceRecall": 0.9172413793103448,
+          "mrr": 0.6698440065681444,
+          "tokensToFirstEvidence": 491.0137931034483
+        },
+        {
+          "budget": 4096,
+          "cases": 145,
+          "evidenceEfficiency": 0.8546588766163793,
+          "payloadEvidenceEfficiency": 0.8233061691810345,
+          "evidenceRecall": 0.9586206896551724,
+          "mrr": 0.6738127581231027,
+          "tokensToFirstEvidence": 595.3172413793103
+        },
+        {
+          "budget": 8192,
+          "cases": 145,
+          "evidenceEfficiency": 0.9117381128771552,
+          "payloadEvidenceEfficiency": 0.8958260371767242,
+          "evidenceRecall": 0.9724137931034482,
+          "mrr": 0.6744546449718861,
+          "tokensToFirstEvidence": 723.0413793103448
+        },
+        {
+          "budget": 16384,
+          "cases": 145,
+          "evidenceEfficiency": 0.9420759529903018,
+          "payloadEvidenceEfficiency": 0.9341199151400862,
+          "evidenceRecall": 0.9724137931034482,
+          "mrr": 0.6744546449718861,
+          "tokensToFirstEvidence": 949.0275862068966
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-256-32\",\"retriever\":{\"kind\":\"hybrid-rrf\",\"embeddingModel\":\"text-embedding-3-large\",\"rrfK\":60,\"vectorWeight\":1,\"bm25Weight\":1},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"}}",
+      "label": "Hybrid text-embedding-3-large v1:b1",
+      "strategyId": "fixed-token-cl100k_base-256-32",
+      "retriever": {
+        "kind": "hybrid-rrf",
+        "embeddingModel": "text-embedding-3-large",
+        "rrfK": 60,
+        "vectorWeight": 1,
+        "bm25Weight": 1
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-weighted-hybrid-v2-ae6ccfcc34835be8.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 145,
+          "evidenceEfficiency": 0.4406384698275862,
+          "payloadEvidenceEfficiency": 0.26297144396551725,
+          "evidenceRecall": 0.696551724137931,
+          "mrr": 0.6068965517241379,
+          "tokensToFirstEvidence": 286.39310344827584
+        },
+        {
+          "budget": 1024,
+          "cases": 145,
+          "evidenceEfficiency": 0.6042093211206897,
+          "payloadEvidenceEfficiency": 0.5006667564655173,
+          "evidenceRecall": 0.8068965517241379,
+          "mrr": 0.6408045977011494,
+          "tokensToFirstEvidence": 405.2896551724138
+        },
+        {
+          "budget": 2048,
+          "cases": 145,
+          "evidenceEfficiency": 0.7462048760775862,
+          "payloadEvidenceEfficiency": 0.686590786637931,
+          "evidenceRecall": 0.9172413793103448,
+          "mrr": 0.6602545155993431,
+          "tokensToFirstEvidence": 519.7724137931034
+        },
+        {
+          "budget": 4096,
+          "cases": 145,
+          "evidenceEfficiency": 0.8474457839439655,
+          "payloadEvidenceEfficiency": 0.8157630657327586,
+          "evidenceRecall": 0.9724137931034482,
+          "mrr": 0.6649274767378216,
+          "tokensToFirstEvidence": 624.8620689655172
+        },
+        {
+          "budget": 8192,
+          "cases": 145,
+          "evidenceEfficiency": 0.9115924703663794,
+          "payloadEvidenceEfficiency": 0.8955212823275862,
+          "evidenceRecall": 0.9862068965517241,
+          "mrr": 0.6653872468527641,
+          "tokensToFirstEvidence": 724.2344827586207
+        },
+        {
+          "budget": 16384,
+          "cases": 145,
+          "evidenceEfficiency": 0.952203158674569,
+          "payloadEvidenceEfficiency": 0.9441195783943965,
+          "evidenceRecall": 0.993103448275862,
+          "mrr": 0.6655788177339902,
+          "tokensToFirstEvidence": 783.1034482758621
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-256-32\",\"retriever\":{\"kind\":\"bge-m3\",\"model\":\"BAAI/bge-m3\",\"mode\":\"hybrid-all-rrf\",\"shortlist\":200},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"}}",
+      "label": "BGE-M3 hybrid-all-rrf",
+      "strategyId": "fixed-token-cl100k_base-256-32",
+      "retriever": {
+        "kind": "bge-m3",
+        "model": "BAAI/bge-m3",
+        "mode": "hybrid-all-rrf",
+        "shortlist": 200
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-local-retrieval-v2-7807eb89f95fa7d8.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 145,
+          "evidenceEfficiency": 0.46360452586206896,
+          "payloadEvidenceEfficiency": 0.2771551724137931,
+          "evidenceRecall": 0.7172413793103448,
+          "mrr": 0.6344827586206897,
+          "tokensToFirstEvidence": 274.63448275862066
+        },
+        {
+          "budget": 1024,
+          "cases": 145,
+          "evidenceEfficiency": 0.6388537176724138,
+          "payloadEvidenceEfficiency": 0.5247844827586207,
+          "evidenceRecall": 0.8758620689655172,
+          "mrr": 0.6821839080459768,
+          "tokensToFirstEvidence": 369.8137931034483
+        },
+        {
+          "budget": 2048,
+          "cases": 145,
+          "evidenceEfficiency": 0.766338900862069,
+          "payloadEvidenceEfficiency": 0.7076407596982759,
+          "evidenceRecall": 0.9103448275862069,
+          "mrr": 0.6875451559934317,
+          "tokensToFirstEvidence": 478.53793103448277
+        },
+        {
+          "budget": 4096,
+          "cases": 145,
+          "evidenceEfficiency": 0.8479795258620689,
+          "payloadEvidenceEfficiency": 0.8180445177801724,
+          "evidenceRecall": 0.9310344827586207,
+          "mrr": 0.6897673782156539,
+          "tokensToFirstEvidence": 622.6758620689656
+        },
+        {
+          "budget": 8192,
+          "cases": 145,
+          "evidenceEfficiency": 0.9077182112068966,
+          "payloadEvidenceEfficiency": 0.8917884563577586,
+          "evidenceRecall": 0.9862068965517241,
+          "mrr": 0.6923078161414873,
+          "tokensToFirstEvidence": 755.9724137931034
+        },
+        {
+          "budget": 16384,
+          "cases": 145,
+          "evidenceEfficiency": 0.9533586173221983,
+          "payloadEvidenceEfficiency": 0.945220736799569,
+          "evidenceRecall": 1,
+          "mrr": 0.6926936372169636,
+          "tokensToFirstEvidence": 764.1724137931035
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-256-32\",\"retriever\":{\"kind\":\"bge-m3\",\"model\":\"BAAI/bge-m3\",\"mode\":\"colbert-dense-shortlist\",\"shortlist\":200},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"}}",
+      "label": "BGE-M3 colbert-dense-shortlist",
+      "strategyId": "fixed-token-cl100k_base-256-32",
+      "retriever": {
+        "kind": "bge-m3",
+        "model": "BAAI/bge-m3",
+        "mode": "colbert-dense-shortlist",
+        "shortlist": 200
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-local-retrieval-v2-7807eb89f95fa7d8.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 145,
+          "evidenceEfficiency": 0.48107489224137934,
+          "payloadEvidenceEfficiency": 0.29051724137931034,
+          "evidenceRecall": 0.7241379310344828,
+          "mrr": 0.6517241379310345,
+          "tokensToFirstEvidence": 265.6896551724138
+        },
+        {
+          "budget": 1024,
+          "cases": 145,
+          "evidenceEfficiency": 0.6421134159482759,
+          "payloadEvidenceEfficiency": 0.5319234913793104,
+          "evidenceRecall": 0.8482758620689655,
+          "mrr": 0.689655172413793,
+          "tokensToFirstEvidence": 366.4758620689655
+        },
+        {
+          "budget": 2048,
+          "cases": 145,
+          "evidenceEfficiency": 0.7636651400862069,
+          "payloadEvidenceEfficiency": 0.7061557112068966,
+          "evidenceRecall": 0.903448275862069,
+          "mrr": 0.6995484400656814,
+          "tokensToFirstEvidence": 484.0137931034483
+        },
+        {
+          "budget": 4096,
+          "cases": 145,
+          "evidenceEfficiency": 0.8454387796336207,
+          "payloadEvidenceEfficiency": 0.8148774245689655,
+          "evidenceRecall": 0.9448275862068966,
+          "mrr": 0.7029948719299631,
+          "tokensToFirstEvidence": 633.0827586206897
+        },
+        {
+          "budget": 8192,
+          "cases": 145,
+          "evidenceEfficiency": 0.9051193763469828,
+          "payloadEvidenceEfficiency": 0.8893217941810345,
+          "evidenceRecall": 0.9793103448275862,
+          "mrr": 0.70448343761559,
+          "tokensToFirstEvidence": 777.2620689655172
+        },
+        {
+          "budget": 16384,
+          "cases": 145,
+          "evidenceEfficiency": 0.9448040140086207,
+          "payloadEvidenceEfficiency": 0.9368214574353448,
+          "evidenceRecall": 0.9862068965517241,
+          "mrr": 0.7046476412280694,
+          "tokensToFirstEvidence": 904.3310344827586
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-512-64\",\"retriever\":{\"kind\":\"hybrid-rrf\",\"embeddingModel\":\"voyage-4-large\",\"rrfK\":60,\"vectorWeight\":0.75,\"bm25Weight\":0.25},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"}}",
+      "label": "Hybrid voyage-4-large v0.75:b0.25",
+      "strategyId": "fixed-token-cl100k_base-512-64",
+      "retriever": {
+        "kind": "hybrid-rrf",
+        "embeddingModel": "voyage-4-large",
+        "rrfK": 60,
+        "vectorWeight": 0.75,
+        "bm25Weight": 0.25
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-weighted-hybrid-v2-ae6ccfcc34835be8.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 145,
+          "evidenceEfficiency": 0.41062769396551724,
+          "payloadEvidenceEfficiency": 0.0037311422413793104,
+          "evidenceRecall": 0.7310344827586207,
+          "mrr": 0.7310344827586207,
+          "tokensToFirstEvidence": 301.7586206896552
+        },
+        {
+          "budget": 1024,
+          "cases": 145,
+          "evidenceEfficiency": 0.5896888469827586,
+          "payloadEvidenceEfficiency": 0.37041352370689656,
+          "evidenceRecall": 0.8344827586206897,
+          "mrr": 0.7827586206896552,
+          "tokensToFirstEvidence": 420.15862068965515
+        },
+        {
+          "budget": 2048,
+          "cases": 145,
+          "evidenceEfficiency": 0.7335028286637931,
+          "payloadEvidenceEfficiency": 0.6162513469827586,
+          "evidenceRecall": 0.896551724137931,
+          "mrr": 0.8022988505747126,
+          "tokensToFirstEvidence": 545.7862068965517
+        },
+        {
+          "budget": 4096,
+          "cases": 145,
+          "evidenceEfficiency": 0.8343379579741379,
+          "payloadEvidenceEfficiency": 0.772375067349138,
+          "evidenceRecall": 0.9517241379310345,
+          "mrr": 0.8119211822660097,
+          "tokensToFirstEvidence": 678.551724137931
+        },
+        {
+          "budget": 8192,
+          "cases": 145,
+          "evidenceEfficiency": 0.899676724137931,
+          "payloadEvidenceEfficiency": 0.8680992389547414,
+          "evidenceRecall": 0.9793103448275862,
+          "mrr": 0.8141858237547891,
+          "tokensToFirstEvidence": 821.8482758620689
+        },
+        {
+          "budget": 16384,
+          "cases": 145,
+          "evidenceEfficiency": 0.9394935344827586,
+          "payloadEvidenceEfficiency": 0.9237047918911638,
+          "evidenceRecall": 0.9793103448275862,
+          "mrr": 0.8141858237547891,
+          "tokensToFirstEvidence": 991.3379310344827
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-256-32\",\"retriever\":{\"kind\":\"hybrid-rrf\",\"embeddingModel\":\"voyage-4-large\",\"rrfK\":60,\"vectorWeight\":0.25,\"bm25Weight\":0.75},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"}}",
+      "label": "Hybrid voyage-4-large v0.25:b0.75",
+      "strategyId": "fixed-token-cl100k_base-256-32",
+      "retriever": {
+        "kind": "hybrid-rrf",
+        "embeddingModel": "voyage-4-large",
+        "rrfK": 60,
+        "vectorWeight": 0.25,
+        "bm25Weight": 0.75
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-weighted-hybrid-v2-ae6ccfcc34835be8.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 145,
+          "evidenceEfficiency": 0.440948275862069,
+          "payloadEvidenceEfficiency": 0.2633620689655172,
+          "evidenceRecall": 0.696551724137931,
+          "mrr": 0.6103448275862069,
+          "tokensToFirstEvidence": 286.2344827586207
+        },
+        {
+          "budget": 1024,
+          "cases": 145,
+          "evidenceEfficiency": 0.6080347521551724,
+          "payloadEvidenceEfficiency": 0.5060546875,
+          "evidenceRecall": 0.8068965517241379,
+          "mrr": 0.6454022988505747,
+          "tokensToFirstEvidence": 401.3724137931035
+        },
+        {
+          "budget": 2048,
+          "cases": 145,
+          "evidenceEfficiency": 0.7347252155172413,
+          "payloadEvidenceEfficiency": 0.6765187230603448,
+          "evidenceRecall": 0.896551724137931,
+          "mrr": 0.6597536945812807,
+          "tokensToFirstEvidence": 543.2827586206896
+        },
+        {
+          "budget": 4096,
+          "cases": 145,
+          "evidenceEfficiency": 0.8334859913793103,
+          "payloadEvidenceEfficiency": 0.8023757408405172,
+          "evidenceRecall": 0.9517241379310345,
+          "mrr": 0.6645148338251787,
+          "tokensToFirstEvidence": 682.0413793103448
+        },
+        {
+          "budget": 8192,
+          "cases": 145,
+          "evidenceEfficiency": 0.8992044383081896,
+          "payloadEvidenceEfficiency": 0.8834885169719827,
+          "evidenceRecall": 0.9655172413793104,
+          "mrr": 0.6653036551008155,
+          "tokensToFirstEvidence": 825.7172413793104
+        },
+        {
+          "budget": 16384,
+          "cases": 145,
+          "evidenceEfficiency": 0.9342133620689655,
+          "payloadEvidenceEfficiency": 0.9262716359105604,
+          "evidenceRecall": 0.9724137931034482,
+          "mrr": 0.6654444010543692,
+          "tokensToFirstEvidence": 1077.848275862069
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-256-32\",\"retriever\":{\"kind\":\"bge-m3\",\"model\":\"BAAI/bge-m3\",\"mode\":\"hybrid-dense-sparse-rrf\",\"shortlist\":200},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"}}",
+      "label": "BGE-M3 hybrid-dense-sparse-rrf",
+      "strategyId": "fixed-token-cl100k_base-256-32",
+      "retriever": {
+        "kind": "bge-m3",
+        "model": "BAAI/bge-m3",
+        "mode": "hybrid-dense-sparse-rrf",
+        "shortlist": 200
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-local-retrieval-v2-7807eb89f95fa7d8.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 145,
+          "evidenceEfficiency": 0.42821928879310345,
+          "payloadEvidenceEfficiency": 0.240625,
+          "evidenceRecall": 0.696551724137931,
+          "mrr": 0.5862068965517241,
+          "tokensToFirstEvidence": 292.75172413793103
+        },
+        {
+          "budget": 1024,
+          "cases": 145,
+          "evidenceEfficiency": 0.6003434806034482,
+          "payloadEvidenceEfficiency": 0.4916487068965517,
+          "evidenceRecall": 0.8344827586206897,
+          "mrr": 0.6275862068965515,
+          "tokensToFirstEvidence": 409.24827586206897
+        },
+        {
+          "budget": 2048,
+          "cases": 145,
+          "evidenceEfficiency": 0.7370319234913794,
+          "payloadEvidenceEfficiency": 0.6791217672413793,
+          "evidenceRecall": 0.896551724137931,
+          "mrr": 0.638111658456486,
+          "tokensToFirstEvidence": 538.5586206896552
+        },
+        {
+          "budget": 4096,
+          "cases": 145,
+          "evidenceEfficiency": 0.8296841325431035,
+          "payloadEvidenceEfficiency": 0.7994207974137931,
+          "evidenceRecall": 0.9448275862068966,
+          "mrr": 0.6420318474628819,
+          "tokensToFirstEvidence": 697.6137931034483
+        },
+        {
+          "budget": 8192,
+          "cases": 145,
+          "evidenceEfficiency": 0.8981125404094827,
+          "payloadEvidenceEfficiency": 0.8822181438577587,
+          "evidenceRecall": 0.9793103448275862,
+          "mrr": 0.6435649259366224,
+          "tokensToFirstEvidence": 834.6620689655173
+        },
+        {
+          "budget": 16384,
+          "cases": 145,
+          "evidenceEfficiency": 0.9448073814655172,
+          "payloadEvidenceEfficiency": 0.9367246430495689,
+          "evidenceRecall": 0.993103448275862,
+          "mrr": 0.6439289106109519,
+          "tokensToFirstEvidence": 904.2758620689655
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-256-32\",\"retriever\":{\"kind\":\"hybrid-rrf\",\"embeddingModel\":\"text-embedding-3-large\",\"rrfK\":60,\"vectorWeight\":0.25,\"bm25Weight\":0.75},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"}}",
+      "label": "Hybrid text-embedding-3-large v0.25:b0.75",
+      "strategyId": "fixed-token-cl100k_base-256-32",
+      "retriever": {
+        "kind": "hybrid-rrf",
+        "embeddingModel": "text-embedding-3-large",
+        "rrfK": 60,
+        "vectorWeight": 0.25,
+        "bm25Weight": 0.75
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-weighted-hybrid-v2-ae6ccfcc34835be8.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 145,
+          "evidenceEfficiency": 0.44253771551724136,
+          "payloadEvidenceEfficiency": 0.2663793103448276,
+          "evidenceRecall": 0.6620689655172414,
+          "mrr": 0.596551724137931,
+          "tokensToFirstEvidence": 285.4206896551724
+        },
+        {
+          "budget": 1024,
+          "cases": 145,
+          "evidenceEfficiency": 0.5898302801724138,
+          "payloadEvidenceEfficiency": 0.49053744612068967,
+          "evidenceRecall": 0.7724137931034483,
+          "mrr": 0.6316091954022988,
+          "tokensToFirstEvidence": 420.0137931034483
+        },
+        {
+          "budget": 2048,
+          "cases": 145,
+          "evidenceEfficiency": 0.7163725754310345,
+          "payloadEvidenceEfficiency": 0.6590045797413793,
+          "evidenceRecall": 0.8896551724137931,
+          "mrr": 0.6508866995073891,
+          "tokensToFirstEvidence": 580.8689655172413
+        },
+        {
+          "budget": 4096,
+          "cases": 145,
+          "evidenceEfficiency": 0.8234442349137931,
+          "payloadEvidenceEfficiency": 0.7922615840517241,
+          "evidenceRecall": 0.9517241379310345,
+          "mrr": 0.6562523778903088,
+          "tokensToFirstEvidence": 723.1724137931035
+        },
+        {
+          "budget": 8192,
+          "cases": 145,
+          "evidenceEfficiency": 0.8967125202047413,
+          "payloadEvidenceEfficiency": 0.8808560075431034,
+          "evidenceRecall": 0.9724137931034482,
+          "mrr": 0.6573658613962339,
+          "tokensToFirstEvidence": 846.1310344827587
+        },
+        {
+          "budget": 16384,
+          "cases": 145,
+          "evidenceEfficiency": 0.9345631566540948,
+          "payloadEvidenceEfficiency": 0.9266349003232759,
+          "evidenceRecall": 0.9724137931034482,
+          "mrr": 0.6573658613962339,
+          "tokensToFirstEvidence": 1072.1172413793104
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-256-32\",\"retriever\":{\"kind\":\"bge-m3\",\"model\":\"BAAI/bge-m3\",\"mode\":\"sparse\",\"shortlist\":200},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"}}",
+      "label": "BGE-M3 sparse",
+      "strategyId": "fixed-token-cl100k_base-256-32",
+      "retriever": {
+        "kind": "bge-m3",
+        "model": "BAAI/bge-m3",
+        "mode": "sparse",
+        "shortlist": 200
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-local-retrieval-v2-7807eb89f95fa7d8.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 145,
+          "evidenceEfficiency": 0.43592403017241377,
+          "payloadEvidenceEfficiency": 0.25991379310344825,
+          "evidenceRecall": 0.6758620689655173,
+          "mrr": 0.596551724137931,
+          "tokensToFirstEvidence": 288.80689655172415
+        },
+        {
+          "budget": 1024,
+          "cases": 145,
+          "evidenceEfficiency": 0.5948073814655173,
+          "payloadEvidenceEfficiency": 0.4922952586206897,
+          "evidenceRecall": 0.8,
+          "mrr": 0.6350574712643677,
+          "tokensToFirstEvidence": 414.9172413793103
+        },
+        {
+          "budget": 2048,
+          "cases": 145,
+          "evidenceEfficiency": 0.7215416217672413,
+          "payloadEvidenceEfficiency": 0.6677532327586206,
+          "evidenceRecall": 0.8689655172413793,
+          "mrr": 0.6474794745484402,
+          "tokensToFirstEvidence": 570.2827586206896
+        },
+        {
+          "budget": 4096,
+          "cases": 145,
+          "evidenceEfficiency": 0.8107101966594827,
+          "payloadEvidenceEfficiency": 0.7814453125,
+          "evidenceRecall": 0.9379310344827586,
+          "mrr": 0.6528454715219421,
+          "tokensToFirstEvidence": 775.3310344827586
+        },
+        {
+          "budget": 8192,
+          "cases": 145,
+          "evidenceEfficiency": 0.8839203933189655,
+          "payloadEvidenceEfficiency": 0.8687045393318965,
+          "evidenceRecall": 0.9655172413793104,
+          "mrr": 0.6540838083974604,
+          "tokensToFirstEvidence": 950.9241379310345
+        },
+        {
+          "budget": 16384,
+          "cases": 145,
+          "evidenceEfficiency": 0.9275853650323276,
+          "payloadEvidenceEfficiency": 0.9199126144935345,
+          "evidenceRecall": 0.9724137931034482,
+          "mrr": 0.6542606430570537,
+          "tokensToFirstEvidence": 1186.441379310345
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-512-64\",\"retriever\":{\"kind\":\"vector\",\"embeddingModel\":\"voyage-4-large\"},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"}}",
+      "label": "Vector voyage-4-large",
+      "strategyId": "fixed-token-cl100k_base-512-64",
+      "retriever": {
+        "kind": "vector",
+        "embeddingModel": "voyage-4-large"
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-text-retrieval-v2-7e926e58f70352fd.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 145,
+          "evidenceEfficiency": 0.40620959051724137,
+          "payloadEvidenceEfficiency": 0.0037311422413793104,
+          "evidenceRecall": 0.696551724137931,
+          "mrr": 0.696551724137931,
+          "tokensToFirstEvidence": 304.0206896551724
+        },
+        {
+          "budget": 1024,
+          "cases": 145,
+          "evidenceEfficiency": 0.5754714439655172,
+          "payloadEvidenceEfficiency": 0.3527411099137931,
+          "evidenceRecall": 0.8137931034482758,
+          "mrr": 0.7551724137931034,
+          "tokensToFirstEvidence": 434.71724137931034
+        },
+        {
+          "budget": 2048,
+          "cases": 145,
+          "evidenceEfficiency": 0.7163321659482759,
+          "payloadEvidenceEfficiency": 0.5977572737068966,
+          "evidenceRecall": 0.8827586206896552,
+          "mrr": 0.7764367816091953,
+          "tokensToFirstEvidence": 580.951724137931
+        },
+        {
+          "budget": 4096,
+          "cases": 145,
+          "evidenceEfficiency": 0.8155997440732758,
+          "payloadEvidenceEfficiency": 0.7527579471982758,
+          "evidenceRecall": 0.9241379310344827,
+          "mrr": 0.7839655172413793,
+          "tokensToFirstEvidence": 755.303448275862
+        },
+        {
+          "budget": 8192,
+          "cases": 145,
+          "evidenceEfficiency": 0.8796336206896552,
+          "payloadEvidenceEfficiency": 0.8470812567349137,
+          "evidenceRecall": 0.9586206896551724,
+          "mrr": 0.7868224332575245,
+          "tokensToFirstEvidence": 986.0413793103448
+        },
+        {
+          "budget": 16384,
+          "cases": 145,
+          "evidenceEfficiency": 0.9254546066810345,
+          "payloadEvidenceEfficiency": 0.9090538287984914,
+          "evidenceRecall": 0.9793103448275862,
+          "mrr": 0.7877527066607211,
+          "tokensToFirstEvidence": 1221.3517241379311
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-512-64\",\"retriever\":{\"kind\":\"hybrid-rrf\",\"embeddingModel\":\"voyage-4-large\",\"rrfK\":60},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"}}",
+      "label": "Hybrid voyage-4-large v1:b1",
+      "strategyId": "fixed-token-cl100k_base-512-64",
+      "retriever": {
+        "kind": "hybrid-rrf",
+        "embeddingModel": "voyage-4-large",
+        "rrfK": 60
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-text-retrieval-v2-7e926e58f70352fd.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 145,
+          "evidenceEfficiency": 0.3787042025862069,
+          "payloadEvidenceEfficiency": 0.0037311422413793104,
+          "evidenceRecall": 0.6689655172413793,
+          "mrr": 0.6689655172413793,
+          "tokensToFirstEvidence": 318.1034482758621
+        },
+        {
+          "budget": 1024,
+          "cases": 145,
+          "evidenceEfficiency": 0.5488348599137931,
+          "payloadEvidenceEfficiency": 0.33894800646551726,
+          "evidenceRecall": 0.8,
+          "mrr": 0.7344827586206897,
+          "tokensToFirstEvidence": 461.99310344827586
+        },
+        {
+          "budget": 2048,
+          "cases": 145,
+          "evidenceEfficiency": 0.6935277478448276,
+          "payloadEvidenceEfficiency": 0.580303744612069,
+          "evidenceRecall": 0.8620689655172413,
+          "mrr": 0.7534482758620688,
+          "tokensToFirstEvidence": 627.6551724137931
+        },
+        {
+          "budget": 4096,
+          "cases": 145,
+          "evidenceEfficiency": 0.7919029498922414,
+          "payloadEvidenceEfficiency": 0.7333159348060345,
+          "evidenceRecall": 0.9172413793103448,
+          "mrr": 0.7622413793103447,
+          "tokensToFirstEvidence": 852.3655172413793
+        },
+        {
+          "budget": 8192,
+          "cases": 145,
+          "evidenceEfficiency": 0.8759311018318966,
+          "payloadEvidenceEfficiency": 0.8445767106681035,
+          "evidenceRecall": 0.9793103448275862,
+          "mrr": 0.7677846961467651,
+          "tokensToFirstEvidence": 1016.3724137931034
+        },
+        {
+          "budget": 16384,
+          "cases": 145,
+          "evidenceEfficiency": 0.9330650592672414,
+          "payloadEvidenceEfficiency": 0.9170704808728448,
+          "evidenceRecall": 1,
+          "mrr": 0.7686646140652225,
+          "tokensToFirstEvidence": 1096.6620689655172
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-256-32\",\"retriever\":{\"kind\":\"vector\",\"embeddingModel\":\"text-embedding-3-large\"},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"}}",
+      "label": "Vector text-embedding-3-large",
+      "strategyId": "fixed-token-cl100k_base-256-32",
+      "retriever": {
+        "kind": "vector",
+        "embeddingModel": "text-embedding-3-large"
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-text-retrieval-v2-7e926e58f70352fd.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 145,
+          "evidenceEfficiency": 0.4140490301724138,
+          "payloadEvidenceEfficiency": 0.24310344827586206,
+          "evidenceRecall": 0.593103448275862,
+          "mrr": 0.5379310344827586,
+          "tokensToFirstEvidence": 300.00689655172414
+        },
+        {
+          "budget": 1024,
+          "cases": 145,
+          "evidenceEfficiency": 0.5512257543103448,
+          "payloadEvidenceEfficiency": 0.44743399784482757,
+          "evidenceRecall": 0.7724137931034483,
+          "mrr": 0.5908045977011492,
+          "tokensToFirstEvidence": 459.5448275862069
+        },
+        {
+          "budget": 2048,
+          "cases": 145,
+          "evidenceEfficiency": 0.6938846982758621,
+          "payloadEvidenceEfficiency": 0.6363079202586207,
+          "evidenceRecall": 0.8689655172413793,
+          "mrr": 0.6073152709359605,
+          "tokensToFirstEvidence": 626.9241379310345
+        },
+        {
+          "budget": 4096,
+          "cases": 145,
+          "evidenceEfficiency": 0.8010540140086206,
+          "payloadEvidenceEfficiency": 0.7703259698275862,
+          "evidenceRecall": 0.9379310344827586,
+          "mrr": 0.6131213135523481,
+          "tokensToFirstEvidence": 814.8827586206896
+        },
+        {
+          "budget": 8192,
+          "cases": 145,
+          "evidenceEfficiency": 0.874462890625,
+          "payloadEvidenceEfficiency": 0.8587789601293103,
+          "evidenceRecall": 0.9586206896551724,
+          "mrr": 0.6139644726179765,
+          "tokensToFirstEvidence": 1028.4
+        },
+        {
+          "budget": 16384,
+          "cases": 145,
+          "evidenceEfficiency": 0.9224133721713362,
+          "payloadEvidenceEfficiency": 0.9144379714439655,
+          "evidenceRecall": 0.9724137931034482,
+          "mrr": 0.6143301988457717,
+          "tokensToFirstEvidence": 1271.1793103448276
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-512-64\",\"retriever\":{\"kind\":\"hybrid-rrf\",\"embeddingModel\":\"voyage-4-large\",\"rrfK\":60,\"vectorWeight\":1,\"bm25Weight\":1},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"}}",
+      "label": "Hybrid voyage-4-large v1:b1",
+      "strategyId": "fixed-token-cl100k_base-512-64",
+      "retriever": {
+        "kind": "hybrid-rrf",
+        "embeddingModel": "voyage-4-large",
+        "rrfK": 60,
+        "vectorWeight": 1,
+        "bm25Weight": 1
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-weighted-hybrid-v2-ae6ccfcc34835be8.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 145,
+          "evidenceEfficiency": 0.34911099137931034,
+          "payloadEvidenceEfficiency": 0.0037580818965517243,
+          "evidenceRecall": 0.6482758620689655,
+          "mrr": 0.6482758620689655,
+          "tokensToFirstEvidence": 333.2551724137931
+        },
+        {
+          "budget": 1024,
+          "cases": 145,
+          "evidenceEfficiency": 0.5384900323275862,
+          "payloadEvidenceEfficiency": 0.33118938577586204,
+          "evidenceRecall": 0.8,
+          "mrr": 0.7241379310344828,
+          "tokensToFirstEvidence": 472.58620689655174
+        },
+        {
+          "budget": 2048,
+          "cases": 145,
+          "evidenceEfficiency": 0.6883553340517241,
+          "payloadEvidenceEfficiency": 0.5764244342672413,
+          "evidenceRecall": 0.8620689655172413,
+          "mrr": 0.7431034482758618,
+          "tokensToFirstEvidence": 638.248275862069
+        },
+        {
+          "budget": 4096,
+          "cases": 145,
+          "evidenceEfficiency": 0.7893167429956897,
+          "payloadEvidenceEfficiency": 0.7313762796336207,
+          "evidenceRecall": 0.9172413793103448,
+          "mrr": 0.7518965517241378,
+          "tokensToFirstEvidence": 862.9586206896552
+        },
+        {
+          "budget": 8192,
+          "cases": 145,
+          "evidenceEfficiency": 0.8733448949353448,
+          "payloadEvidenceEfficiency": 0.8423137796336206,
+          "evidenceRecall": 0.9793103448275862,
+          "mrr": 0.7572622301070576,
+          "tokensToFirstEvidence": 1037.558620689655
+        },
+        {
+          "budget": 16384,
+          "cases": 145,
+          "evidenceEfficiency": 0.9314305798760776,
+          "payloadEvidenceEfficiency": 0.9155976394127155,
+          "evidenceRecall": 1,
+          "mrr": 0.7581097861270274,
+          "tokensToFirstEvidence": 1123.441379310345
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-256-32\",\"retriever\":{\"kind\":\"colbertv2\",\"model\":\"lightonai/colbertv2.0\"},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"}}",
+      "label": "ColBERTv2",
+      "strategyId": "fixed-token-cl100k_base-256-32",
+      "retriever": {
+        "kind": "colbertv2",
+        "model": "lightonai/colbertv2.0"
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-local-retrieval-v2-7807eb89f95fa7d8.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 145,
+          "evidenceEfficiency": 0.48693426724137934,
+          "payloadEvidenceEfficiency": 0.30269396551724137,
+          "evidenceRecall": 0.6896551724137931,
+          "mrr": 0.6448275862068965,
+          "tokensToFirstEvidence": 262.6896551724138
+        },
+        {
+          "budget": 1024,
+          "cases": 145,
+          "evidenceEfficiency": 0.6176252693965517,
+          "payloadEvidenceEfficiency": 0.5121228448275862,
+          "evidenceRecall": 0.7931034482758621,
+          "mrr": 0.675287356321839,
+          "tokensToFirstEvidence": 391.55172413793105
+        },
+        {
+          "budget": 2048,
+          "cases": 145,
+          "evidenceEfficiency": 0.7281822467672414,
+          "payloadEvidenceEfficiency": 0.6717941810344827,
+          "evidenceRecall": 0.8620689655172413,
+          "mrr": 0.6870853858784893,
+          "tokensToFirstEvidence": 556.6827586206897
+        },
+        {
+          "budget": 4096,
+          "cases": 145,
+          "evidenceEfficiency": 0.8074454471982758,
+          "payloadEvidenceEfficiency": 0.7783590382543103,
+          "evidenceRecall": 0.896551724137931,
+          "mrr": 0.6902356073045728,
+          "tokensToFirstEvidence": 788.7034482758621
+        },
+        {
+          "budget": 8192,
+          "cases": 145,
+          "evidenceEfficiency": 0.8634260506465518,
+          "payloadEvidenceEfficiency": 0.848260708512931,
+          "evidenceRecall": 0.9448275862068966,
+          "mrr": 0.6921464895355673,
+          "tokensToFirstEvidence": 1118.8137931034482
+        },
+        {
+          "budget": 16384,
+          "cases": 145,
+          "evidenceEfficiency": 0.9169938712284482,
+          "payloadEvidenceEfficiency": 0.9090963429418103,
+          "evidenceRecall": 0.9793103448275862,
+          "mrr": 0.6929416796719168,
+          "tokensToFirstEvidence": 1359.9724137931034
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-256-32\",\"retriever\":{\"kind\":\"bge-m3\",\"model\":\"BAAI/bge-m3\",\"mode\":\"dense\",\"shortlist\":200},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"}}",
+      "label": "BGE-M3 dense",
+      "strategyId": "fixed-token-cl100k_base-256-32",
+      "retriever": {
+        "kind": "bge-m3",
+        "model": "BAAI/bge-m3",
+        "mode": "dense",
+        "shortlist": 200
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-local-retrieval-v2-7807eb89f95fa7d8.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 145,
+          "evidenceEfficiency": 0.39502963362068966,
+          "payloadEvidenceEfficiency": 0.22941810344827587,
+          "evidenceRecall": 0.6068965517241379,
+          "mrr": 0.5310344827586206,
+          "tokensToFirstEvidence": 309.7448275862069
+        },
+        {
+          "budget": 1024,
+          "cases": 145,
+          "evidenceEfficiency": 0.5423760775862069,
+          "payloadEvidenceEfficiency": 0.4407866379310345,
+          "evidenceRecall": 0.7379310344827587,
+          "mrr": 0.5701149425287356,
+          "tokensToFirstEvidence": 468.60689655172416
+        },
+        {
+          "budget": 2048,
+          "cases": 145,
+          "evidenceEfficiency": 0.6627592941810345,
+          "payloadEvidenceEfficiency": 0.6066002155172414,
+          "evidenceRecall": 0.8206896551724138,
+          "mrr": 0.5834072249589491,
+          "tokensToFirstEvidence": 690.6689655172414
+        },
+        {
+          "budget": 4096,
+          "cases": 145,
+          "evidenceEfficiency": 0.7569571659482759,
+          "payloadEvidenceEfficiency": 0.7273841594827586,
+          "evidenceRecall": 0.8896551724137931,
+          "mrr": 0.5887240919999541,
+          "tokensToFirstEvidence": 995.5034482758621
+        },
+        {
+          "budget": 8192,
+          "cases": 145,
+          "evidenceEfficiency": 0.8470686287715518,
+          "payloadEvidenceEfficiency": 0.8313644935344827,
+          "evidenceRecall": 0.9448275862068966,
+          "mrr": 0.5916032266623149,
+          "tokensToFirstEvidence": 1252.8137931034482
+        },
+        {
+          "budget": 16384,
+          "cases": 145,
+          "evidenceEfficiency": 0.90350341796875,
+          "payloadEvidenceEfficiency": 0.895446356411638,
+          "evidenceRecall": 0.9655172413793104,
+          "mrr": 0.5920917324094414,
+          "tokensToFirstEvidence": 1581
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-512-64\",\"retriever\":{\"kind\":\"hybrid-rrf\",\"embeddingModel\":\"voyage-4-large\",\"rrfK\":60,\"vectorWeight\":0.25,\"bm25Weight\":0.75},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"}}",
+      "label": "Hybrid voyage-4-large v0.25:b0.75",
+      "strategyId": "fixed-token-cl100k_base-512-64",
+      "retriever": {
+        "kind": "hybrid-rrf",
+        "embeddingModel": "voyage-4-large",
+        "rrfK": 60,
+        "vectorWeight": 0.25,
+        "bm25Weight": 0.75
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-weighted-hybrid-v2-ae6ccfcc34835be8.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 145,
+          "evidenceEfficiency": 0.27827316810344827,
+          "payloadEvidenceEfficiency": 0.0037580818965517243,
+          "evidenceRecall": 0.5655172413793104,
+          "mrr": 0.5655172413793104,
+          "tokensToFirstEvidence": 369.5241379310345
+        },
+        {
+          "budget": 1024,
+          "cases": 145,
+          "evidenceEfficiency": 0.4732152478448276,
+          "payloadEvidenceEfficiency": 0.2898100754310345,
+          "evidenceRecall": 0.7448275862068966,
+          "mrr": 0.6551724137931034,
+          "tokensToFirstEvidence": 539.4275862068965
+        },
+        {
+          "budget": 2048,
+          "cases": 145,
+          "evidenceEfficiency": 0.6414803340517241,
+          "payloadEvidenceEfficiency": 0.5360957704741379,
+          "evidenceRecall": 0.8413793103448276,
+          "mrr": 0.6850574712643678,
+          "tokensToFirstEvidence": 734.248275862069
+        },
+        {
+          "budget": 4096,
+          "cases": 145,
+          "evidenceEfficiency": 0.7546016298491379,
+          "payloadEvidenceEfficiency": 0.6988483297413793,
+          "evidenceRecall": 0.903448275862069,
+          "mrr": 0.6941133004926109,
+          "tokensToFirstEvidence": 1005.1517241379311
+        },
+        {
+          "budget": 8192,
+          "cases": 145,
+          "evidenceEfficiency": 0.8383452316810345,
+          "payloadEvidenceEfficiency": 0.8099861934267242,
+          "evidenceRecall": 0.9241379310344827,
+          "mrr": 0.6962728267900682,
+          "tokensToFirstEvidence": 1324.2758620689656
+        },
+        {
+          "budget": 16384,
+          "cases": 145,
+          "evidenceEfficiency": 0.8973228717672413,
+          "payloadEvidenceEfficiency": 0.8826399178340517,
+          "evidenceRecall": 0.9586206896551724,
+          "mrr": 0.6981707426412243,
+          "tokensToFirstEvidence": 1682.2620689655173
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-256-32\",\"retriever\":{\"kind\":\"bm25\"},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"}}",
+      "label": "BM25",
+      "strategyId": "fixed-token-cl100k_base-256-32",
+      "retriever": {
+        "kind": "bm25"
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-text-retrieval-v2-7e926e58f70352fd.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 145,
+          "evidenceEfficiency": 0.3606950431034483,
+          "payloadEvidenceEfficiency": 0.22456896551724137,
+          "evidenceRecall": 0.5379310344827586,
+          "mrr": 0.49310344827586206,
+          "tokensToFirstEvidence": 327.3241379310345
+        },
+        {
+          "budget": 1024,
+          "cases": 145,
+          "evidenceEfficiency": 0.4877020474137931,
+          "payloadEvidenceEfficiency": 0.4038793103448276,
+          "evidenceRecall": 0.6620689655172414,
+          "mrr": 0.5304597701149425,
+          "tokensToFirstEvidence": 524.5931034482759
+        },
+        {
+          "budget": 2048,
+          "cases": 145,
+          "evidenceEfficiency": 0.6102741109913793,
+          "payloadEvidenceEfficiency": 0.5611900592672414,
+          "evidenceRecall": 0.7724137931034483,
+          "mrr": 0.5491461412151067,
+          "tokensToFirstEvidence": 798.1586206896552
+        },
+        {
+          "budget": 4096,
+          "cases": 145,
+          "evidenceEfficiency": 0.7249326508620689,
+          "payloadEvidenceEfficiency": 0.6969490840517242,
+          "evidenceRecall": 0.8758620689655172,
+          "mrr": 0.5580791430791431,
+          "tokensToFirstEvidence": 1126.6758620689654
+        },
+        {
+          "budget": 8192,
+          "cases": 145,
+          "evidenceEfficiency": 0.8198587351831896,
+          "payloadEvidenceEfficiency": 0.8049880455280173,
+          "evidenceRecall": 0.9310344827586207,
+          "mrr": 0.5606342574814647,
+          "tokensToFirstEvidence": 1475.7172413793103
+        },
+        {
+          "budget": 16384,
+          "cases": 145,
+          "evidenceEfficiency": 0.8916158741918103,
+          "payloadEvidenceEfficiency": 0.8838084253771552,
+          "evidenceRecall": 0.9724137931034482,
+          "mrr": 0.5616540613866781,
+          "tokensToFirstEvidence": 1775.7655172413793
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-512-64\",\"retriever\":{\"kind\":\"hybrid-rrf\",\"embeddingModel\":\"text-embedding-3-large\",\"rrfK\":60},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"}}",
+      "label": "Hybrid text-embedding-3-large v1:b1",
+      "strategyId": "fixed-token-cl100k_base-512-64",
+      "retriever": {
+        "kind": "hybrid-rrf",
+        "embeddingModel": "text-embedding-3-large",
+        "rrfK": 60
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-text-retrieval-v2-7e926e58f70352fd.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 145,
+          "evidenceEfficiency": 0.3140490301724138,
+          "payloadEvidenceEfficiency": 0.002330280172413793,
+          "evidenceRecall": 0.5724137931034483,
+          "mrr": 0.5724137931034483,
+          "tokensToFirstEvidence": 351.2068965517241
+        },
+        {
+          "budget": 1024,
+          "cases": 145,
+          "evidenceEfficiency": 0.476953125,
+          "payloadEvidenceEfficiency": 0.2926589439655172,
+          "evidenceRecall": 0.696551724137931,
+          "mrr": 0.6344827586206897,
+          "tokensToFirstEvidence": 535.6
+        },
+        {
+          "budget": 2048,
+          "cases": 145,
+          "evidenceEfficiency": 0.6230334051724138,
+          "payloadEvidenceEfficiency": 0.5180327316810345,
+          "evidenceRecall": 0.8068965517241379,
+          "mrr": 0.6689655172413793,
+          "tokensToFirstEvidence": 772.0275862068966
+        },
+        {
+          "budget": 4096,
+          "cases": 145,
+          "evidenceEfficiency": 0.7331324084051725,
+          "payloadEvidenceEfficiency": 0.6775053879310344,
+          "evidenceRecall": 0.8551724137931035,
+          "mrr": 0.6776436781609195,
+          "tokensToFirstEvidence": 1093.0896551724138
+        },
+        {
+          "budget": 8192,
+          "cases": 145,
+          "evidenceEfficiency": 0.8183854727909483,
+          "payloadEvidenceEfficiency": 0.7880421605603448,
+          "evidenceRecall": 0.9379310344827586,
+          "mrr": 0.6845301346163415,
+          "tokensToFirstEvidence": 1487.7862068965517
+        },
+        {
+          "budget": 16384,
+          "cases": 145,
+          "evidenceEfficiency": 0.8930621969288793,
+          "payloadEvidenceEfficiency": 0.8772936590786637,
+          "evidenceRecall": 0.9862068965517241,
+          "mrr": 0.6866035768088049,
+          "tokensToFirstEvidence": 1752.0689655172414
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"structural-token-cl100k_base-1024-1280\",\"retriever\":{\"kind\":\"vector\",\"embeddingModel\":\"voyage-4-large\"},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"}}",
+      "label": "Vector voyage-4-large",
+      "strategyId": "structural-token-cl100k_base-1024-1280",
+      "retriever": {
+        "kind": "vector",
+        "embeddingModel": "voyage-4-large"
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-text-retrieval-v2-7e926e58f70352fd.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 145,
+          "evidenceEfficiency": 0.06280980603448276,
+          "payloadEvidenceEfficiency": 0.026602909482758622,
+          "evidenceRecall": 0.08275862068965517,
+          "mrr": 0.08275862068965517,
+          "tokensToFirstEvidence": 479.84137931034485
+        },
+        {
+          "budget": 1024,
+          "cases": 145,
+          "evidenceEfficiency": 0.27977505387931034,
+          "payloadEvidenceEfficiency": 0.08389682112068965,
+          "evidenceRecall": 0.43448275862068964,
+          "mrr": 0.43103448275862066,
+          "tokensToFirstEvidence": 737.5103448275862
+        },
+        {
+          "budget": 2048,
+          "cases": 145,
+          "evidenceEfficiency": 0.5670258620689655,
+          "payloadEvidenceEfficiency": 0.37256869612068966,
+          "evidenceRecall": 0.7517241379310344,
+          "mrr": 0.6954022988505747,
+          "tokensToFirstEvidence": 886.7310344827587
+        },
+        {
+          "budget": 4096,
+          "cases": 145,
+          "evidenceEfficiency": 0.7190345501077586,
+          "payloadEvidenceEfficiency": 0.604266567887931,
+          "evidenceRecall": 0.8827586206896552,
+          "mrr": 0.7433333333333332,
+          "tokensToFirstEvidence": 1150.8344827586207
+        },
+        {
+          "budget": 8192,
+          "cases": 145,
+          "evidenceEfficiency": 0.8182229929956897,
+          "payloadEvidenceEfficiency": 0.7573949353448276,
+          "evidenceRecall": 0.9448275862068966,
+          "mrr": 0.7532649151614668,
+          "tokensToFirstEvidence": 1489.1172413793104
+        },
+        {
+          "budget": 16384,
+          "cases": 145,
+          "evidenceEfficiency": 0.8790935647898707,
+          "payloadEvidenceEfficiency": 0.8485764075969827,
+          "evidenceRecall": 0.9517241379310345,
+          "mrr": 0.7533607006020798,
+          "tokensToFirstEvidence": 1980.9310344827586
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-512-64\",\"retriever\":{\"kind\":\"hybrid-rrf\",\"embeddingModel\":\"text-embedding-3-large\",\"rrfK\":60,\"vectorWeight\":1,\"bm25Weight\":1},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"}}",
+      "label": "Hybrid text-embedding-3-large v1:b1",
+      "strategyId": "fixed-token-cl100k_base-512-64",
+      "retriever": {
+        "kind": "hybrid-rrf",
+        "embeddingModel": "text-embedding-3-large",
+        "rrfK": 60,
+        "vectorWeight": 1,
+        "bm25Weight": 1
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-weighted-hybrid-v2-ae6ccfcc34835be8.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 145,
+          "evidenceEfficiency": 0.2910425646551724,
+          "payloadEvidenceEfficiency": 0.002330280172413793,
+          "evidenceRecall": 0.5655172413793104,
+          "mrr": 0.5655172413793104,
+          "tokensToFirstEvidence": 362.9862068965517
+        },
+        {
+          "budget": 1024,
+          "cases": 145,
+          "evidenceEfficiency": 0.46934940732758623,
+          "payloadEvidenceEfficiency": 0.28893453663793106,
+          "evidenceRecall": 0.696551724137931,
+          "mrr": 0.6310344827586207,
+          "tokensToFirstEvidence": 543.3862068965517
+        },
+        {
+          "budget": 2048,
+          "cases": 145,
+          "evidenceEfficiency": 0.6192315463362069,
+          "payloadEvidenceEfficiency": 0.5161705280172414,
+          "evidenceRecall": 0.8068965517241379,
+          "mrr": 0.6655172413793103,
+          "tokensToFirstEvidence": 779.8137931034482
+        },
+        {
+          "budget": 4096,
+          "cases": 145,
+          "evidenceEfficiency": 0.731231478987069,
+          "payloadEvidenceEfficiency": 0.676574286099138,
+          "evidenceRecall": 0.8551724137931035,
+          "mrr": 0.6741954022988506,
+          "tokensToFirstEvidence": 1100.8758620689655
+        },
+        {
+          "budget": 8192,
+          "cases": 145,
+          "evidenceEfficiency": 0.8165729391163793,
+          "payloadEvidenceEfficiency": 0.7867145406788794,
+          "evidenceRecall": 0.9379310344827586,
+          "mrr": 0.6809917190089603,
+          "tokensToFirstEvidence": 1502.6344827586206
+        },
+        {
+          "budget": 16384,
+          "cases": 145,
+          "evidenceEfficiency": 0.8923445076778017,
+          "payloadEvidenceEfficiency": 0.8768184267241379,
+          "evidenceRecall": 0.9862068965517241,
+          "mrr": 0.6830863109843234,
+          "tokensToFirstEvidence": 1763.8275862068965
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-512-64\",\"retriever\":{\"kind\":\"hybrid-rrf\",\"embeddingModel\":\"text-embedding-3-large\",\"rrfK\":60,\"vectorWeight\":0.75,\"bm25Weight\":0.25},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"}}",
+      "label": "Hybrid text-embedding-3-large v0.75:b0.25",
+      "strategyId": "fixed-token-cl100k_base-512-64",
+      "retriever": {
+        "kind": "hybrid-rrf",
+        "embeddingModel": "text-embedding-3-large",
+        "rrfK": 60,
+        "vectorWeight": 0.75,
+        "bm25Weight": 0.25
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-weighted-hybrid-v2-ae6ccfcc34835be8.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 145,
+          "evidenceEfficiency": 0.3325969827586207,
+          "payloadEvidenceEfficiency": 0.002330280172413793,
+          "evidenceRecall": 0.5724137931034483,
+          "mrr": 0.5724137931034483,
+          "tokensToFirstEvidence": 341.7103448275862
+        },
+        {
+          "budget": 1024,
+          "cases": 145,
+          "evidenceEfficiency": 0.4755522629310345,
+          "payloadEvidenceEfficiency": 0.2922279094827586,
+          "evidenceRecall": 0.6551724137931034,
+          "mrr": 0.6137931034482759,
+          "tokensToFirstEvidence": 537.0344827586207
+        },
+        {
+          "budget": 2048,
+          "cases": 145,
+          "evidenceEfficiency": 0.6105704471982759,
+          "payloadEvidenceEfficiency": 0.5003535829741379,
+          "evidenceRecall": 0.8137931034482758,
+          "mrr": 0.6609195402298849,
+          "tokensToFirstEvidence": 797.551724137931
+        },
+        {
+          "budget": 4096,
+          "cases": 145,
+          "evidenceEfficiency": 0.7364830280172414,
+          "payloadEvidenceEfficiency": 0.6756734913793103,
+          "evidenceRecall": 0.8827586206896552,
+          "mrr": 0.6725533661740557,
+          "tokensToFirstEvidence": 1079.3655172413794
+        },
+        {
+          "budget": 8192,
+          "cases": 145,
+          "evidenceEfficiency": 0.8156561489762931,
+          "payloadEvidenceEfficiency": 0.7846763873922413,
+          "evidenceRecall": 0.903448275862069,
+          "mrr": 0.6742775041050901,
+          "tokensToFirstEvidence": 1510.144827586207
+        },
+        {
+          "budget": 16384,
+          "cases": 145,
+          "evidenceEfficiency": 0.8732985924030172,
+          "payloadEvidenceEfficiency": 0.8573684166217672,
+          "evidenceRecall": 0.9379310344827586,
+          "mrr": 0.6760415953215141,
+          "tokensToFirstEvidence": 2075.8758620689655
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"structural-token-cl100k_base-1024-1280\",\"retriever\":{\"kind\":\"hybrid-rrf\",\"embeddingModel\":\"voyage-4-large\",\"rrfK\":60},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"}}",
+      "label": "Hybrid voyage-4-large v1:b1",
+      "strategyId": "structural-token-cl100k_base-1024-1280",
+      "retriever": {
+        "kind": "hybrid-rrf",
+        "embeddingModel": "voyage-4-large",
+        "rrfK": 60
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-text-retrieval-v2-7e926e58f70352fd.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 145,
+          "evidenceEfficiency": 0.05859375,
+          "payloadEvidenceEfficiency": 0.023316271551724138,
+          "evidenceRecall": 0.07586206896551724,
+          "mrr": 0.07586206896551724,
+          "tokensToFirstEvidence": 482
+        },
+        {
+          "budget": 1024,
+          "cases": 145,
+          "evidenceEfficiency": 0.2563106142241379,
+          "payloadEvidenceEfficiency": 0.06546336206896551,
+          "evidenceRecall": 0.4068965517241379,
+          "mrr": 0.3913793103448276,
+          "tokensToFirstEvidence": 761.5379310344828
+        },
+        {
+          "budget": 2048,
+          "cases": 145,
+          "evidenceEfficiency": 0.5379478717672413,
+          "payloadEvidenceEfficiency": 0.34742389547413793,
+          "evidenceRecall": 0.7172413793103448,
+          "mrr": 0.6565517241379312,
+          "tokensToFirstEvidence": 946.2827586206896
+        },
+        {
+          "budget": 4096,
+          "cases": 145,
+          "evidenceEfficiency": 0.6936590786637931,
+          "payloadEvidenceEfficiency": 0.5788422683189656,
+          "evidenceRecall": 0.8827586206896552,
+          "mrr": 0.7147783251231525,
+          "tokensToFirstEvidence": 1254.7724137931034
+        },
+        {
+          "budget": 8192,
+          "cases": 145,
+          "evidenceEfficiency": 0.8001742658943966,
+          "payloadEvidenceEfficiency": 0.7408581963900862,
+          "evidenceRecall": 0.9310344827586207,
+          "mrr": 0.7221485793899586,
+          "tokensToFirstEvidence": 1636.9724137931034
+        },
+        {
+          "budget": 16384,
+          "cases": 145,
+          "evidenceEfficiency": 0.8718105973868534,
+          "payloadEvidenceEfficiency": 0.8415123248922414,
+          "evidenceRecall": 0.9448275862068966,
+          "mrr": 0.7235418221625117,
+          "tokensToFirstEvidence": 2100.255172413793
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-512-64\",\"retriever\":{\"kind\":\"hybrid-rrf\",\"embeddingModel\":\"text-embedding-3-large\",\"rrfK\":60,\"vectorWeight\":0.25,\"bm25Weight\":0.75},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"}}",
+      "label": "Hybrid text-embedding-3-large v0.25:b0.75",
+      "strategyId": "fixed-token-cl100k_base-512-64",
+      "retriever": {
+        "kind": "hybrid-rrf",
+        "embeddingModel": "text-embedding-3-large",
+        "rrfK": 60,
+        "vectorWeight": 0.25,
+        "bm25Weight": 0.75
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-weighted-hybrid-v2-ae6ccfcc34835be8.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 145,
+          "evidenceEfficiency": 0.2573679956896552,
+          "payloadEvidenceEfficiency": 0.0037311422413793104,
+          "evidenceRecall": 0.496551724137931,
+          "mrr": 0.496551724137931,
+          "tokensToFirstEvidence": 380.22758620689655
+        },
+        {
+          "budget": 1024,
+          "cases": 145,
+          "evidenceEfficiency": 0.43355334051724137,
+          "payloadEvidenceEfficiency": 0.25590651939655173,
+          "evidenceRecall": 0.6896551724137931,
+          "mrr": 0.593103448275862,
+          "tokensToFirstEvidence": 580.0413793103448
+        },
+        {
+          "budget": 2048,
+          "cases": 145,
+          "evidenceEfficiency": 0.5858600484913793,
+          "payloadEvidenceEfficiency": 0.4892948545258621,
+          "evidenceRecall": 0.7655172413793103,
+          "mrr": 0.6172413793103447,
+          "tokensToFirstEvidence": 848.1586206896552
+        },
+        {
+          "budget": 4096,
+          "cases": 145,
+          "evidenceEfficiency": 0.7023656384698276,
+          "payloadEvidenceEfficiency": 0.6484391837284482,
+          "evidenceRecall": 0.8689655172413793,
+          "mrr": 0.6332676518883416,
+          "tokensToFirstEvidence": 1219.1103448275862
+        },
+        {
+          "budget": 8192,
+          "cases": 145,
+          "evidenceEfficiency": 0.798822231950431,
+          "payloadEvidenceEfficiency": 0.7705709523168104,
+          "evidenceRecall": 0.9241379310344827,
+          "mrr": 0.6375764561109388,
+          "tokensToFirstEvidence": 1648.048275862069
+        },
+        {
+          "budget": 16384,
+          "cases": 145,
+          "evidenceEfficiency": 0.8767742288523707,
+          "payloadEvidenceEfficiency": 0.8621451542295259,
+          "evidenceRecall": 0.9586206896551724,
+          "mrr": 0.6393789508535427,
+          "tokensToFirstEvidence": 2018.9310344827586
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-1024-128\",\"retriever\":{\"kind\":\"hybrid-rrf\",\"embeddingModel\":\"voyage-4-large\",\"rrfK\":60},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"}}",
+      "label": "Hybrid voyage-4-large v1:b1",
+      "strategyId": "fixed-token-cl100k_base-1024-128",
+      "retriever": {
+        "kind": "hybrid-rrf",
+        "embeddingModel": "voyage-4-large",
+        "rrfK": 60
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-text-retrieval-v2-7e926e58f70352fd.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 145,
+          "evidenceEfficiency": 0.007960668103448277,
+          "payloadEvidenceEfficiency": 0.004027478448275862,
+          "evidenceRecall": 0.013793103448275862,
+          "mrr": 0.013793103448275862,
+          "tokensToFirstEvidence": 507.92413793103447
+        },
+        {
+          "budget": 1024,
+          "cases": 145,
+          "evidenceEfficiency": 0.3625404094827586,
+          "payloadEvidenceEfficiency": 0.014156788793103448,
+          "evidenceRecall": 0.6413793103448275,
+          "mrr": 0.6379310344827587,
+          "tokensToFirstEvidence": 652.7586206896551
+        },
+        {
+          "budget": 2048,
+          "cases": 145,
+          "evidenceEfficiency": 0.5363146551724138,
+          "payloadEvidenceEfficiency": 0.32789264547413793,
+          "evidenceRecall": 0.7793103448275862,
+          "mrr": 0.7057471264367816,
+          "tokensToFirstEvidence": 949.6275862068966
+        },
+        {
+          "budget": 4096,
+          "cases": 145,
+          "evidenceEfficiency": 0.6811405576508621,
+          "payloadEvidenceEfficiency": 0.5655980603448276,
+          "evidenceRecall": 0.8758620689655172,
+          "mrr": 0.7324137931034483,
+          "tokensToFirstEvidence": 1306.048275862069
+        },
+        {
+          "budget": 8192,
+          "cases": 145,
+          "evidenceEfficiency": 0.7903404498922414,
+          "payloadEvidenceEfficiency": 0.7295460668103448,
+          "evidenceRecall": 0.9103448275862069,
+          "mrr": 0.7383333333333333,
+          "tokensToFirstEvidence": 1717.5310344827585
+        },
+        {
+          "budget": 16384,
+          "cases": 145,
+          "evidenceEfficiency": 0.8579147865032327,
+          "payloadEvidenceEfficiency": 0.8273016567887931,
+          "evidenceRecall": 0.9379310344827586,
+          "mrr": 0.7406321839080459,
+          "tokensToFirstEvidence": 2327.9241379310347
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-1024-128\",\"retriever\":{\"kind\":\"vector\",\"embeddingModel\":\"voyage-4-large\"},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"}}",
+      "label": "Vector voyage-4-large",
+      "strategyId": "fixed-token-cl100k_base-1024-128",
+      "retriever": {
+        "kind": "vector",
+        "embeddingModel": "voyage-4-large"
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-text-retrieval-v2-7e926e58f70352fd.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 145,
+          "evidenceEfficiency": 0.005172413793103448,
+          "payloadEvidenceEfficiency": 0.0014008620689655172,
+          "evidenceRecall": 0.006896551724137931,
+          "mrr": 0.006896551724137931,
+          "tokensToFirstEvidence": 509.35172413793106
+        },
+        {
+          "budget": 1024,
+          "cases": 145,
+          "evidenceEfficiency": 0.39478717672413793,
+          "payloadEvidenceEfficiency": 0.012641433189655172,
+          "evidenceRecall": 0.6896551724137931,
+          "mrr": 0.6896551724137931,
+          "tokensToFirstEvidence": 619.7379310344828
+        },
+        {
+          "budget": 2048,
+          "cases": 145,
+          "evidenceEfficiency": 0.5576373922413793,
+          "payloadEvidenceEfficiency": 0.35451575969827587,
+          "evidenceRecall": 0.7586206896551724,
+          "mrr": 0.7241379310344828,
+          "tokensToFirstEvidence": 905.9586206896552
+        },
+        {
+          "budget": 4096,
+          "cases": 145,
+          "evidenceEfficiency": 0.6771400188577587,
+          "payloadEvidenceEfficiency": 0.5673727101293103,
+          "evidenceRecall": 0.8413793103448276,
+          "mrr": 0.7473563218390805,
+          "tokensToFirstEvidence": 1322.4344827586208
+        },
+        {
+          "budget": 8192,
+          "cases": 145,
+          "evidenceEfficiency": 0.7841763200431034,
+          "payloadEvidenceEfficiency": 0.7245597050107758,
+          "evidenceRecall": 0.9172413793103448,
+          "mrr": 0.7595977011494254,
+          "tokensToFirstEvidence": 1768.0275862068966
+        },
+        {
+          "budget": 16384,
+          "cases": 145,
+          "evidenceEfficiency": 0.8675250875538794,
+          "payloadEvidenceEfficiency": 0.8365133351293104,
+          "evidenceRecall": 0.9517241379310345,
+          "mrr": 0.763352490421456,
+          "tokensToFirstEvidence": 2170.4689655172415
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-512-64\",\"retriever\":{\"kind\":\"vector\",\"embeddingModel\":\"text-embedding-3-large\"},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"}}",
+      "label": "Vector text-embedding-3-large",
+      "strategyId": "fixed-token-cl100k_base-512-64",
+      "retriever": {
+        "kind": "vector",
+        "embeddingModel": "text-embedding-3-large"
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-text-retrieval-v2-7e926e58f70352fd.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 145,
+          "evidenceEfficiency": 0.2992322198275862,
+          "payloadEvidenceEfficiency": 0.002330280172413793,
+          "evidenceRecall": 0.4827586206896552,
+          "mrr": 0.4827586206896552,
+          "tokensToFirstEvidence": 358.7931034482759
+        },
+        {
+          "budget": 1024,
+          "cases": 145,
+          "evidenceEfficiency": 0.4196053340517241,
+          "payloadEvidenceEfficiency": 0.24756196120689655,
+          "evidenceRecall": 0.6068965517241379,
+          "mrr": 0.5448275862068965,
+          "tokensToFirstEvidence": 594.3241379310344
+        },
+        {
+          "budget": 2048,
+          "cases": 145,
+          "evidenceEfficiency": 0.550030307112069,
+          "payloadEvidenceEfficiency": 0.44991244612068965,
+          "evidenceRecall": 0.7103448275862069,
+          "mrr": 0.5770114942528736,
+          "tokensToFirstEvidence": 921.5379310344828
+        },
+        {
+          "budget": 4096,
+          "cases": 145,
+          "evidenceEfficiency": 0.6607960668103449,
+          "payloadEvidenceEfficiency": 0.6047279094827587,
+          "evidenceRecall": 0.8137931034482758,
+          "mrr": 0.5939080459770116,
+          "tokensToFirstEvidence": 1389.3793103448277
+        },
+        {
+          "budget": 8192,
+          "cases": 145,
+          "evidenceEfficiency": 0.7583487675107758,
+          "payloadEvidenceEfficiency": 0.7278614964978448,
+          "evidenceRecall": 0.8758620689655172,
+          "mrr": 0.5993129093129096,
+          "tokensToFirstEvidence": 1979.606896551724
+        },
+        {
+          "budget": 16384,
+          "cases": 145,
+          "evidenceEfficiency": 0.8300793877963362,
+          "payloadEvidenceEfficiency": 0.8141706795528018,
+          "evidenceRecall": 0.9172413793103448,
+          "mrr": 0.6011354554843401,
+          "tokensToFirstEvidence": 2783.979310344828
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"structural-token-cl100k_base-1024-1280\",\"retriever\":{\"kind\":\"hybrid-rrf\",\"embeddingModel\":\"text-embedding-3-large\",\"rrfK\":60},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"}}",
+      "label": "Hybrid text-embedding-3-large v1:b1",
+      "strategyId": "structural-token-cl100k_base-1024-1280",
+      "retriever": {
+        "kind": "hybrid-rrf",
+        "embeddingModel": "text-embedding-3-large",
+        "rrfK": 60
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-text-retrieval-v2-7e926e58f70352fd.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 145,
+          "evidenceEfficiency": 0.05009428879310345,
+          "payloadEvidenceEfficiency": 0.020285560344827588,
+          "evidenceRecall": 0.06896551724137931,
+          "mrr": 0.06551724137931035,
+          "tokensToFirstEvidence": 486.35172413793106
+        },
+        {
+          "budget": 1024,
+          "cases": 145,
+          "evidenceEfficiency": 0.20055899784482759,
+          "payloadEvidenceEfficiency": 0.06555765086206897,
+          "evidenceRecall": 0.3310344827586207,
+          "mrr": 0.32413793103448274,
+          "tokensToFirstEvidence": 818.6275862068966
+        },
+        {
+          "budget": 2048,
+          "cases": 145,
+          "evidenceEfficiency": 0.459991244612069,
+          "payloadEvidenceEfficiency": 0.2941742995689655,
+          "evidenceRecall": 0.6551724137931034,
+          "mrr": 0.5545977011494253,
+          "tokensToFirstEvidence": 1105.9379310344827
+        },
+        {
+          "budget": 4096,
+          "cases": 145,
+          "evidenceEfficiency": 0.6243096713362069,
+          "payloadEvidenceEfficiency": 0.5200228987068966,
+          "evidenceRecall": 0.8068965517241379,
+          "mrr": 0.6132183908045977,
+          "tokensToFirstEvidence": 1538.8275862068965
+        },
+        {
+          "budget": 8192,
+          "cases": 145,
+          "evidenceEfficiency": 0.7472428946659483,
+          "payloadEvidenceEfficiency": 0.689911099137931,
+          "evidenceRecall": 0.896551724137931,
+          "mrr": 0.628098223615465,
+          "tokensToFirstEvidence": 2070.5862068965516
+        },
+        {
+          "budget": 16384,
+          "cases": 145,
+          "evidenceEfficiency": 0.8387110216864224,
+          "payloadEvidenceEfficiency": 0.808202704067888,
+          "evidenceRecall": 0.9517241379310345,
+          "mrr": 0.6326155453741661,
+          "tokensToFirstEvidence": 2642.558620689655
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-512-64\",\"retriever\":{\"kind\":\"bm25\"},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"}}",
+      "label": "BM25",
+      "strategyId": "fixed-token-cl100k_base-512-64",
+      "retriever": {
+        "kind": "bm25"
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-text-retrieval-v2-7e926e58f70352fd.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 145,
+          "evidenceEfficiency": 0.21082974137931035,
+          "payloadEvidenceEfficiency": 0.0037580818965517243,
+          "evidenceRecall": 0.42758620689655175,
+          "mrr": 0.42758620689655175,
+          "tokensToFirstEvidence": 404.0551724137931
+        },
+        {
+          "budget": 1024,
+          "cases": 145,
+          "evidenceEfficiency": 0.36141567887931036,
+          "payloadEvidenceEfficiency": 0.2195514547413793,
+          "evidenceRecall": 0.5793103448275863,
+          "mrr": 0.503448275862069,
+          "tokensToFirstEvidence": 653.9103448275862
+        },
+        {
+          "budget": 2048,
+          "cases": 145,
+          "evidenceEfficiency": 0.49076306573275863,
+          "payloadEvidenceEfficiency": 0.4104222790948276,
+          "evidenceRecall": 0.6551724137931034,
+          "mrr": 0.5258620689655172,
+          "tokensToFirstEvidence": 1042.9172413793103
+        },
+        {
+          "budget": 4096,
+          "cases": 145,
+          "evidenceEfficiency": 0.6124174973060345,
+          "payloadEvidenceEfficiency": 0.563836880387931,
+          "evidenceRecall": 0.7862068965517242,
+          "mrr": 0.5473563218390806,
+          "tokensToFirstEvidence": 1587.5379310344827
+        },
+        {
+          "budget": 8192,
+          "cases": 145,
+          "evidenceEfficiency": 0.7250984981142241,
+          "payloadEvidenceEfficiency": 0.6983432112068966,
+          "evidenceRecall": 0.896551724137931,
+          "mrr": 0.5559730077225009,
+          "tokensToFirstEvidence": 2251.993103448276
+        },
+        {
+          "budget": 16384,
+          "cases": 145,
+          "evidenceEfficiency": 0.8220837823275862,
+          "payloadEvidenceEfficiency": 0.8082229088092673,
+          "evidenceRecall": 0.9310344827586207,
+          "mrr": 0.5574776467549277,
+          "tokensToFirstEvidence": 2914.979310344828
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-1024-128\",\"retriever\":{\"kind\":\"hybrid-rrf\",\"embeddingModel\":\"text-embedding-3-large\",\"rrfK\":60},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"}}",
+      "label": "Hybrid text-embedding-3-large v1:b1",
+      "strategyId": "fixed-token-cl100k_base-1024-128",
+      "retriever": {
+        "kind": "hybrid-rrf",
+        "embeddingModel": "text-embedding-3-large",
+        "rrfK": 60
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-text-retrieval-v2-7e926e58f70352fd.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 145,
+          "evidenceEfficiency": 0.007960668103448277,
+          "payloadEvidenceEfficiency": 0.004027478448275862,
+          "evidenceRecall": 0.013793103448275862,
+          "mrr": 0.013793103448275862,
+          "tokensToFirstEvidence": 507.92413793103447
+        },
+        {
+          "budget": 1024,
+          "cases": 145,
+          "evidenceEfficiency": 0.27631330818965516,
+          "payloadEvidenceEfficiency": 0.008519665948275862,
+          "evidenceRecall": 0.503448275862069,
+          "mrr": 0.5,
+          "tokensToFirstEvidence": 741.0551724137931
+        },
+        {
+          "budget": 2048,
+          "cases": 145,
+          "evidenceEfficiency": 0.42373383620689653,
+          "payloadEvidenceEfficiency": 0.2591998922413793,
+          "evidenceRecall": 0.6482758620689655,
+          "mrr": 0.5712643678160919,
+          "tokensToFirstEvidence": 1180.193103448276
+        },
+        {
+          "budget": 4096,
+          "cases": 145,
+          "evidenceEfficiency": 0.5807852909482759,
+          "payloadEvidenceEfficiency": 0.4836863550646552,
+          "evidenceRecall": 0.8,
+          "mrr": 0.6174712643678161,
+          "tokensToFirstEvidence": 1717.103448275862
+        },
+        {
+          "budget": 8192,
+          "cases": 145,
+          "evidenceEfficiency": 0.7218842605064655,
+          "payloadEvidenceEfficiency": 0.6663835196659482,
+          "evidenceRecall": 0.8896551724137931,
+          "mrr": 0.6326299945265463,
+          "tokensToFirstEvidence": 2278.3241379310343
+        },
+        {
+          "budget": 16384,
+          "cases": 145,
+          "evidenceEfficiency": 0.8115251212284482,
+          "payloadEvidenceEfficiency": 0.7828912143049569,
+          "evidenceRecall": 0.9172413793103448,
+          "mrr": 0.6345818070818072,
+          "tokensToFirstEvidence": 3087.9724137931034
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"structural-token-cl100k_base-1024-1280\",\"retriever\":{\"kind\":\"vector\",\"embeddingModel\":\"text-embedding-3-large\"},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"}}",
+      "label": "Vector text-embedding-3-large",
+      "strategyId": "structural-token-cl100k_base-1024-1280",
+      "retriever": {
+        "kind": "vector",
+        "embeddingModel": "text-embedding-3-large"
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-text-retrieval-v2-7e926e58f70352fd.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 145,
+          "evidenceEfficiency": 0.053098060344827586,
+          "payloadEvidenceEfficiency": 0.02265625,
+          "evidenceRecall": 0.06896551724137931,
+          "mrr": 0.06896551724137931,
+          "tokensToFirstEvidence": 484.8137931034483
+        },
+        {
+          "budget": 1024,
+          "cases": 145,
+          "evidenceEfficiency": 0.19799973060344828,
+          "payloadEvidenceEfficiency": 0.06815059267241379,
+          "evidenceRecall": 0.31724137931034485,
+          "mrr": 0.30574712643678165,
+          "tokensToFirstEvidence": 821.248275862069
+        },
+        {
+          "budget": 2048,
+          "cases": 145,
+          "evidenceEfficiency": 0.4174232219827586,
+          "payloadEvidenceEfficiency": 0.28217941810344827,
+          "evidenceRecall": 0.5793103448275863,
+          "mrr": 0.5201149425287357,
+          "tokensToFirstEvidence": 1193.1172413793104
+        },
+        {
+          "budget": 4096,
+          "cases": 145,
+          "evidenceEfficiency": 0.5594659213362069,
+          "payloadEvidenceEfficiency": 0.4718952047413793,
+          "evidenceRecall": 0.7172413793103448,
+          "mrr": 0.566551724137931,
+          "tokensToFirstEvidence": 1804.4275862068966
+        },
+        {
+          "budget": 8192,
+          "cases": 145,
+          "evidenceEfficiency": 0.6743096713362069,
+          "payloadEvidenceEfficiency": 0.6225055563038793,
+          "evidenceRecall": 0.8137931034482758,
+          "mrr": 0.5825396825396826,
+          "tokensToFirstEvidence": 2668.055172413793
+        },
+        {
+          "budget": 16384,
+          "cases": 145,
+          "evidenceEfficiency": 0.7691515692349138,
+          "payloadEvidenceEfficiency": 0.7403459220096983,
+          "evidenceRecall": 0.903448275862069,
+          "mrr": 0.589685748103598,
+          "tokensToFirstEvidence": 3782.2206896551725
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"structural-token-cl100k_base-1024-1280\",\"retriever\":{\"kind\":\"bm25\"},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"}}",
+      "label": "BM25",
+      "strategyId": "structural-token-cl100k_base-1024-1280",
+      "retriever": {
+        "kind": "bm25"
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-text-retrieval-v2-7e926e58f70352fd.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 145,
+          "evidenceEfficiency": 0.04018049568965517,
+          "payloadEvidenceEfficiency": 0.019329202586206896,
+          "evidenceRecall": 0.05517241379310345,
+          "mrr": 0.05517241379310345,
+          "tokensToFirstEvidence": 491.42758620689654
+        },
+        {
+          "budget": 1024,
+          "cases": 145,
+          "evidenceEfficiency": 0.19580414870689655,
+          "payloadEvidenceEfficiency": 0.06427801724137931,
+          "evidenceRecall": 0.32413793103448274,
+          "mrr": 0.3120689655172414,
+          "tokensToFirstEvidence": 823.4965517241379
+        },
+        {
+          "budget": 2048,
+          "cases": 145,
+          "evidenceEfficiency": 0.3953562769396552,
+          "payloadEvidenceEfficiency": 0.2585095635775862,
+          "evidenceRecall": 0.5586206896551724,
+          "mrr": 0.48298850574712643,
+          "tokensToFirstEvidence": 1238.3103448275863
+        },
+        {
+          "budget": 4096,
+          "cases": 145,
+          "evidenceEfficiency": 0.5180108432112069,
+          "payloadEvidenceEfficiency": 0.4342537715517241,
+          "evidenceRecall": 0.6620689655172414,
+          "mrr": 0.5167816091954023,
+          "tokensToFirstEvidence": 1974.2275862068966
+        },
+        {
+          "budget": 8192,
+          "cases": 145,
+          "evidenceEfficiency": 0.6329690867456896,
+          "payloadEvidenceEfficiency": 0.5835432381465517,
+          "evidenceRecall": 0.7655172413793103,
+          "mrr": 0.5339272030651341,
+          "tokensToFirstEvidence": 3006.7172413793105
+        },
+        {
+          "budget": 16384,
+          "cases": 145,
+          "evidenceEfficiency": 0.7378662109375,
+          "payloadEvidenceEfficiency": 0.7104408001077587,
+          "evidenceRecall": 0.8758620689655172,
+          "mrr": 0.5430293298092488,
+          "tokensToFirstEvidence": 4294.8
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-1024-128\",\"retriever\":{\"kind\":\"vector\",\"embeddingModel\":\"text-embedding-3-large\"},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"}}",
+      "label": "Vector text-embedding-3-large",
+      "strategyId": "fixed-token-cl100k_base-1024-128",
+      "retriever": {
+        "kind": "vector",
+        "embeddingModel": "text-embedding-3-large"
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-text-retrieval-v2-7e926e58f70352fd.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 145,
+          "evidenceEfficiency": 0.007960668103448277,
+          "payloadEvidenceEfficiency": 0.004027478448275862,
+          "evidenceRecall": 0.013793103448275862,
+          "mrr": 0.013793103448275862,
+          "tokensToFirstEvidence": 507.92413793103447
+        },
+        {
+          "budget": 1024,
+          "cases": 145,
+          "evidenceEfficiency": 0.21431842672413792,
+          "payloadEvidenceEfficiency": 0.009300915948275862,
+          "evidenceRecall": 0.4068965517241379,
+          "mrr": 0.4068965517241379,
+          "tokensToFirstEvidence": 804.5379310344828
+        },
+        {
+          "budget": 2048,
+          "cases": 145,
+          "evidenceEfficiency": 0.3591864224137931,
+          "payloadEvidenceEfficiency": 0.21478987068965516,
+          "evidenceRecall": 0.5793103448275863,
+          "mrr": 0.49310344827586206,
+          "tokensToFirstEvidence": 1312.3862068965518
+        },
+        {
+          "budget": 4096,
+          "cases": 145,
+          "evidenceEfficiency": 0.49625707165948274,
+          "payloadEvidenceEfficiency": 0.4143975619612069,
+          "evidenceRecall": 0.6689655172413793,
+          "mrr": 0.5197701149425288,
+          "tokensToFirstEvidence": 2063.3310344827587
+        },
+        {
+          "budget": 8192,
+          "cases": 145,
+          "evidenceEfficiency": 0.6086417362607759,
+          "payloadEvidenceEfficiency": 0.5614535627693965,
+          "evidenceRecall": 0.7586206896551724,
+          "mrr": 0.5339244663382595,
+          "tokensToFirstEvidence": 3206.006896551724
+        },
+        {
+          "budget": 16384,
+          "cases": 145,
+          "evidenceEfficiency": 0.7226953966864225,
+          "payloadEvidenceEfficiency": 0.6967672413793103,
+          "evidenceRecall": 0.8620689655172413,
+          "mrr": 0.543394115463081,
+          "tokensToFirstEvidence": 4543.358620689655
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-1024-128\",\"retriever\":{\"kind\":\"bm25\"},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"}}",
+      "label": "BM25",
+      "strategyId": "fixed-token-cl100k_base-1024-128",
+      "retriever": {
+        "kind": "bm25"
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-text-retrieval-v2-7e926e58f70352fd.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 145,
+          "evidenceEfficiency": 0.005172413793103448,
+          "payloadEvidenceEfficiency": 0.0014008620689655172,
+          "evidenceRecall": 0.006896551724137931,
+          "mrr": 0.006896551724137931,
+          "tokensToFirstEvidence": 509.35172413793106
+        },
+        {
+          "budget": 1024,
+          "cases": 145,
+          "evidenceEfficiency": 0.2429956896551724,
+          "payloadEvidenceEfficiency": 0.007758620689655172,
+          "evidenceRecall": 0.4482758620689655,
+          "mrr": 0.4482758620689655,
+          "tokensToFirstEvidence": 775.1724137931035
+        },
+        {
+          "budget": 2048,
+          "cases": 145,
+          "evidenceEfficiency": 0.3786200161637931,
+          "payloadEvidenceEfficiency": 0.23146551724137931,
+          "evidenceRecall": 0.5655172413793104,
+          "mrr": 0.5051724137931034,
+          "tokensToFirstEvidence": 1272.5862068965516
+        },
+        {
+          "budget": 4096,
+          "cases": 145,
+          "evidenceEfficiency": 0.488427734375,
+          "payloadEvidenceEfficiency": 0.40354088092672413,
+          "evidenceRecall": 0.6689655172413793,
+          "mrr": 0.5321839080459769,
+          "tokensToFirstEvidence": 2095.4
+        },
+        {
+          "budget": 8192,
+          "cases": 145,
+          "evidenceEfficiency": 0.607806606950431,
+          "payloadEvidenceEfficiency": 0.5595618938577587,
+          "evidenceRecall": 0.7517241379310344,
+          "mrr": 0.5467980295566502,
+          "tokensToFirstEvidence": 3212.848275862069
+        },
+        {
+          "budget": 16384,
+          "cases": 145,
+          "evidenceEfficiency": 0.7100665914601293,
+          "payloadEvidenceEfficiency": 0.6836834085398706,
+          "evidenceRecall": 0.8620689655172413,
+          "mrr": 0.5557902920833957,
+          "tokensToFirstEvidence": 4750.268965517242
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-256-32\",\"retriever\":{\"kind\":\"random\",\"seed\":42},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"}}",
+      "label": "Random seed 42",
+      "strategyId": "fixed-token-cl100k_base-256-32",
+      "retriever": {
+        "kind": "random",
+        "seed": 42
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-text-retrieval-v2-7e926e58f70352fd.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 145,
+          "evidenceEfficiency": 0.006681034482758621,
+          "payloadEvidenceEfficiency": 0.0034482758620689655,
+          "evidenceRecall": 0.013793103448275862,
+          "mrr": 0.010344827586206896,
+          "tokensToFirstEvidence": 508.5793103448276
+        },
+        {
+          "budget": 1024,
+          "cases": 145,
+          "evidenceEfficiency": 0.01521417025862069,
+          "payloadEvidenceEfficiency": 0.01206896551724138,
+          "evidenceRecall": 0.027586206896551724,
+          "mrr": 0.014942528735632184,
+          "tokensToFirstEvidence": 1008.4206896551724
+        },
+        {
+          "budget": 2048,
+          "cases": 145,
+          "evidenceEfficiency": 0.02681505926724138,
+          "payloadEvidenceEfficiency": 0.02413793103448276,
+          "evidenceRecall": 0.04827586206896552,
+          "mrr": 0.018333333333333333,
+          "tokensToFirstEvidence": 1993.0827586206897
+        },
+        {
+          "budget": 4096,
+          "cases": 145,
+          "evidenceEfficiency": 0.04023269127155173,
+          "payloadEvidenceEfficiency": 0.03879310344827586,
+          "evidenceRecall": 0.05517241379310345,
+          "mrr": 0.019022988505747126,
+          "tokensToFirstEvidence": 3931.206896551724
+        },
+        {
+          "budget": 8192,
+          "cases": 145,
+          "evidenceEfficiency": 0.06099811422413793,
+          "payloadEvidenceEfficiency": 0.05954505657327586,
+          "evidenceRecall": 0.09655172413793103,
+          "mrr": 0.02091823320480833,
+          "tokensToFirstEvidence": 7692.303448275862
+        },
+        {
+          "budget": 16384,
+          "cases": 145,
+          "evidenceEfficiency": 0.08946617389547414,
+          "payloadEvidenceEfficiency": 0.08850223935883621,
+          "evidenceRecall": 0.1310344827586207,
+          "mrr": 0.021672325855452708,
+          "tokensToFirstEvidence": 14918.186206896551
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-512-64\",\"retriever\":{\"kind\":\"random\",\"seed\":42},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"}}",
+      "label": "Random seed 42",
+      "strategyId": "fixed-token-cl100k_base-512-64",
+      "retriever": {
+        "kind": "random",
+        "seed": 42
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-text-retrieval-v2-7e926e58f70352fd.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 145,
+          "evidenceEfficiency": 0,
+          "payloadEvidenceEfficiency": 0,
+          "evidenceRecall": 0,
+          "mrr": 0,
+          "tokensToFirstEvidence": 512
+        },
+        {
+          "budget": 1024,
+          "cases": 145,
+          "evidenceEfficiency": 0.0005859375,
+          "payloadEvidenceEfficiency": 0,
+          "evidenceRecall": 0.006896551724137931,
+          "mrr": 0.0034482758620689655,
+          "tokensToFirstEvidence": 1023.4
+        },
+        {
+          "budget": 2048,
+          "cases": 145,
+          "evidenceEfficiency": 0.0037412446120689657,
+          "payloadEvidenceEfficiency": 0.0034482758620689655,
+          "evidenceRecall": 0.006896551724137931,
+          "mrr": 0.0034482758620689655,
+          "tokensToFirstEvidence": 2040.3379310344828
+        },
+        {
+          "budget": 4096,
+          "cases": 145,
+          "evidenceEfficiency": 0.01455078125,
+          "payloadEvidenceEfficiency": 0.01228785021551724,
+          "evidenceRecall": 0.05517241379310345,
+          "mrr": 0.01050903119868637,
+          "tokensToFirstEvidence": 4036.4
+        },
+        {
+          "budget": 8192,
+          "cases": 145,
+          "evidenceEfficiency": 0.039445548221982756,
+          "payloadEvidenceEfficiency": 0.037209556842672416,
+          "evidenceRecall": 0.0896551724137931,
+          "mrr": 0.012888864009553663,
+          "tokensToFirstEvidence": 7868.862068965517
+        },
+        {
+          "budget": 16384,
+          "cases": 145,
+          "evidenceEfficiency": 0.09949193494073276,
+          "payloadEvidenceEfficiency": 0.09625580886314655,
+          "evidenceRecall": 0.20689655172413793,
+          "mrr": 0.018009213449915462,
+          "tokensToFirstEvidence": 14753.924137931035
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"structural-token-cl100k_base-1024-1280\",\"retriever\":{\"kind\":\"random\",\"seed\":42},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"}}",
+      "label": "Random seed 42",
+      "strategyId": "structural-token-cl100k_base-1024-1280",
+      "retriever": {
+        "kind": "random",
+        "seed": 42
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-text-retrieval-v2-7e926e58f70352fd.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 145,
+          "evidenceEfficiency": 0,
+          "payloadEvidenceEfficiency": 0,
+          "evidenceRecall": 0,
+          "mrr": 0,
+          "tokensToFirstEvidence": 512
+        },
+        {
+          "budget": 1024,
+          "cases": 145,
+          "evidenceEfficiency": 0.0017039331896551723,
+          "payloadEvidenceEfficiency": 0.000060614224137931034,
+          "evidenceRecall": 0.006896551724137931,
+          "mrr": 0.006896551724137931,
+          "tokensToFirstEvidence": 1022.255172413793
+        },
+        {
+          "budget": 2048,
+          "cases": 145,
+          "evidenceEfficiency": 0.00900457974137931,
+          "payloadEvidenceEfficiency": 0.0048188308189655174,
+          "evidenceRecall": 0.027586206896551724,
+          "mrr": 0.015517241379310345,
+          "tokensToFirstEvidence": 2029.558620689655
+        },
+        {
+          "budget": 4096,
+          "cases": 145,
+          "evidenceEfficiency": 0.01927027209051724,
+          "payloadEvidenceEfficiency": 0.01530004040948276,
+          "evidenceRecall": 0.041379310344827586,
+          "mrr": 0.01896551724137931,
+          "tokensToFirstEvidence": 4017.0689655172414
+        },
+        {
+          "budget": 8192,
+          "cases": 145,
+          "evidenceEfficiency": 0.03763048895474138,
+          "payloadEvidenceEfficiency": 0.033576070851293105,
+          "evidenceRecall": 0.07586206896551724,
+          "mrr": 0.023451261382295863,
+          "tokensToFirstEvidence": 7883.731034482758
+        },
+        {
+          "budget": 16384,
+          "cases": 145,
+          "evidenceEfficiency": 0.07802187163254311,
+          "payloadEvidenceEfficiency": 0.07286713698814655,
+          "evidenceRecall": 0.15862068965517243,
+          "mrr": 0.02966218253236509,
+          "tokensToFirstEvidence": 15105.689655172413
+        }
+      ]
+    },
+    {
+      "id": "{\"strategyId\":\"fixed-token-cl100k_base-1024-128\",\"retriever\":{\"kind\":\"random\",\"seed\":42},\"queryMode\":\"question\",\"contextPolicy\":{\"kind\":\"chunks\"}}",
+      "label": "Random seed 42",
+      "strategyId": "fixed-token-cl100k_base-1024-128",
+      "retriever": {
+        "kind": "random",
+        "seed": 42
+      },
+      "queryMode": "question",
+      "contextPolicy": {
+        "kind": "chunks"
+      },
+      "sourceRun": "C:\\Users\\conne\\dev\\book-rag-eval\\.rag-eval\\runs\\six-book-text-retrieval-v2-7e926e58f70352fd.json",
+      "curve": [
+        {
+          "budget": 512,
+          "cases": 145,
+          "evidenceEfficiency": 0,
+          "payloadEvidenceEfficiency": 0,
+          "evidenceRecall": 0,
+          "mrr": 0,
+          "tokensToFirstEvidence": 512
+        },
+        {
+          "budget": 1024,
+          "cases": 145,
+          "evidenceEfficiency": 0,
+          "payloadEvidenceEfficiency": 0,
+          "evidenceRecall": 0,
+          "mrr": 0,
+          "tokensToFirstEvidence": 1024
+        },
+        {
+          "budget": 2048,
+          "cases": 145,
+          "evidenceEfficiency": 0.007829337284482759,
+          "payloadEvidenceEfficiency": 0.0005825700431034482,
+          "evidenceRecall": 0.020689655172413793,
+          "mrr": 0.010344827586206896,
+          "tokensToFirstEvidence": 2031.9655172413793
+        },
+        {
+          "budget": 4096,
+          "cases": 145,
+          "evidenceEfficiency": 0.014259496228448276,
+          "payloadEvidenceEfficiency": 0.01063611260775862,
+          "evidenceRecall": 0.020689655172413793,
+          "mrr": 0.010344827586206896,
+          "tokensToFirstEvidence": 4037.593103448276
+        },
+        {
+          "budget": 8192,
+          "cases": 145,
+          "evidenceEfficiency": 0.03613617995689655,
+          "payloadEvidenceEfficiency": 0.02984240301724138,
+          "evidenceRecall": 0.08275862068965517,
+          "mrr": 0.02043513957307061,
+          "tokensToFirstEvidence": 7895.972413793103
+        },
+        {
+          "budget": 16384,
+          "cases": 145,
+          "evidenceEfficiency": 0.09564924568965517,
+          "payloadEvidenceEfficiency": 0.08899767645474138,
+          "evidenceRecall": 0.22758620689655173,
+          "mrr": 0.03186732807422463,
+          "tokensToFirstEvidence": 14816.88275862069
+        }
+      ]
+    }
+  ]
+}

@@ -104,11 +104,15 @@ Each strategy is a small module that conforms to a common interface and is regis
 
 The eval harness is independent of the desktop app and runs headless. For each (book, strategy, query set) it reports:
 
-- **Retrieval metrics** — Hit@k, MRR, coverage-aware nDCG, required-evidence
-  recall, full-evidence success, context precision, exact span coverage, and
-  tokens before the first relevant result.
-- **Answer metrics** — faithfulness and answer relevance via LLM-judge, with the judging prompt and model versioned alongside results.
-- **Operational metrics** — latency, token cost, index size.
+- **Retrieval metrics** — Evidence Efficiency over exact delivered source
+  ranges, whole-payload efficiency, Hit@budget, MRR, coverage-aware nDCG,
+  required-evidence recall, exact evidence density, and tokens to first/full
+  evidence. The standard curve is 512, 1,024, 2,048, 4,096, 8,192, and 16,384
+  tokens, with Evidence Efficiency @8,192 as the headline.
+- **Evaluation policy** — retrieval is scored deterministically against
+  canonical evidence. No LLM judge is required for the retrieval tournament.
+- **Operational metrics** — index build latency and storage, p50/p95 online
+  retrieval/reranking latency, embedding/reranking tokens, and nominal cost.
 
 Eval sets use a versioned schema. Each case records a stable canonical search
 query, within-book or library scope, answerability, dev/test split, difficulty,
@@ -118,7 +122,14 @@ images. Legacy pilot sets are validated and migrated when loaded.
 
 ## Status
 
-Early. The Electron + React shell and EPUB ingestion via the Readium Go toolkit are in place. Chunk model, strategy interface, Python sidecar wiring, overlay rendering, and the eval harness are next.
+The six-book development harness is operational. It supports fixed and
+structural token chunking; random and BM25 controls; OpenAI and Voyage dense
+retrieval; weighted hybrid RRF; Voyage reranking; local ColBERTv2; and BGE-M3
+dense, sparse, multi-vector, and hybrid modes. The current 145 text cases are
+explicitly provisional development data. Human review and a locked test split
+remain the release gate before publishing benchmark claims.
+The exact holdout procedure is documented in
+[`benchmarks/LOCKED_TEST_PROTOCOL.md`](benchmarks/LOCKED_TEST_PROTOCOL.md).
 
 ## Stack
 
@@ -161,6 +172,7 @@ npm run rag-eval -- export .rag-eval/runs/<run>.json -- --format jsonl
 npm run rag-eval -- export-eval <book-id> <set-id> benchmarks/evals/<set>.json
 npm run rag-eval -- sample-evidence benchmarks/corpora/six-book-smoke.json .rag-eval/review.json -- --per-book 25
 npm run rag-eval -- report .rag-eval/runs/<run>.json
+npm run rag-eval -- tournament .rag-eval/runs/<run>.json -- --budget 8192 --top 12
 npm run rag-eval -- plan-drafts .rag-eval/draft-generation.yaml
 npm run rag-eval -- run-drafts .rag-eval/draft-generation.yaml -- --max-usd 5
 npm run rag-eval -- retry-draft-failures .rag-eval/eval-drafts/<run>.json -- --max-usd 5 --additional-attempts 2
@@ -202,8 +214,11 @@ The first 150-candidate packet is versioned at
 `benchmarks/authoring/six-book-smoke-candidates-v1.json`.
 
 `report` writes Markdown and JSON summaries with deterministic 95% bootstrap
-intervals plus paired evidence-recall deltas against the first configured
-strategy at each context budget.
+intervals, paired evidence-recall deltas, online latency/cost distributions,
+and local index build/storage accounting. `tournament` discovers all compatible
+completed runs for the target case set and metric version, deduplicates their
+strategy cells, and emits a ranked Markdown report, full JSON curves, and an
+SVG Evidence Efficiency plot.
 
 Canonical eval drafting is configured from
 `benchmarks/authoring/draft-generation.template.yaml`. `plan-drafts` requires
@@ -242,7 +257,16 @@ the draft run, and approval revalidates the edited case against its canonical
 evidence. Set `BOOK_RAG_EVAL_ARTIFACTS_DIR` when the artifact directory is not
 the project-root `.rag-eval` directory.
 
-Python sidecar setup will be documented once it lands.
+Local ColBERTv2/BGE-M3 setup is optional and isolated in an ignored virtual
+environment:
+
+```bash
+npm run setup:retrieval-python
+```
+
+The local indexes are content-addressed under
+`.rag-eval/artifacts/local-retrieval`; they can be reused across scoring and
+reranking runs without rebuilding.
 
 ## License
 
