@@ -30,7 +30,7 @@ function retrieverKey(cell: BenchmarkResultCell): string {
 }
 
 function columnKey(cell: BenchmarkResultCell): string {
-  return `${cell.strategyId}|${retrieverKey(cell)}|${JSON.stringify(cell.contextPolicy)}`
+  return `${cell.strategyId}|${retrieverKey(cell)}|${JSON.stringify(cell.contextPolicy)}|${JSON.stringify(cell.routingPolicy ?? { kind: 'within-book' })}`
 }
 
 function resultCellKey(cell: BenchmarkResultCell): string {
@@ -41,21 +41,28 @@ function retrieverLabel(cell: BenchmarkResultCell): string {
   const reranker = cell.retriever.reranker ? ` + ${cell.retriever.reranker.model}` : ''
   const context =
     cell.contextPolicy.kind === 'neighbors' ? ` + ±${cell.contextPolicy.window} neighbor` : ''
+  const routing = !cell.routingPolicy
+    ? ''
+    : cell.routingPolicy.kind === 'flat'
+      ? ' · flat library'
+      : cell.routingPolicy.kind === 'oracle'
+        ? ' · oracle books'
+        : ` · route top ${cell.routingPolicy.topK}`
   if (cell.retriever.kind === 'random')
-    return `Random (seed ${cell.retriever.seed})${reranker}${context}`
-  if (cell.retriever.kind === 'bm25') return `BM25${reranker}${context}`
+    return `Random (seed ${cell.retriever.seed})${reranker}${context}${routing}`
+  if (cell.retriever.kind === 'bm25') return `BM25${reranker}${context}${routing}`
   if (cell.retriever.kind === 'vector') {
-    return `Vector · ${cell.retriever.embeddingModel}${reranker}${context}`
+    return `Vector · ${cell.retriever.embeddingModel}${reranker}${context}${routing}`
   }
   if (cell.retriever.kind === 'hybrid-rrf') {
-    return `Hybrid RRF · ${cell.retriever.embeddingModel}${reranker}${context}`
+    return `Hybrid RRF · ${cell.retriever.embeddingModel}${reranker}${context}${routing}`
   }
-  if (cell.retriever.kind === 'colbertv2') return `ColBERTv2${reranker}${context}`
+  if (cell.retriever.kind === 'colbertv2') return `ColBERTv2${reranker}${context}${routing}`
   const mode =
     cell.retriever.mode === 'colbert-dense-shortlist'
       ? `multi-vector top ${cell.retriever.shortlist}`
       : cell.retriever.mode.replace('hybrid-', 'hybrid ').replace('-rrf', ' RRF')
-  return `BGE-M3 · ${mode}${reranker}${context}`
+  return `BGE-M3 · ${mode}${reranker}${context}${routing}`
 }
 
 function retrieverSortKey(cell: BenchmarkResultCell): string {

@@ -9,6 +9,8 @@ import { exportEvalSetFile } from './benchmarkData'
 import { createEvidenceReviewPacket } from './evidenceSampler'
 import { writeRunReport } from './report'
 import { writeTournamentReport } from './tournamentReport'
+import { generateLibraryCases } from './libraryCaseGeneration'
+import { runLibraryExperiment } from './libraryExperimentRunner'
 import { planDraftGeneration, retryDraftFailures, runDraftGeneration } from './draftGeneration'
 import { compileApprovedDrafts, compileProvisionalDrafts } from './draftCompilation'
 import { writeDraftAudit } from './draftAudit'
@@ -61,6 +63,8 @@ function usage(): string {
     '  npm run rag-eval -- sample-evidence <corpus.json> <output.json> --per-book <count> [--library-dir <path>]',
     '  npm run rag-eval -- report <run.json> [--output <report.md>] [--bootstrap <iterations>]',
     '  npm run rag-eval -- tournament <run.json> [--output <report.md>] [--budget <tokens>] [--top <count>]',
+    '  npm run rag-eval -- generate-library-cases <corpus.json> --source-evals <dir> --output-evals <dir> --run <run.json> --max-usd <amount>',
+    '  npm run rag-eval -- run-library <experiment.yaml> --max-usd <amount> [--library-dir <path>]',
     '  npm run rag-eval -- plan-drafts <draft-generation.yaml>',
     '  npm run rag-eval -- run-drafts <draft-generation.yaml> --max-usd <amount>',
     '  npm run rag-eval -- resume-drafts <draft-generation.yaml> --max-usd <amount>',
@@ -169,6 +173,31 @@ async function main(): Promise<void> {
       Number(optionString(args, '--top') ?? 12)
     )
     process.stdout.write(`${JSON.stringify(paths, null, 2)}\n`)
+    return
+  }
+
+  if (command === 'generate-library-cases') {
+    const sourceEvalDir = optionString(args, '--source-evals')
+    const outputEvalDir = optionString(args, '--output-evals')
+    const runPath = optionString(args, '--run')
+    const maxUsd = optionString(args, '--max-usd')
+    if (!sourceEvalDir || !outputEvalDir || !runPath || maxUsd === undefined) throw new Error(usage())
+    const run = await generateLibraryCases({
+      corpusPath: target,
+      sourceEvalDir,
+      outputEvalDir,
+      runPath,
+      maxUsd: Number(maxUsd)
+    })
+    process.stdout.write(`${JSON.stringify({ status: run.status, cases: run.records.length, actualCostUsd: run.ledger.actualCostUsd }, null, 2)}\n`)
+    return
+  }
+
+  if (command === 'run-library') {
+    const maxUsd = optionString(args, '--max-usd')
+    if (maxUsd === undefined) throw new Error(usage())
+    const run = await runLibraryExperiment(target, Number(maxUsd), optionString(args, '--library-dir'))
+    process.stdout.write(`${JSON.stringify({ status: run.status, runPath: run.plan.runPath, results: run.results.length, actualCostUsd: run.ledger.actualCostUsd }, null, 2)}\n`)
     return
   }
 

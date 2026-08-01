@@ -68,6 +68,7 @@ function strategyKey(row: HeadlessResultRow): string {
     retriever: row.retriever,
     queryMode: row.queryMode ?? 'reference',
     contextPolicy: contextPolicy(row)
+    ,routingPolicy: row.routingPolicy ?? null
   })
 }
 
@@ -278,7 +279,7 @@ export async function writeTournamentReport(
     const budgets = [...new Set(items.map((item) => item.row.contextBudget))].sort((a, b) => a - b)
     return {
       id,
-      label: `${retrieverLabel(first.retriever)}${contextLabel(policy)}`,
+      label: `${retrieverLabel(first.retriever)}${contextLabel(policy)}${!first.routingPolicy ? '' : first.routingPolicy.kind === 'flat' ? ' · flat library' : first.routingPolicy.kind === 'oracle' ? ' · oracle books' : ` · route top ${first.routingPolicy.topK}`}`,
       strategyId: first.strategyId,
       retriever: first.retriever,
       queryMode: first.queryMode ?? 'reference',

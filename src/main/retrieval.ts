@@ -57,22 +57,34 @@ export function rankRandomChunks(
 
 export type RetrievalEmbeddingUsageSink = (model: EmbeddingModel, tokens: number) => void
 
-async function queryVector(
-  bookId: string,
-  set: ChunkSet,
+export async function embedRetrievalQuery(
   query: string,
-  k: number,
   embeddingModel: EmbeddingModel,
   onEmbeddingUsage?: RetrievalEmbeddingUsageSink
-): Promise<ScoredHit[]> {
+): Promise<number[]> {
   const [openaiApiKey, voyageApiKey] = await Promise.all([getOpenaiKey(), getVoyageKey()])
   if (embeddingModel.startsWith('voyage-') && !voyageApiKey) {
     throw new Error('VOYAGE_API_KEY is not set. Add it to the environment before retrieving.')
   }
   if (!embeddingModel.startsWith('voyage-') && !openaiApiKey) {
-    throw new Error('OpenAI API key is not set. Add it in Settings before retrieving.')
+    throw new Error('OPENAI_API_KEY is not set. Add it in Settings before retrieving.')
   }
+  await sidecar.ensureStarted({
+    openaiApiKey: openaiApiKey ?? undefined,
+    voyageApiKey: voyageApiKey ?? undefined
+  })
+  const queryResult = await sidecar.embed([query], embeddingModel, 'query')
+  onEmbeddingUsage?.(embeddingModel, queryResult.tokens)
+  return queryResult.embeddings[0]
+}
 
+export async function queryVectorWithEmbedding(
+  bookId: string,
+  set: ChunkSet,
+  queryVec: number[],
+  k: number,
+  embeddingModel: EmbeddingModel
+): Promise<ScoredHit[]> {
   const artifact = embeddingArtifactIdentity(
     set,
     embeddingModel,
@@ -87,14 +99,6 @@ async function queryVector(
     )
   }
 
-  await sidecar.ensureStarted({
-    openaiApiKey: openaiApiKey ?? undefined,
-    voyageApiKey: voyageApiKey ?? undefined
-  })
-  const queryResult = await sidecar.embed([query], embeddingModel, 'query')
-  onEmbeddingUsage?.(embeddingModel, queryResult.tokens)
-  const queryVec = queryResult.embeddings[0]
-
   const db = new Database(dbPath)
   sqliteVec.load(db)
   try {
@@ -108,6 +112,18 @@ async function queryVector(
   } finally {
     db.close()
   }
+}
+
+async function queryVector(
+  bookId: string,
+  set: ChunkSet,
+  query: string,
+  k: number,
+  embeddingModel: EmbeddingModel,
+  onEmbeddingUsage?: RetrievalEmbeddingUsageSink
+): Promise<ScoredHit[]> {
+  const queryVec = await embedRetrievalQuery(query, embeddingModel, onEmbeddingUsage)
+  return queryVectorWithEmbedding(bookId, set, queryVec, k, embeddingModel)
 }
 
 // Reciprocal Rank Fusion: each result earns 1/(k+rank) from each ranked list

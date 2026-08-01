@@ -128,6 +128,12 @@ export interface HeadlessResultRow {
   queryMode?: ExperimentQueryMode
   retrievalQuery?: string
   contextPolicy?: ExperimentContextPolicy
+  routingPolicy?:
+    | { kind: 'flat' }
+    | { kind: 'oracle' }
+    | { kind: 'bge-profile'; topK: number }
+  routedBookIds?: string[]
+  routingMetrics?: { requiredBookRecall: number; allRequiredBooks: boolean }
   contextBudget: number
   retrievedChunkIds: string[]
   retrievedTokens: number

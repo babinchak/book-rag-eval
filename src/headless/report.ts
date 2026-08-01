@@ -52,11 +52,14 @@ export interface ReportGroup {
   retriever: string
   queryMode: ExperimentQueryMode
   contextPolicy: string
+  routingPolicy: string
   contextBudget: number
   cases: number
   isBaseline: boolean
   metrics: Record<ReportMetric, ConfidenceEstimate>
   evidenceRecallDeltaFromBaseline: ConfidenceEstimate
+  requiredBookRecall: ConfidenceEstimate
+  allRequiredBooks: ConfidenceEstimate
 }
 
 export interface DistributionSummary {
@@ -70,6 +73,7 @@ export interface QueryPerformanceGroup {
   strategyId: string
   retriever: string
   queryMode: ExperimentQueryMode
+  routingPolicy: string
   queries: number
   retrievalLatencyMs: DistributionSummary
   rerankLatencyMs: DistributionSummary
@@ -135,12 +139,20 @@ function retrieverLabel(retriever: ExperimentRetriever): string {
 }
 
 function groupId(row: HeadlessResultRow): string {
-  return `${row.strategyId}|${retrieverLabel(row.retriever)}|${row.queryMode ?? 'reference'}|${contextPolicyLabel(row.contextPolicy)}|${row.contextBudget}`
+  return `${row.strategyId}|${retrieverLabel(row.retriever)}|${row.queryMode ?? 'reference'}|${contextPolicyLabel(row.contextPolicy)}|${routingPolicyLabel(row)}|${row.contextBudget}`
 }
 
 function contextPolicyLabel(policy?: ExperimentContextPolicy): string {
   if (!policy || policy.kind === 'chunks') return 'chunks'
   return `neighbors:${policy.window}`
+}
+
+function routingPolicyLabel(row: HeadlessResultRow): string {
+  const policy = row.routingPolicy
+  if (!policy) return row.scope === 'library' ? 'library-unspecified' : 'within-book'
+  if (policy.kind === 'flat') return 'flat-library'
+  if (policy.kind === 'oracle') return 'oracle-books'
+  return `bge-profile-top${policy.topK}`
 }
 
 function caseId(row: HeadlessResultRow): string {
@@ -182,7 +194,7 @@ function queryIdOf(row: HeadlessResultRow): string {
 }
 
 function queryPerformanceGroupId(row: HeadlessResultRow): string {
-  return `${row.strategyId}|${retrieverLabel(row.retriever)}|${row.queryMode ?? 'reference'}`
+  return `${row.strategyId}|${retrieverLabel(row.retriever)}|${row.queryMode ?? 'reference'}|${routingPolicyLabel(row)}`
 }
 
 export function bootstrapMean(
@@ -234,7 +246,7 @@ export function summarizeRun(run: HeadlessRun, bootstrapIterations = 2000): Expe
 
   const baselineByRetrieverBudgetAndQuery = new Map<string, HeadlessResultRow[]>()
   for (const row of run.results) {
-    const baselineKey = `${retrieverLabel(row.retriever)}|${row.contextBudget}|${row.queryMode ?? 'reference'}|${contextPolicyLabel(row.contextPolicy)}`
+    const baselineKey = `${retrieverLabel(row.retriever)}|${row.contextBudget}|${row.queryMode ?? 'reference'}|${contextPolicyLabel(row.contextPolicy)}|${routingPolicyLabel(row)}`
     if (!baselineByRetrieverBudgetAndQuery.has(baselineKey)) {
       baselineByRetrieverBudgetAndQuery.set(baselineKey, rowsByGroup.get(groupId(row))!)
     }
@@ -257,7 +269,7 @@ export function summarizeRun(run: HeadlessRun, bootstrapIterations = 2000): Expe
 
     const baselineRows =
       baselineByRetrieverBudgetAndQuery.get(
-        `${retrieverLabel(first.retriever)}|${first.contextBudget}|${first.queryMode ?? 'reference'}|${contextPolicyLabel(first.contextPolicy)}`
+        `${retrieverLabel(first.retriever)}|${first.contextBudget}|${first.queryMode ?? 'reference'}|${contextPolicyLabel(first.contextPolicy)}|${routingPolicyLabel(first)}`
       ) ?? []
     const baseline = new Map(
       baselineRows.flatMap((row) => {
@@ -277,6 +289,7 @@ export function summarizeRun(run: HeadlessRun, bootstrapIterations = 2000): Expe
       retriever: retrieverLabel(first.retriever),
       queryMode: first.queryMode ?? 'reference',
       contextPolicy: contextPolicyLabel(first.contextPolicy),
+      routingPolicy: routingPolicyLabel(first),
       contextBudget: first.contextBudget,
       cases: new Set(rows.map(caseId)).size,
       isBaseline: baselineRows.length > 0 && groupId(first) === groupId(baselineRows[0]),
@@ -285,6 +298,16 @@ export function summarizeRun(run: HeadlessRun, bootstrapIterations = 2000): Expe
         pairedDeltas,
         bootstrapIterations,
         `${run.fingerprint}|${id}|paired-evidence-recall`
+      ),
+      requiredBookRecall: bootstrapMean(
+        rows.flatMap((row) => row.routingMetrics ? [row.routingMetrics.requiredBookRecall] : []),
+        bootstrapIterations,
+        `${run.fingerprint}|${id}|required-book-recall`
+      ),
+      allRequiredBooks: bootstrapMean(
+        rows.flatMap((row) => row.routingMetrics ? [row.routingMetrics.allRequiredBooks ? 1 : 0] : []),
+        bootstrapIterations,
+        `${run.fingerprint}|${id}|all-required-books`
       )
     })
   }
@@ -359,6 +382,7 @@ export function summarizeRun(run: HeadlessRun, bootstrapIterations = 2000): Expe
       strategyId: first.strategyId,
       retriever: retrieverLabel(first.retriever),
       queryMode: first.queryMode ?? 'reference',
+      routingPolicy: routingPolicyLabel(first),
       queries: queryRows.size,
       retrievalLatencyMs: distribution(retrievalLatencies),
       rerankLatencyMs: distribution(rerankLatencies),
@@ -395,6 +419,7 @@ export function summarizeRun(run: HeadlessRun, bootstrapIterations = 2000): Expe
         left.contextBudget - right.contextBudget ||
         left.queryMode.localeCompare(right.queryMode) ||
         left.contextPolicy.localeCompare(right.contextPolicy) ||
+        left.routingPolicy.localeCompare(right.routingPolicy) ||
         left.retriever.localeCompare(right.retriever) ||
         left.strategyId.localeCompare(right.strategyId)
     )
@@ -482,12 +507,12 @@ export function reportMarkdown(report: ExperimentReport): string {
       '',
       'Latencies are wall-clock measurements from this machine. Cached executions retain the original measurement; API prices are nominal pinned rates.',
       '',
-      '| Chunking strategy | Retriever | Query | Queries | Retrieval p50 | Retrieval p95 | Rerank p50 | Rerank p95 | Total p50 | Total p95 | Nominal query cost | Mean/query |',
-      '| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |'
+      '| Chunking strategy | Retriever | Routing | Query | Queries | Retrieval p50 | Retrieval p95 | Rerank p50 | Rerank p95 | Total p50 | Total p95 | Nominal query cost | Mean/query |',
+      '| --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |'
     )
     for (const item of report.queryPerformance) {
       lines.push(
-        `| ${item.strategyId} | ${item.retriever} | ${item.queryMode} | ${item.queries} | ${fixed(item.retrievalLatencyMs.p50, 1)} ms | ${fixed(item.retrievalLatencyMs.p95, 1)} ms | ${fixed(item.rerankLatencyMs.p50, 1)} ms | ${fixed(item.rerankLatencyMs.p95, 1)} ms | ${fixed(item.totalLatencyMs.p50, 1)} ms | ${fixed(item.totalLatencyMs.p95, 1)} ms | $${item.nominalTotalQueryCostUsd.toFixed(6)} | $${item.meanNominalCostPerQueryUsd.toFixed(8)} |`
+        `| ${item.strategyId} | ${item.retriever} | ${item.routingPolicy} | ${item.queryMode} | ${item.queries} | ${fixed(item.retrievalLatencyMs.p50, 1)} ms | ${fixed(item.retrievalLatencyMs.p95, 1)} ms | ${fixed(item.rerankLatencyMs.p50, 1)} ms | ${fixed(item.rerankLatencyMs.p95, 1)} ms | ${fixed(item.totalLatencyMs.p50, 1)} ms | ${fixed(item.totalLatencyMs.p95, 1)} ms | $${item.nominalTotalQueryCostUsd.toFixed(6)} | $${item.meanNominalCostPerQueryUsd.toFixed(8)} |`
       )
     }
     lines.push('')
@@ -495,13 +520,13 @@ export function reportMarkdown(report: ExperimentReport): string {
   lines.push(
     'Values are means with 95% bootstrap intervals. Δ recall is paired against the first configured strategy at the same context budget and query mode.',
     '',
-    '| Budget | Query | Context | Strategy | Retriever | Evidence efficiency | Payload efficiency | Hit | MRR | nDCG | Evidence recall | Δ recall | Evidence density | Item precision | Tokens to first | Tokens to full |',
-    '| ---: | --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |'
+    '| Budget | Query | Context | Routing | Strategy | Retriever | Evidence efficiency | Payload efficiency | Hit | MRR | nDCG | Evidence recall | Book recall | All books | Δ recall | Evidence density | Item precision | Tokens to first | Tokens to full |',
+    '| ---: | --- | --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |'
   )
   for (const group of report.groups) {
     const strategy = group.isBaseline ? `${group.strategyId} (baseline)` : group.strategyId
     lines.push(
-      `| ${group.contextBudget} | ${group.queryMode} | ${group.contextPolicy} | \`${strategy}\` | \`${group.retriever}\` | ${estimateCell(group.metrics.evidenceEfficiency)} | ${estimateCell(group.metrics.payloadEvidenceEfficiency)} | ${estimateCell(group.metrics.hitAtK)} | ${estimateCell(group.metrics.mrr)} | ${estimateCell(group.metrics.ndcgAtK)} | ${estimateCell(group.metrics.evidenceRecall)} | ${estimateCell(group.evidenceRecallDeltaFromBaseline)} | ${estimateCell(group.metrics.exactEvidenceDensity)} | ${estimateCell(group.metrics.contextPrecision)} | ${estimateCell(group.metrics.tokensToFirstEvidence)} | ${estimateCell(group.metrics.tokensToFullEvidence)} |`
+      `| ${group.contextBudget} | ${group.queryMode} | ${group.contextPolicy} | ${group.routingPolicy} | \`${strategy}\` | \`${group.retriever}\` | ${estimateCell(group.metrics.evidenceEfficiency)} | ${estimateCell(group.metrics.payloadEvidenceEfficiency)} | ${estimateCell(group.metrics.hitAtK)} | ${estimateCell(group.metrics.mrr)} | ${estimateCell(group.metrics.ndcgAtK)} | ${estimateCell(group.metrics.evidenceRecall)} | ${estimateCell(group.requiredBookRecall)} | ${estimateCell(group.allRequiredBooks)} | ${estimateCell(group.evidenceRecallDeltaFromBaseline)} | ${estimateCell(group.metrics.exactEvidenceDensity)} | ${estimateCell(group.metrics.contextPrecision)} | ${estimateCell(group.metrics.tokensToFirstEvidence)} | ${estimateCell(group.metrics.tokensToFullEvidence)} |`
     )
   }
   return `${lines.join('\n')}\n`
