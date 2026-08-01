@@ -21,6 +21,7 @@ import { parseEvalSet } from '../shared/evalSchema'
 import {
   assembleContextBudget,
   computeRetrievalMetrics,
+  RETRIEVAL_METRIC_VERSION,
   type ContextCandidate
 } from '../shared/evalMetrics'
 import {
@@ -145,6 +146,7 @@ export interface CostLedger {
 export interface HeadlessRun {
   schemaVersion: typeof HEADLESS_RUN_SCHEMA_VERSION
   fingerprint: string
+  metricVersion?: number
   status: 'running' | 'completed' | 'failed'
   configPath: string
   plan: ExperimentPlan
@@ -165,6 +167,7 @@ function resolveFrom(baseDir: string, path: string): string {
 function reproducibleConfig(config: LoadedExperiment): object {
   return {
     schemaVersion: config.schemaVersion,
+    metricVersion: RETRIEVAL_METRIC_VERSION,
     name: config.name,
     books: config.books.map((selection) => ({
       bookId: selection.bookId,
@@ -631,6 +634,7 @@ export async function runExperiment(
   const run: HeadlessRun = existing ?? {
     schemaVersion: HEADLESS_RUN_SCHEMA_VERSION,
     fingerprint: plan.fingerprint,
+    metricVersion: RETRIEVAL_METRIC_VERSION,
     status: 'running',
     configPath: prepared.configPath,
     plan,
@@ -763,9 +767,14 @@ export async function runExperiment(
                 )
                 const metricCandidates = assembled.items.map((item) => ({
                   ...item.candidate,
-                  tokenCount: item.tokenCount
+                  tokenCount: item.tokenCount,
+                  sourceRanges: item.sourceRanges,
+                  payloadSegments: item.payloadSegments
                 }))
-                const metrics = computeRetrievalMetrics(metricCandidates, evalCase.goldEvidence)
+                const metrics = computeRetrievalMetrics(metricCandidates, evalCase.goldEvidence, {
+                  contextBudgetTokens: budget,
+                  countTokens: countChunkTokens
+                })
                 const { candidateRelevance, ...persistedMetrics } = metrics
                 void candidateRelevance
                 const key = resultKey(queryId, budget)
@@ -846,8 +855,13 @@ export async function exportRun(runPath: string, format: 'jsonl' | 'csv'): Promi
     'evidenceRecall',
     'fullEvidenceSuccess',
     'contextPrecision',
+    'exactEvidenceDensity',
     'goldSpanCoverage',
     'tokensBeforeFirstEvidence',
+    'tokensToFirstEvidence',
+    'tokensToFullEvidence',
+    'evidenceEfficiency',
+    'payloadEvidenceEfficiency',
     'correctBookRecall'
   ]
   const lines = [
@@ -872,8 +886,13 @@ export async function exportRun(runPath: string, format: 'jsonl' | 'csv'): Promi
         row.metrics.evidenceRecall,
         row.metrics.fullEvidenceSuccess,
         row.metrics.contextPrecision,
+        row.metrics.exactEvidenceDensity,
         row.metrics.goldSpanCoverage,
         row.metrics.tokensBeforeFirstEvidence,
+        row.metrics.tokensToFirstEvidence,
+        row.metrics.tokensToFullEvidence,
+        row.metrics.evidenceEfficiency,
+        row.metrics.payloadEvidenceEfficiency,
         row.metrics.correctBookRecall
       ]
         .map(csvCell)

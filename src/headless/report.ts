@@ -10,18 +10,28 @@ type ReportMetric =
   | 'mrr'
   | 'ndcgAtK'
   | 'evidenceRecall'
+  | 'evidenceEfficiency'
+  | 'payloadEvidenceEfficiency'
   | 'contextPrecision'
+  | 'exactEvidenceDensity'
   | 'goldSpanCoverage'
   | 'tokensBeforeFirstEvidence'
+  | 'tokensToFirstEvidence'
+  | 'tokensToFullEvidence'
 
 const REPORT_METRICS: ReportMetric[] = [
   'hitAtK',
   'mrr',
   'ndcgAtK',
   'evidenceRecall',
+  'evidenceEfficiency',
+  'payloadEvidenceEfficiency',
   'contextPrecision',
+  'exactEvidenceDensity',
   'goldSpanCoverage',
-  'tokensBeforeFirstEvidence'
+  'tokensBeforeFirstEvidence',
+  'tokensToFirstEvidence',
+  'tokensToFullEvidence'
 ]
 
 export interface ConfidenceEstimate {
@@ -315,13 +325,13 @@ export function reportMarkdown(report: ExperimentReport): string {
   lines.push(
     'Values are means with 95% bootstrap intervals. Δ recall is paired against the first configured strategy at the same context budget and query mode.',
     '',
-    '| Budget | Query | Strategy | Retriever | Hit | MRR | nDCG | Evidence recall | Δ recall | Context precision | Tokens before evidence |',
-    '| ---: | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |'
+    '| Budget | Query | Strategy | Retriever | Evidence efficiency | Payload efficiency | Hit | MRR | nDCG | Evidence recall | Δ recall | Evidence density | Item precision | Tokens to first | Tokens to full |',
+    '| ---: | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |'
   )
   for (const group of report.groups) {
     const strategy = group.isBaseline ? `${group.strategyId} (baseline)` : group.strategyId
     lines.push(
-      `| ${group.contextBudget} | ${group.queryMode} | \`${strategy}\` | \`${group.retriever}\` | ${estimateCell(group.metrics.hitAtK)} | ${estimateCell(group.metrics.mrr)} | ${estimateCell(group.metrics.ndcgAtK)} | ${estimateCell(group.metrics.evidenceRecall)} | ${estimateCell(group.evidenceRecallDeltaFromBaseline)} | ${estimateCell(group.metrics.contextPrecision)} | ${estimateCell(group.metrics.tokensBeforeFirstEvidence)} |`
+      `| ${group.contextBudget} | ${group.queryMode} | \`${strategy}\` | \`${group.retriever}\` | ${estimateCell(group.metrics.evidenceEfficiency)} | ${estimateCell(group.metrics.payloadEvidenceEfficiency)} | ${estimateCell(group.metrics.hitAtK)} | ${estimateCell(group.metrics.mrr)} | ${estimateCell(group.metrics.ndcgAtK)} | ${estimateCell(group.metrics.evidenceRecall)} | ${estimateCell(group.evidenceRecallDeltaFromBaseline)} | ${estimateCell(group.metrics.exactEvidenceDensity)} | ${estimateCell(group.metrics.contextPrecision)} | ${estimateCell(group.metrics.tokensToFirstEvidence)} | ${estimateCell(group.metrics.tokensToFullEvidence)} |`
     )
   }
   return `${lines.join('\n')}\n`

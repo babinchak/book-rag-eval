@@ -9,7 +9,14 @@ import type {
 import { cv } from '../lib/theme'
 import ErrorDisplay from './ErrorDisplay'
 
-type MatrixMetric = 'hitAtK' | 'mrr' | 'evidenceRecall' | 'ndcgAtK'
+type MatrixMetric =
+  | 'evidenceEfficiency'
+  | 'payloadEvidenceEfficiency'
+  | 'hitAtK'
+  | 'mrr'
+  | 'evidenceRecall'
+  | 'exactEvidenceDensity'
+  | 'ndcgAtK'
 type MatrixScope = 'compatible' | 'single'
 type ColumnOrder = 'chunking' | 'retriever' | 'score'
 
@@ -66,12 +73,15 @@ function strategySortKey(strategyId: string): string {
 }
 
 function metricValue(cell: BenchmarkResultCell, metric: MatrixMetric): number | null {
-  return cell.metrics[metric]
+  return cell.metrics[metric] ?? null
 }
 
 function metricLabel(metric: MatrixMetric): string {
   if (metric === 'hitAtK') return 'Hit@budget'
+  if (metric === 'evidenceEfficiency') return 'Evidence efficiency'
+  if (metric === 'payloadEvidenceEfficiency') return 'Whole-payload efficiency'
   if (metric === 'evidenceRecall') return 'Evidence recall'
+  if (metric === 'exactEvidenceDensity') return 'Exact evidence density'
   if (metric === 'ndcgAtK') return 'nDCG'
   return 'MRR'
 }
@@ -150,7 +160,7 @@ function BenchmarkMatrix({ cases, onOpenCase }: BenchmarkMatrixProps): React.JSX
   const [scope, setScope] = useState<MatrixScope>('compatible')
   const [queryMode, setQueryMode] = useState<'question' | 'reference'>('question')
   const [budget, setBudget] = useState(4096)
-  const [metric, setMetric] = useState<MatrixMetric>('hitAtK')
+  const [metric, setMetric] = useState<MatrixMetric>('evidenceEfficiency')
   const [columnOrder, setColumnOrder] = useState<ColumnOrder>('chunking')
   const [bookId, setBookId] = useState('all')
   const [search, setSearch] = useState('')
@@ -389,9 +399,12 @@ function BenchmarkMatrix({ cases, onOpenCase }: BenchmarkMatrixProps): React.JSX
           onChange={(event) => setMetric(event.target.value as MatrixMetric)}
           style={controlStyle}
         >
+          <option value="evidenceEfficiency">Evidence efficiency</option>
+          <option value="payloadEvidenceEfficiency">Whole-payload efficiency</option>
           <option value="hitAtK">Hit@budget</option>
           <option value="mrr">MRR</option>
           <option value="evidenceRecall">Evidence recall</option>
+          <option value="exactEvidenceDensity">Exact evidence density</option>
           <option value="ndcgAtK">nDCG</option>
         </select>
         <select

@@ -109,6 +109,38 @@ test('computes coverage-aware nDCG without rewarding duplicate hits', () => {
   assert.equal(metrics.fullEvidenceSuccess, 1)
 })
 
+test('separates time-to-evidence efficiency from whole-payload efficiency', () => {
+  const evidence: GoldEvidence[] = [
+    {
+      id: 'gold',
+      requirementId: 'claim',
+      kind: 'text',
+      bookId: 'book-1',
+      nodeId: 'node-a',
+      spineHref: 'chapter.xhtml',
+      textStart: 10,
+      textEnd: 20
+    }
+  ]
+  const metrics = computeRetrievalMetrics(
+    [
+      {
+        ...candidate('large-hit', 10, 110, { tokenCount: 100 }),
+        sourceRanges: [[10, 110]],
+        payloadSegments: [{ textStart: 10, textEnd: 110, text: 'x'.repeat(100) }]
+      }
+    ],
+    evidence,
+    { contextBudgetTokens: 100, countTokens: (text) => text.length }
+  )
+
+  assert.equal(metrics.tokensToFirstEvidence, 3)
+  assert.equal(metrics.tokensToFullEvidence, 3)
+  assert.equal(metrics.evidenceEfficiency, 0.97)
+  assert.equal(metrics.payloadEvidenceEfficiency, 0)
+  assert.equal(metrics.exactEvidenceDensity, 0.1)
+})
+
 test('returns not-applicable retrieval metrics for unanswerable cases', () => {
   const metrics = computeRetrievalMetrics([candidate('anything', 0, 10)], [])
   assert.equal(metrics.hitAtK, null)
@@ -141,6 +173,10 @@ test('assembles contexts under an exact token budget and removes overlap', () =>
     ]
   )
   assert.equal(assembled.totalTokens, 15)
+  assert.deepEqual(
+    assembled.items.map((item) => item.sourceRanges),
+    [[[0, 10]], [[10, 15]]]
+  )
   assert.deepEqual(assembled.skippedOverBudgetIds, ['too-large'])
 })
 
