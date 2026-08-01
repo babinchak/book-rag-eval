@@ -119,7 +119,7 @@ def _colbert_query(params: dict[str, Any]) -> dict[str, Any]:
         is_query=True,
         show_progress_bar=False,
     )
-    results = retrieve.ColBERT(index=index).retrieve(query_embeddings=query_embeddings, k=k)[0]
+    results = retrieve.ColBERT(index=index).retrieve(queries_embeddings=query_embeddings, k=k)[0]
     return {
         "hits": [
             {"id": str(hit["id"]), "score": float(hit["score"]), "rank": rank}
