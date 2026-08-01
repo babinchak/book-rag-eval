@@ -290,6 +290,40 @@ function BenchmarkMatrix({ cases, onOpenCase }: BenchmarkMatrixProps): React.JSX
     for (const item of cases) byId.set(item.bookId, item.bookTitle)
     return [...byId.entries()].sort((a, b) => a[1].localeCompare(b[1]))
   }, [cases])
+  const matrixCases = useMemo(() => {
+    const byKey = new Map(cases.map((item) => [`${item.bookId}|${item.caseId}`, item]))
+    const titles = new Map(cases.map((item) => [item.bookId, item.bookTitle]))
+    for (const resultSet of resultSets) {
+      for (const cell of resultSet.cells) {
+        const key = `${cell.bookId}|${cell.caseId}`
+        if (byKey.has(key)) continue
+        byKey.set(key, {
+          caseId: cell.caseId,
+          candidateId: `result-only:${cell.caseId}`,
+          bookId: cell.bookId,
+          bookTitle: titles.get(cell.bookId) ?? 'Library-wide case',
+          bookAuthor: '',
+          evidenceKind: 'text',
+          spineHref: '',
+          headingPath: [],
+          assets: [],
+          excerpt: '',
+          question: cell.retrievalQuery,
+          canonicalSearchQuery: cell.retrievalQuery,
+          answerSpan: '',
+          referenceAnswer: '',
+          tags: ['library-wide'],
+          difficulty: 'medium',
+          reviewStatus: 'pending',
+          reviewerNotes: 'Provisional library-wide result case',
+          auditDisposition: 'review',
+          auditFlags: [],
+          model: 'library-case-generator'
+        })
+      }
+    }
+    return [...byKey.values()]
+  }, [cases, resultSets])
   const visibleCases = useMemo(() => {
     const needle = search.trim().toLocaleLowerCase()
     const evaluated = new Set(
@@ -297,7 +331,7 @@ function BenchmarkMatrix({ cases, onOpenCase }: BenchmarkMatrixProps): React.JSX
         resultSet.cells.map((cell) => `${cell.bookId}|${cell.caseId}`)
       )
     )
-    return cases.filter((item) => {
+    return matrixCases.filter((item) => {
       if (!evaluated.has(`${item.bookId}|${item.caseId}`)) return false
       if (bookId !== 'all' && item.bookId !== bookId) return false
       if (!needle) return true
@@ -305,7 +339,7 @@ function BenchmarkMatrix({ cases, onOpenCase }: BenchmarkMatrixProps): React.JSX
         .toLocaleLowerCase()
         .includes(needle)
     })
-  }, [cases, resultSets, bookId, search])
+  }, [matrixCases, resultSets, bookId, search])
   const columns = useMemo(() => {
     const byKey = new Map<string, BenchmarkResultCell>()
     for (const cell of visibleCells) byKey.set(columnKey(cell), cell)

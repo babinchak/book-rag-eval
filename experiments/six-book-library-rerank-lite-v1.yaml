@@ -1,0 +1,94 @@
+schemaVersion: 1
+name: six-book-library-rerank-lite-v1
+corpusPath: ../benchmarks/corpora/six-book-smoke.json
+evalDir: ../.rag-eval/provisional-evals/six-book-library-v1
+outputDir: ../.rag-eval/runs
+
+chunker:
+  kind: fixed-token
+  size: 256
+  overlap: 32
+  encoding: cl100k_base
+
+pipelines:
+  - id: flat-voyage-vector-rerank
+    routing: { kind: flat }
+    retriever:
+      {
+        kind: vector,
+        embeddingModel: voyage-4-large,
+        reranker: { kind: voyage, model: rerank-2.5-lite }
+      }
+  - id: flat-voyage-hybrid-rerank
+    routing: { kind: flat }
+    retriever:
+      {
+        kind: hybrid-rrf,
+        embeddingModel: voyage-4-large,
+        reranker: { kind: voyage, model: rerank-2.5-lite }
+      }
+  - id: flat-openai-vector-rerank
+    routing: { kind: flat }
+    retriever:
+      {
+        kind: vector,
+        embeddingModel: text-embedding-3-large,
+        reranker: { kind: voyage, model: rerank-2.5-lite }
+      }
+  - id: flat-openai-hybrid-rerank
+    routing: { kind: flat }
+    retriever:
+      {
+        kind: hybrid-rrf,
+        embeddingModel: text-embedding-3-large,
+        reranker: { kind: voyage, model: rerank-2.5-lite }
+      }
+  - id: flat-bge-sparse-rerank
+    routing: { kind: flat }
+    retriever: { kind: bge-m3, mode: sparse, reranker: { kind: voyage, model: rerank-2.5-lite } }
+  - id: flat-bge-multivector-rerank
+    routing: { kind: flat }
+    retriever:
+      {
+        kind: bge-m3,
+        mode: colbert-dense-shortlist,
+        shortlist: 200,
+        reranker: { kind: voyage, model: rerank-2.5-lite }
+      }
+  - id: flat-bge-hybrid-all-rerank
+    routing: { kind: flat }
+    retriever:
+      {
+        kind: bge-m3,
+        mode: hybrid-all-rrf,
+        shortlist: 200,
+        reranker: { kind: voyage, model: rerank-2.5-lite }
+      }
+  - id: hierarchical-bge-top5-rerank
+    routing: { kind: bge-profile, topK: 5 }
+    retriever:
+      {
+        kind: bge-m3,
+        mode: hybrid-all-rrf,
+        shortlist: 200,
+        reranker: { kind: voyage, model: rerank-2.5-lite }
+      }
+  - id: oracle-bge-rerank
+    routing: { kind: oracle }
+    retriever:
+      {
+        kind: bge-m3,
+        mode: hybrid-all-rrf,
+        shortlist: 200,
+        reranker: { kind: voyage, model: rerank-2.5-lite }
+      }
+
+contextBudgets: [512, 1024, 2048, 4096, 8192, 16384]
+candidatePoolSize: 50
+
+pricing:
+  embeddingUsdPerMillion:
+    text-embedding-3-large: 0.13
+    voyage-4-large: 0.12
+  rerankingUsdPerMillion:
+    rerank-2.5-lite: 0.02

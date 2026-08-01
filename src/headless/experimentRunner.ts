@@ -128,10 +128,7 @@ export interface HeadlessResultRow {
   queryMode?: ExperimentQueryMode
   retrievalQuery?: string
   contextPolicy?: ExperimentContextPolicy
-  routingPolicy?:
-    | { kind: 'flat' }
-    | { kind: 'oracle' }
-    | { kind: 'bge-profile'; topK: number }
+  routingPolicy?: { kind: 'flat' } | { kind: 'oracle' } | { kind: 'bge-profile'; topK: number }
   routedBookIds?: string[]
   routingMetrics?: { requiredBookRecall: number; allRequiredBooks: boolean }
   contextBudget: number
@@ -144,6 +141,7 @@ interface QueryCacheEntry {
   schemaVersion?: 1
   chunkArtifactId: string
   hits: Array<{ chunkId: string; distance: number; rank: number }>
+  routingLatencyMs?: number
   retrievalLatencyMs?: number
   embeddingModel?: EmbeddingModel
   embeddingQueryTokens?: number
@@ -762,10 +760,8 @@ async function resolveRetrievalTrace(
       schemaVersion: 1,
       chunkArtifactId,
       retrievalLatencyMs:
-        Math.max(
-          vectorTrace.retrievalLatencyMs ?? 0,
-          bm25Trace.retrievalLatencyMs ?? 0
-        ) + fusionLatencyMs,
+        Math.max(vectorTrace.retrievalLatencyMs ?? 0, bm25Trace.retrievalLatencyMs ?? 0) +
+        fusionLatencyMs,
       embeddingModel: vectorTrace.embeddingModel,
       embeddingQueryTokens: vectorTrace.embeddingQueryTokens,
       nominalEmbeddingQueryCostUsd: vectorTrace.nominalEmbeddingQueryCostUsd,
@@ -981,9 +977,9 @@ async function ensureLocalIndex(
   const artifactId = localArtifactIdentity(set.artifactId!, retriever)
   const artifactDir = localArtifactDir(outputDir, set.artifactId!, retriever)
   if (await localArtifactExists(artifactDir)) {
-    const manifest = JSON.parse(
-      await fs.readFile(join(artifactDir, 'manifest.json'), 'utf8')
-    ) as { indexingLatencyMs?: number }
+    const manifest = JSON.parse(await fs.readFile(join(artifactDir, 'manifest.json'), 'utf8')) as {
+      indexingLatencyMs?: number
+    }
     return {
       artifactId,
       artifactDir,
@@ -1029,9 +1025,7 @@ async function retrieveLocal(
     latencyMs: result.queryLatencyMs,
     hits: result.hits.flatMap((hit) => {
       const chunk = chunks.get(hit.id)
-      return chunk
-        ? [{ chunk, distance: -hit.score, rank: hit.rank }]
-        : []
+      return chunk ? [{ chunk, distance: -hit.score, rank: hit.rank }] : []
     })
   }
 }
@@ -1151,9 +1145,7 @@ export async function runExperiment(
           if (isLocalRetriever(retriever)) {
             const localIndex = await ensureLocalIndex(run.plan.outputDir, set, retriever)
             if (
-              !run.ledger.localIndexes.some(
-                (item) => item.artifactId === localIndex.artifactId
-              )
+              !run.ledger.localIndexes.some((item) => item.artifactId === localIndex.artifactId)
             ) {
               run.ledger.localIndexes.push({
                 bookId: book.bookId,
@@ -1288,14 +1280,9 @@ export async function runExperiment(
                   retrievalLatencyMs = baseResolved.trace.retrievalLatencyMs ?? 0
                   embeddingModel = baseResolved.trace.embeddingModel
                   embeddingQueryTokens = baseResolved.trace.embeddingQueryTokens
-                  nominalEmbeddingQueryCostUsd =
-                    baseResolved.trace.nominalEmbeddingQueryCostUsd
+                  nominalEmbeddingQueryCostUsd = baseResolved.trace.nominalEmbeddingQueryCostUsd
                   if (baseResolved.synthesized) {
-                    await writeRetrievalTrace(
-                      run.plan.outputDir,
-                      baseQueryId,
-                      baseResolved.trace
-                    )
+                    await writeRetrievalTrace(run.plan.outputDir, baseQueryId, baseResolved.trace)
                   }
                 } else {
                   if (retrieverNeedsEmbedding(baseRetriever)) {

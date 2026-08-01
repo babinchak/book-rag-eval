@@ -75,6 +75,7 @@ export interface QueryPerformanceGroup {
   queryMode: ExperimentQueryMode
   routingPolicy: string
   queries: number
+  routingLatencyMs: DistributionSummary
   retrievalLatencyMs: DistributionSummary
   rerankLatencyMs: DistributionSummary
   totalLatencyMs: DistributionSummary
@@ -300,12 +301,14 @@ export function summarizeRun(run: HeadlessRun, bootstrapIterations = 2000): Expe
         `${run.fingerprint}|${id}|paired-evidence-recall`
       ),
       requiredBookRecall: bootstrapMean(
-        rows.flatMap((row) => row.routingMetrics ? [row.routingMetrics.requiredBookRecall] : []),
+        rows.flatMap((row) => (row.routingMetrics ? [row.routingMetrics.requiredBookRecall] : [])),
         bootstrapIterations,
         `${run.fingerprint}|${id}|required-book-recall`
       ),
       allRequiredBooks: bootstrapMean(
-        rows.flatMap((row) => row.routingMetrics ? [row.routingMetrics.allRequiredBooks ? 1 : 0] : []),
+        rows.flatMap((row) =>
+          row.routingMetrics ? [row.routingMetrics.allRequiredBooks ? 1 : 0] : []
+        ),
         bootstrapIterations,
         `${run.fingerprint}|${id}|all-required-books`
       )
@@ -360,12 +363,24 @@ export function summarizeRun(run: HeadlessRun, bootstrapIterations = 2000): Expe
     const retrievalLatencies = traces.flatMap((trace) =>
       trace.retrievalLatencyMs === undefined ? [] : [trace.retrievalLatencyMs]
     )
+    const routingLatencies = traces.flatMap((trace) =>
+      trace.routingLatencyMs === undefined ? [] : [trace.routingLatencyMs]
+    )
     const rerankLatencies = traces.flatMap((trace) =>
       trace.rerankLatencyMs === undefined ? [] : [trace.rerankLatencyMs]
     )
     const totalLatencies = traces.flatMap((trace) => {
-      if (trace.retrievalLatencyMs === undefined && trace.rerankLatencyMs === undefined) return []
-      return [(trace.retrievalLatencyMs ?? 0) + (trace.rerankLatencyMs ?? 0)]
+      if (
+        trace.routingLatencyMs === undefined &&
+        trace.retrievalLatencyMs === undefined &&
+        trace.rerankLatencyMs === undefined
+      )
+        return []
+      return [
+        (trace.routingLatencyMs ?? 0) +
+          (trace.retrievalLatencyMs ?? 0) +
+          (trace.rerankLatencyMs ?? 0)
+      ]
     })
     const nominalEmbeddingQueryCostUsd = traces.reduce(
       (total, trace) => total + (trace.nominalEmbeddingQueryCostUsd ?? 0),
@@ -375,8 +390,7 @@ export function summarizeRun(run: HeadlessRun, bootstrapIterations = 2000): Expe
       (total, trace) => total + (trace.nominalRerankCostUsd ?? 0),
       0
     )
-    const nominalTotalQueryCostUsd =
-      nominalEmbeddingQueryCostUsd + nominalRerankCostUsd
+    const nominalTotalQueryCostUsd = nominalEmbeddingQueryCostUsd + nominalRerankCostUsd
     return {
       id,
       strategyId: first.strategyId,
@@ -384,6 +398,7 @@ export function summarizeRun(run: HeadlessRun, bootstrapIterations = 2000): Expe
       queryMode: first.queryMode ?? 'reference',
       routingPolicy: routingPolicyLabel(first),
       queries: queryRows.size,
+      routingLatencyMs: distribution(routingLatencies),
       retrievalLatencyMs: distribution(retrievalLatencies),
       rerankLatencyMs: distribution(rerankLatencies),
       totalLatencyMs: distribution(totalLatencies),
@@ -507,12 +522,12 @@ export function reportMarkdown(report: ExperimentReport): string {
       '',
       'Latencies are wall-clock measurements from this machine. Cached executions retain the original measurement; API prices are nominal pinned rates.',
       '',
-      '| Chunking strategy | Retriever | Routing | Query | Queries | Retrieval p50 | Retrieval p95 | Rerank p50 | Rerank p95 | Total p50 | Total p95 | Nominal query cost | Mean/query |',
-      '| --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |'
+      '| Chunking strategy | Retriever | Routing | Query | Queries | Route p50 | Route p95 | Retrieval p50 | Retrieval p95 | Rerank p50 | Rerank p95 | Total p50 | Total p95 | Nominal query cost | Mean/query |',
+      '| --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |'
     )
     for (const item of report.queryPerformance) {
       lines.push(
-        `| ${item.strategyId} | ${item.retriever} | ${item.routingPolicy} | ${item.queryMode} | ${item.queries} | ${fixed(item.retrievalLatencyMs.p50, 1)} ms | ${fixed(item.retrievalLatencyMs.p95, 1)} ms | ${fixed(item.rerankLatencyMs.p50, 1)} ms | ${fixed(item.rerankLatencyMs.p95, 1)} ms | ${fixed(item.totalLatencyMs.p50, 1)} ms | ${fixed(item.totalLatencyMs.p95, 1)} ms | $${item.nominalTotalQueryCostUsd.toFixed(6)} | $${item.meanNominalCostPerQueryUsd.toFixed(8)} |`
+        `| ${item.strategyId} | ${item.retriever} | ${item.routingPolicy} | ${item.queryMode} | ${item.queries} | ${fixed(item.routingLatencyMs.p50, 1)} ms | ${fixed(item.routingLatencyMs.p95, 1)} ms | ${fixed(item.retrievalLatencyMs.p50, 1)} ms | ${fixed(item.retrievalLatencyMs.p95, 1)} ms | ${fixed(item.rerankLatencyMs.p50, 1)} ms | ${fixed(item.rerankLatencyMs.p95, 1)} ms | ${fixed(item.totalLatencyMs.p50, 1)} ms | ${fixed(item.totalLatencyMs.p95, 1)} ms | $${item.nominalTotalQueryCostUsd.toFixed(6)} | $${item.meanNominalCostPerQueryUsd.toFixed(8)} |`
       )
     }
     lines.push('')

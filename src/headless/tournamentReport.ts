@@ -1,5 +1,6 @@
 import { promises as fs } from 'node:fs'
-import { basename, dirname, join, resolve } from 'node:path'
+import { basename, dirname, isAbsolute, join, resolve } from 'node:path'
+import { parse as parseYaml } from 'yaml'
 import type { RetrievalMetrics } from '../shared/evalMetrics'
 import type { ExperimentContextPolicy, ExperimentRetriever } from '../shared/experimentSchema'
 import type { HeadlessResultRow, HeadlessRun } from './experimentRunner'
@@ -25,6 +26,25 @@ interface TournamentStrategy {
   curve: TournamentPoint[]
 }
 
+interface TournamentCategoryBreakdown {
+  category: string
+  cases: number
+  leaderboard: Array<{
+    label: string
+    evidenceEfficiency: number | null
+    evidenceRecall: number | null
+    mrr: number | null
+  }>
+}
+
+interface TournamentRoutingDiagnostic {
+  label: string
+  requiredBookRecall: number | null
+  allRequiredBooks: number | null
+  evidenceEfficiency: number | null
+  evidenceRecall: number | null
+}
+
 export interface TournamentReport {
   schemaVersion: 1
   provisional: true
@@ -40,6 +60,8 @@ export interface TournamentReport {
   totalMeteredCostUsd: number
   runDirectoryMeteredCostUsd: number
   strategies: TournamentStrategy[]
+  categoryBreakdowns: TournamentCategoryBreakdown[]
+  routingDiagnostics: TournamentRoutingDiagnostic[]
 }
 
 function contextPolicy(row: HeadlessResultRow): ExperimentContextPolicy {
@@ -67,14 +89,14 @@ function strategyKey(row: HeadlessResultRow): string {
     strategyId: row.strategyId,
     retriever: row.retriever,
     queryMode: row.queryMode ?? 'reference',
-    contextPolicy: contextPolicy(row)
-    ,routingPolicy: row.routingPolicy ?? null
+    contextPolicy: contextPolicy(row),
+    routingPolicy: row.routingPolicy ?? null
   })
 }
 
 function finiteMean(values: Array<number | null | undefined>): number | null {
-  const finite = values.filter((value): value is number =>
-    typeof value === 'number' && Number.isFinite(value)
+  const finite = values.filter(
+    (value): value is number => typeof value === 'number' && Number.isFinite(value)
   )
   return finite.length === 0
     ? null
@@ -101,7 +123,9 @@ async function readRuns(targetPath: string): Promise<{
   allCompleted: Array<{ path: string; run: HeadlessRun }>
 }> {
   const target = JSON.parse(await fs.readFile(targetPath, 'utf8')) as HeadlessRun
-  const targetCases = [...new Set(target.results.map((row) => `${row.bookId}|${row.caseId}`))].sort()
+  const targetCases = [
+    ...new Set(target.results.map((row) => `${row.bookId}|${row.caseId}`))
+  ].sort()
   const targetCaseKey = JSON.stringify(targetCases)
   const names = await fs.readdir(dirname(targetPath))
   const compatible: Array<{ path: string; run: HeadlessRun }> = []
@@ -111,10 +135,7 @@ async function readRuns(targetPath: string): Promise<{
     const path = join(dirname(targetPath), name)
     try {
       const run = JSON.parse(await fs.readFile(path, 'utf8')) as HeadlessRun
-      if (
-        run.status !== 'completed' ||
-        !Array.isArray(run.results)
-      ) {
+      if (run.status !== 'completed' || !Array.isArray(run.results)) {
         continue
       }
       allCompleted.push({ path, run })
@@ -146,16 +167,30 @@ function escapeXml(value: string): string {
 
 function svgFor(strategies: TournamentStrategy[], headlineBudget: number): string {
   const width = 1200
-  const height = 680
+  const height = Math.max(680, 36 + strategies.length * 43 + 30)
   const left = 72
   const top = 36
   const plotWidth = 760
   const plotHeight = 560
-  const budgets = [...new Set(strategies.flatMap((strategy) => strategy.curve.map((p) => p.budget)))].sort(
-    (a, b) => a - b
-  )
-  const colors = ['#0b6e4f', '#1976d2', '#b55d00', '#8e44ad', '#c62828', '#00838f', '#5d6d1d', '#6d4c41', '#455a64', '#ad1457', '#2e7d32', '#283593']
-  const x = (budget: number) => left + (budgets.indexOf(budget) / Math.max(1, budgets.length - 1)) * plotWidth
+  const budgets = [
+    ...new Set(strategies.flatMap((strategy) => strategy.curve.map((p) => p.budget)))
+  ].sort((a, b) => a - b)
+  const colors = [
+    '#0b6e4f',
+    '#1976d2',
+    '#b55d00',
+    '#8e44ad',
+    '#c62828',
+    '#00838f',
+    '#5d6d1d',
+    '#6d4c41',
+    '#455a64',
+    '#ad1457',
+    '#2e7d32',
+    '#283593'
+  ]
+  const x = (budget: number) =>
+    left + (budgets.indexOf(budget) / Math.max(1, budgets.length - 1)) * plotWidth
   const y = (value: number) => top + (1 - value) * plotHeight
   const lines: string[] = [
     `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">`,
@@ -180,13 +215,18 @@ function svgFor(strategies: TournamentStrategy[], headlineBudget: number): strin
   strategies.forEach((strategy, index) => {
     const color = colors[index % colors.length]
     const points = strategy.curve
-      .filter((item): item is TournamentPoint & { evidenceEfficiency: number } => item.evidenceEfficiency !== null)
+      .filter(
+        (item): item is TournamentPoint & { evidenceEfficiency: number } =>
+          item.evidenceEfficiency !== null
+      )
       .map((item) => `${x(item.budget)},${y(item.evidenceEfficiency)}`)
       .join(' ')
     lines.push(`<polyline points="${points}" fill="none" stroke="${color}" stroke-width="2.5"/>`)
     strategy.curve.forEach((item) => {
       if (item.evidenceEfficiency !== null) {
-        lines.push(`<circle cx="${x(item.budget)}" cy="${y(item.evidenceEfficiency)}" r="3" fill="${color}"/>`)
+        lines.push(
+          `<circle cx="${x(item.budget)}" cy="${y(item.evidenceEfficiency)}" r="3" fill="${color}"/>`
+        )
       }
     })
     const legendY = top + index * 43
@@ -203,9 +243,49 @@ function fixed(value: number | null, digits = 4): string {
   return value === null ? 'N/A' : value.toFixed(digits)
 }
 
-function markdownFor(report: TournamentReport, topStrategies: TournamentStrategy[], svgName: string): string {
+async function loadCaseCategories(configPath: string): Promise<Map<string, string>> {
+  const categories = new Map<string, string>()
+  try {
+    const absoluteConfig = resolve(configPath)
+    const config = parseYaml(await fs.readFile(absoluteConfig, 'utf8')) as { evalDir?: string }
+    if (!config.evalDir) return categories
+    const evalDir = isAbsolute(config.evalDir)
+      ? config.evalDir
+      : resolve(dirname(absoluteConfig), config.evalDir)
+    for (const name of await fs.readdir(evalDir)) {
+      if (!name.endsWith('.json')) continue
+      const evalSet = JSON.parse(await fs.readFile(join(evalDir, name), 'utf8')) as {
+        cases?: Array<{ id?: string; tags?: string[] }>
+      }
+      for (const evalCase of evalSet.cases ?? []) {
+        if (!evalCase.id) continue
+        const category = evalCase.tags?.find((tag) =>
+          ['attributed', 'discovery', 'comparative'].includes(tag)
+        )
+        if (category) categories.set(evalCase.id, category)
+      }
+    }
+  } catch {
+    // Portable and older experiment configs may not expose an eval directory.
+  }
+  return categories
+}
+
+function markdownFor(
+  report: TournamentReport,
+  topStrategies: TournamentStrategy[],
+  svgName: string
+): string {
+  const libraryWide = report.strategies.some(
+    (strategy) =>
+      strategy.label.includes('library') ||
+      strategy.label.includes('oracle books') ||
+      strategy.label.includes('route top')
+  )
   const lines = [
-    '# Six-book retrieval tournament',
+    libraryWide
+      ? '# Six-book library-wide retrieval tournament'
+      : '# Six-book within-book retrieval tournament',
     '',
     '> Development result: the questions and evidence are provisional and unreviewed. Do not present these values as a locked benchmark.',
     '',
@@ -228,6 +308,38 @@ function markdownFor(report: TournamentReport, topStrategies: TournamentStrategy
       `| ${index + 1} | ${strategy.strategyId} | ${strategy.label} | ${fixed(headline.evidenceEfficiency)} | ${fixed(headline.payloadEvidenceEfficiency)} | ${fixed(headline.evidenceRecall)} | ${fixed(headline.mrr)} | ${fixed(headline.tokensToFirstEvidence, 1)} | ${basename(strategy.sourceRun)} |`
     )
   })
+  if (report.categoryBreakdowns.length > 0) {
+    lines.push('', '## Performance by question type', '')
+    for (const breakdown of report.categoryBreakdowns) {
+      lines.push(
+        `### ${breakdown.category[0].toUpperCase()}${breakdown.category.slice(1)} (${breakdown.cases} cases)`,
+        '',
+        '| Rank | Retrieval pipeline | EE | Recall | MRR |',
+        '| ---: | --- | ---: | ---: | ---: |'
+      )
+      breakdown.leaderboard.slice(0, 5).forEach((item, index) => {
+        lines.push(
+          `| ${index + 1} | ${item.label} | ${fixed(item.evidenceEfficiency)} | ${fixed(item.evidenceRecall)} | ${fixed(item.mrr)} |`
+        )
+      })
+      lines.push('')
+    }
+  }
+  if (report.routingDiagnostics.length > 0) {
+    lines.push(
+      '',
+      '## Book-routing diagnostics',
+      '',
+      '| Routing pipeline | Required-book recall | All required books | EE | Evidence recall |',
+      '| --- | ---: | ---: | ---: | ---: |'
+    )
+    for (const item of report.routingDiagnostics) {
+      lines.push(
+        `| ${item.label} | ${fixed(item.requiredBookRecall)} | ${fixed(item.allRequiredBooks)} | ${fixed(item.evidenceEfficiency)} | ${fixed(item.evidenceRecall)} |`
+      )
+    }
+    lines.push('')
+  }
   lines.push(
     '',
     '## Cost ledger by run',
@@ -252,7 +364,8 @@ export async function writeTournamentReport(
   headlineBudget = 8192,
   top = 12
 ): Promise<{ markdownPath: string; jsonPath: string; svgPath: string; strategies: number }> {
-  if (!Number.isInteger(headlineBudget) || headlineBudget <= 0) throw new Error('--budget must be positive')
+  if (!Number.isInteger(headlineBudget) || headlineBudget <= 0)
+    throw new Error('--budget must be positive')
   if (!Number.isInteger(top) || top <= 0) throw new Error('--top must be positive')
   const target = resolve(targetRunPath)
   const { compatible, allCompleted } = await readRuns(target)
@@ -284,8 +397,15 @@ export async function writeTournamentReport(
       retriever: first.retriever,
       queryMode: first.queryMode ?? 'reference',
       contextPolicy: policy,
-      sourceRun: items.sort((a, b) => b.row.contextBudget - a.row.contextBudget)[0].runPath,
-      curve: budgets.map((budget) => point(items.map((item) => item.row), budget))
+      sourceRun: basename(
+        items.sort((a, b) => b.row.contextBudget - a.row.contextBudget)[0].runPath
+      ),
+      curve: budgets.map((budget) =>
+        point(
+          items.map((item) => item.row),
+          budget
+        )
+      )
     }
   })
   const ranked = strategies
@@ -295,6 +415,64 @@ export async function writeTournamentReport(
       const r = right.curve.find((item) => item.budget === headlineBudget)!.evidenceEfficiency ?? -1
       return r - l || left.label.localeCompare(right.label)
     })
+  const caseCategories = await loadCaseCategories(targetRun.configPath)
+  const categoryBreakdowns = [...new Set(caseCategories.values())].sort().map((category) => {
+    const categoryCaseIds = new Set(
+      targetRun.results
+        .filter((row) => caseCategories.get(row.caseId) === category)
+        .map((row) => row.caseId)
+    )
+    const leaderboard = ranked
+      .map((strategy) => {
+        const rows = (byStrategy.get(strategy.id) ?? [])
+          .map((item) => item.row)
+          .filter(
+            (row) =>
+              row.contextBudget === headlineBudget && caseCategories.get(row.caseId) === category
+          )
+        return {
+          label: strategy.label,
+          evidenceEfficiency: finiteMean(rows.map((row) => row.metrics.evidenceEfficiency)),
+          evidenceRecall: finiteMean(rows.map((row) => row.metrics.evidenceRecall)),
+          mrr: finiteMean(rows.map((row) => row.metrics.mrr))
+        }
+      })
+      .filter((item) => item.evidenceEfficiency !== null)
+      .sort(
+        (left, right) =>
+          (right.evidenceEfficiency ?? -1) - (left.evidenceEfficiency ?? -1) ||
+          left.label.localeCompare(right.label)
+      )
+    return { category, cases: categoryCaseIds.size, leaderboard }
+  })
+  const routingDiagnostics = ranked
+    .flatMap((strategy) => {
+      const rows = (byStrategy.get(strategy.id) ?? [])
+        .map((item) => item.row)
+        .filter(
+          (row) =>
+            row.contextBudget === headlineBudget &&
+            row.routingPolicy !== undefined &&
+            row.routingPolicy.kind !== 'flat'
+        )
+      if (rows.length === 0) return []
+      return [
+        {
+          label: strategy.label,
+          requiredBookRecall: finiteMean(rows.map((row) => row.routingMetrics?.requiredBookRecall)),
+          allRequiredBooks: finiteMean(
+            rows.map((row) => (row.routingMetrics?.allRequiredBooks ? 1 : 0))
+          ),
+          evidenceEfficiency: finiteMean(rows.map((row) => row.metrics.evidenceEfficiency)),
+          evidenceRecall: finiteMean(rows.map((row) => row.metrics.evidenceRecall))
+        }
+      ]
+    })
+    .sort(
+      (left, right) =>
+        (right.requiredBookRecall ?? -1) - (left.requiredBookRecall ?? -1) ||
+        (right.evidenceEfficiency ?? -1) - (left.evidenceEfficiency ?? -1)
+    )
   const report: TournamentReport = {
     schemaVersion: 1,
     provisional: true,
@@ -302,17 +480,22 @@ export async function writeTournamentReport(
     caseSet: [...new Set(targetRun.results.map((row) => `${row.bookId}|${row.caseId}`))].sort(),
     headlineBudget,
     compatibleRuns: compatible.map(({ path, run }) => ({
-      path,
+      path: basename(path),
       name: run.plan.name,
       costUsd: run.ledger.actualCostUsd,
       resultCells: run.results.length
     })),
-    totalMeteredCostUsd: compatible.reduce((total, item) => total + item.run.ledger.actualCostUsd, 0),
+    totalMeteredCostUsd: compatible.reduce(
+      (total, item) => total + item.run.ledger.actualCostUsd,
+      0
+    ),
     runDirectoryMeteredCostUsd: allCompleted.reduce(
       (total, item) => total + item.run.ledger.actualCostUsd,
       0
     ),
-    strategies: ranked
+    strategies: ranked,
+    categoryBreakdowns,
+    routingDiagnostics
   }
   const markdownPath = resolve(outputPath ?? target.replace(/\.json$/i, '.tournament.md'))
   const jsonPath = markdownPath.replace(/\.md$/i, '.json')

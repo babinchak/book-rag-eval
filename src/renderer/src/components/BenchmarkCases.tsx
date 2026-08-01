@@ -170,6 +170,7 @@ function BenchmarkCases({ onBack }: BenchmarkCasesProps): React.JSX.Element {
   const [tab, setTab] = useState<CaseTab>('definition')
   const [workspace, setWorkspace] = useState<WorkspaceTab>('matrix')
   const [selectedResult, setSelectedResult] = useState<BenchmarkResultCell | null>(null)
+  const [selectedMatrixCase, setSelectedMatrixCase] = useState<DraftCaseBrowserItem | null>(null)
   const [editor, setEditor] = useState<EditorValue | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -237,7 +238,11 @@ function BenchmarkCases({ onBack }: BenchmarkCasesProps): React.JSX.Element {
     })
   }, [data, search, bookFilter, statusFilter, kindFilter, flaggedOnly])
 
-  const selectedCase = data?.cases.find((item) => item.candidateId === selectedCandidateId)
+  const selectedCase =
+    data?.cases.find((item) => item.candidateId === selectedCandidateId) ??
+    selectedMatrixCase ??
+    undefined
+  const resultOnlyCase = selectedCase?.candidateId.startsWith('result-only:') ?? false
 
   async function save(
     reviewStatus: DraftReviewStatus | undefined,
@@ -378,6 +383,7 @@ function BenchmarkCases({ onBack }: BenchmarkCasesProps): React.JSX.Element {
           <BenchmarkMatrix
             cases={data.cases}
             onOpenCase={(item, cell) => {
+              setSelectedMatrixCase(item)
               setSelectedCandidateId(item.candidateId)
               setEditor(editorValue(item))
               setSelectedResult(cell)
@@ -521,7 +527,8 @@ function BenchmarkCases({ onBack }: BenchmarkCasesProps): React.JSX.Element {
                     <div style={{ display: 'flex', gap: 7, alignItems: 'center', marginBottom: 6 }}>
                       <StatusBadge status={selectedCase.reviewStatus} />
                       <span style={{ color: cv.text4, fontSize: 11 }}>
-                        {selectedCase.evidenceKind} · within book
+                        {selectedCase.evidenceKind} ·{' '}
+                        {resultOnlyCase ? 'library-wide' : 'within book'}
                       </span>
                     </div>
                     <h2 style={{ margin: 0, fontSize: 20 }}>{selectedCase.bookTitle}</h2>
@@ -650,6 +657,21 @@ function BenchmarkCases({ onBack }: BenchmarkCasesProps): React.JSX.Element {
                       cell to inspect its query, metrics, and retrieved chunk IDs.
                     </div>
                   )
+                ) : resultOnlyCase ? (
+                  <div
+                    style={{
+                      marginTop: 18,
+                      padding: 24,
+                      border: `1px dashed ${cv.border2}`,
+                      borderRadius: 7,
+                      color: cv.text3,
+                      lineHeight: 1.6
+                    }}
+                  >
+                    This provisional library-wide case was loaded from a benchmark result. Its
+                    complete multi-book evidence definition remains in the generated eval set;
+                    review editing is intentionally disabled in this draft-run browser.
+                  </div>
                 ) : (
                   <>
                     <div style={{ display: 'grid', gap: 14, marginTop: 18 }}>
