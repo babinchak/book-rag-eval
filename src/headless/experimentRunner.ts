@@ -82,6 +82,8 @@ export interface ExperimentPlan {
   artifacts: PlannedArtifact[]
   experimentCells: number
   retrievalQueries: number
+  cachedRetrievalQueries: number
+  missingRetrievalQueries: number
   estimatedEmbeddingTokens: number
   estimatedCostUsd: number | null
   unknownCostModels: EmbeddingModel[]
@@ -327,6 +329,8 @@ export async function planExperiment(
   }
   let estimatedEmbeddingTokens = 0
   let estimatedCostUsd = 0
+  let cachedRetrievalQueries = 0
+  let missingRetrievalQueries = 0
   const unknownCostModels = new Set<EmbeddingModel>()
 
   for (const book of prepared.books) {
@@ -401,23 +405,34 @@ export async function planExperiment(
       })
 
       for (const retriever of config.retrievers) {
-        if (!retrieverNeedsEmbedding(retriever)) continue
-        const queryTokens = book.cases
-          .filter((evalCase) => evalCase.scope === 'within_book')
-          .reduce(
-            (total, evalCase) =>
-              total +
-              config.queryModes.reduce(
-                (queryTotal, queryMode) =>
-                  queryTotal + countChunkTokens(retrievalQueryFor(evalCase, queryMode)),
-                0
-              ),
-            0
-          )
-        estimatedEmbeddingTokens += queryTokens
-        const price = priceOf(config, retriever.embeddingModel)
-        if (price === undefined) unknownCostModels.add(retriever.embeddingModel)
-        else estimatedCostUsd += (queryTokens / 1_000_000) * price
+        for (const evalCase of book.cases.filter(
+          (candidate) => candidate.scope === 'within_book'
+        )) {
+          for (const queryMode of config.queryModes) {
+            const retrievalQuery = retrievalQueryFor(evalCase, queryMode)
+            const queryId = queryKey(
+              book.bookId,
+              chunkIdentity.id,
+              retriever,
+              evalCase,
+              queryMode,
+              retrievalQuery,
+              config.candidatePoolSize
+            )
+            const cached = await readRetrievalTrace(config.outputDir, queryId)
+            if (cached?.chunkArtifactId === chunkIdentity.id) {
+              cachedRetrievalQueries += 1
+              continue
+            }
+            missingRetrievalQueries += 1
+            if (!retrieverNeedsEmbedding(retriever)) continue
+            const queryTokens = countChunkTokens(retrievalQuery)
+            estimatedEmbeddingTokens += queryTokens
+            const price = priceOf(config, retriever.embeddingModel)
+            if (price === undefined) unknownCostModels.add(retriever.embeddingModel)
+            else estimatedCostUsd += (queryTokens / 1_000_000) * price
+          }
+        }
       }
     }
   }
@@ -461,6 +476,8 @@ export async function planExperiment(
     artifacts,
     experimentCells,
     retrievalQueries,
+    cachedRetrievalQueries,
+    missingRetrievalQueries,
     estimatedEmbeddingTokens,
     estimatedCostUsd: unknownCostModels.size === 0 ? estimatedCostUsd : null,
     unknownCostModels: [...unknownCostModels],
