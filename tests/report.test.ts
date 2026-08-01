@@ -3,7 +3,12 @@ import test from 'node:test'
 import { bootstrapMean, reportMarkdown, summarizeRun } from '../src/headless/report'
 import type { HeadlessRun, HeadlessResultRow } from '../src/headless/experimentRunner'
 
-function row(strategyId: string, caseId: string, recall: number): HeadlessResultRow {
+function row(
+  strategyId: string,
+  caseId: string,
+  recall: number,
+  retriever: HeadlessResultRow['retriever'] = { kind: 'bm25' }
+): HeadlessResultRow {
   return {
     key: `${strategyId}-${caseId}`,
     bookId: 'book-1',
@@ -13,7 +18,7 @@ function row(strategyId: string, caseId: string, recall: number): HeadlessResult
     scope: 'within_book',
     strategyId,
     chunkArtifactId: `${strategyId}-artifact`,
-    retriever: { kind: 'bm25' },
+    retriever,
     contextBudget: 2048,
     retrievedChunkIds: [],
     retrievedTokens: 100,
@@ -33,10 +38,7 @@ function row(strategyId: string, caseId: string, recall: number): HeadlessResult
 }
 
 test('builds deterministic bootstrap estimates and paired strategy deltas', () => {
-  assert.deepEqual(
-    bootstrapMean([0, 1, 1], 100, 'stable'),
-    bootstrapMean([0, 1, 1], 100, 'stable')
-  )
+  assert.deepEqual(bootstrapMean([0, 1, 1], 100, 'stable'), bootstrapMean([0, 1, 1], 100, 'stable'))
   const run = {
     schemaVersion: 1,
     fingerprint: 'run-1',
@@ -60,14 +62,24 @@ test('builds deterministic bootstrap estimates and paired strategy deltas', () =
       row('baseline', 'case-1', 0),
       row('baseline', 'case-2', 1),
       row('candidate', 'case-1', 1),
-      row('candidate', 'case-2', 1)
+      row('candidate', 'case-2', 1),
+      row('baseline', 'case-1', 0, { kind: 'random', seed: 42 }),
+      row('baseline', 'case-2', 0, { kind: 'random', seed: 42 }),
+      row('candidate', 'case-1', 0, { kind: 'random', seed: 42 }),
+      row('candidate', 'case-2', 0, { kind: 'random', seed: 42 })
     ]
   } as HeadlessRun
 
   const report = summarizeRun(run, 100)
-  const candidate = report.groups.find((group) => group.strategyId === 'candidate')!
+  const candidate = report.groups.find(
+    (group) => group.strategyId === 'candidate' && group.retriever === 'bm25'
+  )!
   assert.equal(candidate.metrics.evidenceRecall.mean, 1)
   assert.equal(candidate.evidenceRecallDeltaFromBaseline.mean, 0.5)
+  const randomCandidate = report.groups.find(
+    (group) => group.strategyId === 'candidate' && group.retriever === 'random:seed42'
+  )!
+  assert.equal(randomCandidate.evidenceRecallDeltaFromBaseline.mean, 0)
   assert.match(reportMarkdown(report), /Retrieval experiment report/)
   assert.match(reportMarkdown(report), /candidate/)
 })

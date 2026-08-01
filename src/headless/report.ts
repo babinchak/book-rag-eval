@@ -143,11 +143,11 @@ export function summarizeRun(run: HeadlessRun, bootstrapIterations = 2000): Expe
     rowsByGroup.set(id, rows)
   }
 
-  const baselineByBudgetAndQuery = new Map<string, HeadlessResultRow[]>()
+  const baselineByRetrieverBudgetAndQuery = new Map<string, HeadlessResultRow[]>()
   for (const row of run.results) {
-    const baselineKey = `${row.contextBudget}|${row.queryMode ?? 'reference'}`
-    if (!baselineByBudgetAndQuery.has(baselineKey)) {
-      baselineByBudgetAndQuery.set(baselineKey, rowsByGroup.get(groupId(row))!)
+    const baselineKey = `${retrieverLabel(row.retriever)}|${row.contextBudget}|${row.queryMode ?? 'reference'}`
+    if (!baselineByRetrieverBudgetAndQuery.has(baselineKey)) {
+      baselineByRetrieverBudgetAndQuery.set(baselineKey, rowsByGroup.get(groupId(row))!)
     }
   }
 
@@ -167,7 +167,9 @@ export function summarizeRun(run: HeadlessRun, bootstrapIterations = 2000): Expe
     ) as Record<ReportMetric, ConfidenceEstimate>
 
     const baselineRows =
-      baselineByBudgetAndQuery.get(`${first.contextBudget}|${first.queryMode ?? 'reference'}`) ?? []
+      baselineByRetrieverBudgetAndQuery.get(
+        `${retrieverLabel(first.retriever)}|${first.contextBudget}|${first.queryMode ?? 'reference'}`
+      ) ?? []
     const baseline = new Map(
       baselineRows.flatMap((row) => {
         const value = numericMetric(row, 'evidenceRecall')
